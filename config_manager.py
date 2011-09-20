@@ -12,8 +12,13 @@ import inspect
 import os.path
 import re
 
-import socorro.lib.util as sutil
-import socorro.lib.datetimeutil as dtu
+import datetime_util as dtu
+
+#==============================================================================
+class DotDict(dict):
+  __getattr__= dict.__getitem__
+  __setattr__= dict.__setitem__
+  __delattr__= dict.__delitem__
 
 
 #==============================================================================
@@ -99,7 +104,7 @@ class Option(object):
 
 
 #==============================================================================
-class Namespace(sutil.DotDict):
+class Namespace(DotDict):
     #--------------------------------------------------------------------------
     def __init__(self, doc=''):
         super(Namespace, self).__init__()
@@ -175,7 +180,7 @@ class OptionsByGetopt(object):
                                            long_options_list)
         except getopt.GetoptError, x:
             raise NotAnOptionError(str(x))
-        command_line_values = sutil.DotDict()
+        command_line_values = DotDict()
         for opt_name, opt_val in getopt_options:
             if opt_name.startswith('--'):
                 name = opt_name[2:]
@@ -664,7 +669,7 @@ class ConfigurationManager(object):
             if value_type == Option:
                 destination[key] = val.value
             elif value_type == Namespace:
-                destination[key] = d = sutil.DotDict()
+                destination[key] = d = DotDict()
                 self.walk_config_copy_values(val, d)
 
     #--------------------------------------------------------------------------
@@ -695,7 +700,7 @@ class ConfigurationManager(object):
 
     #--------------------------------------------------------------------------
     def get_config(self):
-        config = sutil.DotDict()
+        config = DotDict()
         self.walk_config_copy_values(self.option_definitions, config)
         return config
 
@@ -903,7 +908,7 @@ class ConfigurationManager(object):
         if source is None:
             source = self.option_definitions
         if destination is None:
-            destination = sutil.DotDict()
+            destination = DotDict()
         try:
             for key, val in source.items():
                 if key in self.manager_controls_list:
@@ -912,7 +917,7 @@ class ConfigurationManager(object):
                     continue  # ignore these
                 val_type = type(val)
                 if val_type == Option:
-                    destination[key] = d = sutil.DotDict(val.__dict__.copy())
+                    destination[key] = d = DotDict(val.__dict__.copy())
                     for attr in ['default', 'value', 'from_string_converter']:
                         try:
                             attr_type = type(d[attr])
@@ -922,7 +927,7 @@ class ConfigurationManager(object):
                             pass
                 elif isinstance(val, coll.Mapping):
                     # this is a namespace
-                    destination[key] = d = sutil.DotDict()
+                    destination[key] = d = DotDict()
                     self.str_safe_option_definitions(val, d)
                 else:
                     pass
@@ -1095,8 +1100,8 @@ to_string_converters = {int: str,
                         str: str,
                         unicode: unicode,
                         bool: lambda x: 'True' if x else 'False',
-                        dt.datetime: dtu.datetimeToISOdateString,
-                        dt.timedelta: dtu.timedeltaToStr,
+                        dt.datetime: dtu.datetime_to_ISO_string,
+                        dt.timedelta: dtu.timedelta_to_str,
                         type: classes_and_functions_to_str,
                         types.FunctionType: classes_and_functions_to_str,
                         compiled_regexp_type: lambda x: x.pattern,

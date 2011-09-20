@@ -6,9 +6,8 @@ import StringIO as sio
 import json
 import functools
 
-import socorro.unittest.testlib.expectations as exp
-import socorro.lib.config_manager as cm
-import socorro.lib.util as sutil
+#import socorro.unittest.testlib.expectations as exp
+import config_manager as cm
 
 def do_assert(r, e):
     assert r == e, 'expected\n%s\nbut got\n%s' % (e, r)
@@ -208,7 +207,7 @@ def test_get_config_1():
                                 use_config_files=False,
                                 auto_help=False)
     d = c.get_config()
-    e = sutil.DotDict()
+    e = cm.DotDict()
     e.a = 1
     e.b = 17
     do_assert(d, e)
@@ -226,10 +225,10 @@ def test_get_config_2():
                                 use_config_files=False,
                                 auto_help=False)
     d = c.get_config()
-    e = sutil.DotDict()
+    e = cm.DotDict()
     e.a = 1
     e.b = 17
-    e.c = sutil.DotDict()
+    e.c = cm.DotDict()
     e.c.x = 'fred'
     e.c.y = 3.14159
     e.c.z = 99
@@ -295,7 +294,7 @@ def test_write_flat():
     expected = \
 """# name: aaa
 # doc: the a
-# converter: socorro.lib.config_manager.datetime_converter
+# converter: configman.config_manager.datetime_converter
 aaa=2011-05-04T15:10:00
 
 #-------------------------------------------------------------------------------
@@ -353,7 +352,7 @@ def test_write_ini():
     expected = """[top_level]
 # name: aaa
 # doc: the a
-# converter: socorro.lib.config_manager.datetime_converter
+# converter: configman.config_manager.datetime_converter
 aaa=2011-05-04T15:10:00
 
 [c]
@@ -410,7 +409,7 @@ def test_write_json():
                                 manager_controls=False,
                                 use_config_files=False,
                                 auto_help=False)
-    expected = '{"x": {"password": {"default": "secrets", "name": "password", "from_string_converter": "str", "doc": "the password", "value": "secrets", "short_form": null}, "size": {"default": "100", "name": "size", "from_string_converter": "int", "doc": "how big in tons", "value": "100", "short_form": "s"}}, "c": {"wilma": {"default": "waspish", "name": "wilma", "from_string_converter": "str", "doc": "wife from Flintstones", "value": "waspish", "short_form": null}, "fred": {"default": "stupid", "name": "fred", "from_string_converter": "str", "doc": "husband from Flintstones", "value": "stupid", "short_form": null}}, "aaa": {"default": "2011-05-04T15:10:00", "name": "aaa", "from_string_converter": "socorro.lib.config_manager.datetime_converter", "doc": "the a", "value": "2011-05-04T15:10:00", "short_form": "a"}, "d": {"ethel": {"default": "silly", "name": "ethel", "from_string_converter": "str", "doc": "female neighbor from I Love Lucy", "value": "silly", "short_form": null}, "fred": {"default": "crabby", "name": "fred", "from_string_converter": "str", "doc": "male neighbor from I Love Lucy", "value": "crabby", "short_form": null}}}'
+    expected = '{"x": {"password": {"default": "secrets", "name": "password", "from_string_converter": "str", "doc": "the password", "value": "secrets", "short_form": null}, "size": {"default": "100", "name": "size", "from_string_converter": "int", "doc": "how big in tons", "value": "100", "short_form": "s"}}, "c": {"wilma": {"default": "waspish", "name": "wilma", "from_string_converter": "str", "doc": "wife from Flintstones", "value": "waspish", "short_form": null}, "fred": {"default": "stupid", "name": "fred", "from_string_converter": "str", "doc": "husband from Flintstones", "value": "stupid", "short_form": null}}, "aaa": {"default": "2011-05-04T15:10:00", "name": "aaa", "from_string_converter": "configman.config_manager.datetime_converter", "doc": "the a", "value": "2011-05-04T15:10:00", "short_form": "a"}, "d": {"ethel": {"default": "silly", "name": "ethel", "from_string_converter": "str", "doc": "female neighbor from I Love Lucy", "value": "silly", "short_form": null}, "fred": {"default": "crabby", "name": "fred", "from_string_converter": "str", "doc": "male neighbor from I Love Lucy", "value": "crabby", "short_form": null}}}'
     jexp = json.loads(expected)
     s = sio.StringIO()
     c.write_json(output_stream=s)
@@ -450,10 +449,10 @@ def test_overlay_config_1():
     o = { "a": 2, "c.z": 22, "c.x": 'noob', "c.y": "2.89" }
     c.overlay_config_recurse(o)
     d = c.get_config()
-    e = sutil.DotDict()
+    e = cm.DotDict()
     e.a = 2
     e.b = 17
-    e.c = sutil.DotDict()
+    e.c = cm.DotDict()
     e.c.x = 'noob'
     e.c.y = 2.89
     e.c.z = 22
@@ -479,10 +478,10 @@ def test_overlay_config_2():
     o = { "a": 2, "c.z": 22, "c.x": 'noob', "c.y": "2.89", "n": "not here" }
     c.overlay_config_recurse(o, ignore_mismatches=True)
     d = c.get_config()
-    e = sutil.DotDict()
+    e = cm.DotDict()
     e.a = 2
     e.b = 17
-    e.c = sutil.DotDict()
+    e.c = cm.DotDict()
     e.c.x = 'noob'
     e.c.y = 2.89
     e.c.z = 22
@@ -734,12 +733,12 @@ string =   from ini
     config = ConfigParser.RawConfigParser()
     config.readfp(io.BytesIO(ini_data))
     g = cm.OptionsByIniFile(config)
-    e = sutil.DotDict()
-    e.fred = sutil.DotDict() # should be ignored
+    e = cm.DotDict()
+    e.fred = cm.DotDict() # should be ignored
     e.fred.t = 'T'  # should be ignored
-    e.d = sutil.DotDict()
+    e.d = cm.DotDict()
     e.d.a = 16
-    e.c = sutil.DotDict()
+    e.c = cm.DotDict()
     e.c.extra = 18.6
     e.c.string = 'from environment'
     v = cm.OptionsByGetopt(argv_source=['--other.t', 'TTT', '--c.extra', '11.0']
@@ -789,12 +788,12 @@ string =   from ini
     config = ConfigParser.RawConfigParser()
     config.readfp(io.BytesIO(ini_data))
     g = cm.OptionsByIniFile(config)
-    e = sutil.DotDict()
-    e.top_level = sutil.DotDict()
+    e = cm.DotDict()
+    e.top_level = cm.DotDict()
     e.top_level.t = 'T'
-    e.d = sutil.DotDict()
+    e.d = cm.DotDict()
     e.d.a = 16
-    e.c = sutil.DotDict()
+    e.c = cm.DotDict()
     e.c.extra = 18.6
     e.c.string = 'from environment'
     v = cm.OptionsByGetopt(argv_source=['--c.extra', '11.0'])
