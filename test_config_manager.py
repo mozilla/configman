@@ -8,93 +8,10 @@ import functools
 
 #import socorro.unittest.testlib.expectations as exp
 import config_manager as cm
+import converters as conv
 
 def do_assert(r, e):
     assert r == e, 'expected\n%s\nbut got\n%s' % (e, r)
-
-
-def test_option_constructor_1 ():
-    o = cm.Option()
-    do_assert(o.name, None)
-    do_assert(o.default, None)
-    do_assert(o.doc, None)
-    do_assert(o.from_string_converter, None)
-    do_assert(o.value, None)
-
-    o = cm.Option('lucy')
-    do_assert(o.name, 'lucy')
-    do_assert(o.default, None)
-    do_assert(o.doc, None)
-    do_assert(o.from_string_converter, None)
-    do_assert(o.value, None)
-
-    d = { 'name': 'lucy',
-          'default': 1,
-          'doc': "lucy's integer"
-        }
-    o = cm.Option(**d)
-    do_assert(o.name, 'lucy')
-    do_assert(o.default, 1)
-    do_assert(o.doc, "lucy's integer")
-    do_assert(o.from_string_converter, int)
-    do_assert(o.value, 1)
-
-    d = { 'name': 'lucy',
-          'default': 1,
-          'doc': "lucy's integer",
-          'value': '1'
-        }
-    o = cm.Option(**d)
-    do_assert(o.name, 'lucy')
-    do_assert(o.default, 1)
-    do_assert(o.doc, "lucy's integer")
-    do_assert(o.from_string_converter, int)
-    do_assert(o.value, 1)
-
-    d = { 'name': 'lucy',
-          'default': '1',
-          'doc': "lucy's integer",
-          'from_string_converter': int
-        }
-    o = cm.Option(**d)
-    do_assert(o.name, 'lucy')
-    do_assert(o.default, '1')
-    do_assert(o.doc, "lucy's integer")
-    do_assert(o.from_string_converter, int)
-    do_assert(o.value, 1)
-
-    d = { 'name': 'lucy',
-          'default': '1',
-          'doc': "lucy's integer",
-          'from_string_converter': int,
-          'other': 'no way'
-        }
-    o = cm.Option(**d)
-    do_assert(o.name, 'lucy')
-    do_assert(o.default, '1')
-    do_assert(o.doc, "lucy's integer")
-    do_assert(o.from_string_converter, int)
-    do_assert(o.value, 1)
-
-    d = { 'default': '1',
-          'doc': "lucy's integer",
-          'from_string_converter': int,
-          'other': 'no way'
-        }
-    o = cm.Option(**d)
-    do_assert(o.name, None)
-    do_assert(o.default, '1')
-    do_assert(o.doc, "lucy's integer")
-    do_assert(o.from_string_converter, int)
-    do_assert(o.value, 1)
-
-    d = dt.datetime.now()
-    o = cm.Option(name='now', default=d)
-    do_assert(o.name, 'now')
-    do_assert(o.default, d)
-    do_assert(o.doc, None)
-    do_assert(o.from_string_converter, cm.datetime_converter)
-    do_assert(o.value, d)
 
 def test_OptionsByGetOpt01():
     source = [ 'a', 'b', 'c' ]
@@ -142,7 +59,7 @@ def test_namespace_constructor_0():
     do_assert(n.beta.name, 'beta')
     do_assert(n.beta.doc, None)
     do_assert(n.beta.default, my_birthday)
-    do_assert(n.beta.from_string_converter, cm.datetime_converter)
+    do_assert(n.beta.from_string_converter, conv.datetime_converter)
     do_assert(n.beta.value, my_birthday)
     do_assert(n._doc, 'doc string')
 
@@ -273,7 +190,7 @@ def some_namespaces():
     """set up some namespaces"""
     n = cm.Namespace(doc='top')
     n.aaa = cm.Option('aaa', 'the a', '2011-05-04T15:10:00', short_form='a',
-                      from_string_converter=cm.datetime_converter)
+                      from_string_converter=conv.datetime_converter)
     n.c = cm.Namespace(doc='c space')
     n.c.fred = cm.Option('fred', 'husband from Flintstones', default='stupid')
     n.c.wilma = cm.Option('wilma', 'wife from Flintstones', default='waspish')
@@ -294,7 +211,7 @@ def test_write_flat():
     expected = \
 """# name: aaa
 # doc: the a
-# converter: configman.config_manager.datetime_converter
+# converter: configman.converters.datetime_converter
 aaa=2011-05-04T15:10:00
 
 #-------------------------------------------------------------------------------
@@ -352,7 +269,7 @@ def test_write_ini():
     expected = """[top_level]
 # name: aaa
 # doc: the a
-# converter: configman.config_manager.datetime_converter
+# converter: configman.converters.datetime_converter
 aaa=2011-05-04T15:10:00
 
 [c]
@@ -409,7 +326,7 @@ def test_write_json():
                                 manager_controls=False,
                                 use_config_files=False,
                                 auto_help=False)
-    expected = '{"x": {"password": {"default": "secrets", "name": "password", "from_string_converter": "str", "doc": "the password", "value": "secrets", "short_form": null}, "size": {"default": "100", "name": "size", "from_string_converter": "int", "doc": "how big in tons", "value": "100", "short_form": "s"}}, "c": {"wilma": {"default": "waspish", "name": "wilma", "from_string_converter": "str", "doc": "wife from Flintstones", "value": "waspish", "short_form": null}, "fred": {"default": "stupid", "name": "fred", "from_string_converter": "str", "doc": "husband from Flintstones", "value": "stupid", "short_form": null}}, "aaa": {"default": "2011-05-04T15:10:00", "name": "aaa", "from_string_converter": "configman.config_manager.datetime_converter", "doc": "the a", "value": "2011-05-04T15:10:00", "short_form": "a"}, "d": {"ethel": {"default": "silly", "name": "ethel", "from_string_converter": "str", "doc": "female neighbor from I Love Lucy", "value": "silly", "short_form": null}, "fred": {"default": "crabby", "name": "fred", "from_string_converter": "str", "doc": "male neighbor from I Love Lucy", "value": "crabby", "short_form": null}}}'
+    expected = '{"x": {"password": {"default": "secrets", "name": "password", "from_string_converter": "str", "doc": "the password", "value": "secrets", "short_form": null}, "size": {"default": "100", "name": "size", "from_string_converter": "int", "doc": "how big in tons", "value": "100", "short_form": "s"}}, "c": {"wilma": {"default": "waspish", "name": "wilma", "from_string_converter": "str", "doc": "wife from Flintstones", "value": "waspish", "short_form": null}, "fred": {"default": "stupid", "name": "fred", "from_string_converter": "str", "doc": "husband from Flintstones", "value": "stupid", "short_form": null}}, "aaa": {"default": "2011-05-04T15:10:00", "name": "aaa", "from_string_converter": "configman.converters.datetime_converter", "doc": "the a", "value": "2011-05-04T15:10:00", "short_form": "a"}, "d": {"ethel": {"default": "silly", "name": "ethel", "from_string_converter": "str", "doc": "female neighbor from I Love Lucy", "value": "silly", "short_form": null}, "fred": {"default": "crabby", "name": "fred", "from_string_converter": "str", "doc": "male neighbor from I Love Lucy", "value": "crabby", "short_form": null}}}'
     jexp = json.loads(expected)
     s = sio.StringIO()
     c.write_json(output_stream=s)
