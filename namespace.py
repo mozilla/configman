@@ -1,4 +1,9 @@
-import opt.Option as opt
+import datetime as dt
+
+import option as opt
+
+
+from dotdict import DotDict
 
 #==============================================================================
 class Namespace(DotDict):
@@ -16,8 +21,9 @@ class Namespace(DotDict):
             o = value
         if type(o) not in (opt.Option, Namespace):
             raise NotAnOptionError('Namespace can only hold instances of '
-                                   'opt.Option or Namespace, an attempt to assign '
-                                   'a %s has been detected' % type(value))
+                                   'opt.Option or Namespace, an attempt to '
+                                   'assign a %s has been detected' %
+                                                                   type(value))
         self.__setitem__(name, o)
 
     #--------------------------------------------------------------------------

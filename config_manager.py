@@ -13,18 +13,14 @@ import re
 
 import datetime_util as dtu
 
-import option as opt
 import converters as conv
 
 #==============================================================================
-# for convenience define the Option class here.
-Option = opt.Option
+# for convenience define some external symbols here
+from option import Option
+from dotdict import DotDict
+from namespace import Namespace
 
-#==============================================================================
-class DotDict(dict):
-  __getattr__= dict.__getitem__
-  __setattr__= dict.__setitem__
-  __delattr__= dict.__delitem__
 
 
 #==============================================================================
