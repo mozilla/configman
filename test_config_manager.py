@@ -9,6 +9,7 @@ import functools
 #import socorro.unittest.testlib.expectations as exp
 import config_manager as cm
 import converters as conv
+import exceptions as exc
 
 from dotdict import DotDict
 
@@ -356,7 +357,7 @@ def test_overlay_config_3():
     o = { "a": 2, "c.z": 22, "c.x": 'noob', "c.y": "2.89", "c.n": "not here" }
     try:
         c.overlay_config_recurse(o, ignore_mismatches=False)
-    except cm.NotAnOptionError:
+    except exc.NotAnOptionError:
         pass
 
 def test_overlay_config_4():
