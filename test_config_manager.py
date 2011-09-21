@@ -8,195 +8,19 @@ import functools
 
 #import socorro.unittest.testlib.expectations as exp
 import config_manager as cm
+import converters as conv
+import exceptions as exc
+
+from dotdict import DotDict
 
 def do_assert(r, e):
     assert r == e, 'expected\n%s\nbut got\n%s' % (e, r)
-
-
-def test_option_constructor_1 ():
-    o = cm.Option()
-    do_assert(o.name, None)
-    do_assert(o.default, None)
-    do_assert(o.doc, None)
-    do_assert(o.from_string_converter, None)
-    do_assert(o.value, None)
-
-    o = cm.Option('lucy')
-    do_assert(o.name, 'lucy')
-    do_assert(o.default, None)
-    do_assert(o.doc, None)
-    do_assert(o.from_string_converter, None)
-    do_assert(o.value, None)
-
-    d = { 'name': 'lucy',
-          'default': 1,
-          'doc': "lucy's integer"
-        }
-    o = cm.Option(**d)
-    do_assert(o.name, 'lucy')
-    do_assert(o.default, 1)
-    do_assert(o.doc, "lucy's integer")
-    do_assert(o.from_string_converter, int)
-    do_assert(o.value, 1)
-
-    d = { 'name': 'lucy',
-          'default': 1,
-          'doc': "lucy's integer",
-          'value': '1'
-        }
-    o = cm.Option(**d)
-    do_assert(o.name, 'lucy')
-    do_assert(o.default, 1)
-    do_assert(o.doc, "lucy's integer")
-    do_assert(o.from_string_converter, int)
-    do_assert(o.value, 1)
-
-    d = { 'name': 'lucy',
-          'default': '1',
-          'doc': "lucy's integer",
-          'from_string_converter': int
-        }
-    o = cm.Option(**d)
-    do_assert(o.name, 'lucy')
-    do_assert(o.default, '1')
-    do_assert(o.doc, "lucy's integer")
-    do_assert(o.from_string_converter, int)
-    do_assert(o.value, 1)
-
-    d = { 'name': 'lucy',
-          'default': '1',
-          'doc': "lucy's integer",
-          'from_string_converter': int,
-          'other': 'no way'
-        }
-    o = cm.Option(**d)
-    do_assert(o.name, 'lucy')
-    do_assert(o.default, '1')
-    do_assert(o.doc, "lucy's integer")
-    do_assert(o.from_string_converter, int)
-    do_assert(o.value, 1)
-
-    d = { 'default': '1',
-          'doc': "lucy's integer",
-          'from_string_converter': int,
-          'other': 'no way'
-        }
-    o = cm.Option(**d)
-    do_assert(o.name, None)
-    do_assert(o.default, '1')
-    do_assert(o.doc, "lucy's integer")
-    do_assert(o.from_string_converter, int)
-    do_assert(o.value, 1)
-
-    d = dt.datetime.now()
-    o = cm.Option(name='now', default=d)
-    do_assert(o.name, 'now')
-    do_assert(o.default, d)
-    do_assert(o.doc, None)
-    do_assert(o.from_string_converter, cm.datetime_converter)
-    do_assert(o.value, d)
-
-def test_OptionsByGetOpt01():
-    source = [ 'a', 'b', 'c' ]
-    o = cm.OptionsByGetopt(source)
-    do_assert(o.argv_source, source)
-    o = cm.OptionsByGetopt(argv_source=source)
-    do_assert(o.argv_source, source)
-
-def test_OptionsByGetOpt02():
-    args = [ 'a', 'b', 'c' ]
-    o, a = cm.OptionsByGetopt.getopt_with_ignore(args, '', [])
-    do_assert([], o)
-    do_assert(a, args)
-    args = [ '-a', '14', '--fred', 'sally', 'ethel', 'dwight' ]
-    o, a = cm.OptionsByGetopt.getopt_with_ignore(args, '', [])
-    do_assert([], o)
-    do_assert(a, args)
-    args = [ '-a', '14', '--fred', 'sally', 'ethel', 'dwight' ]
-    o, a = cm.OptionsByGetopt.getopt_with_ignore(args, 'a:', [])
-    do_assert(o, [('-a', '14')])
-    do_assert(a,['--fred', 'sally', 'ethel', 'dwight'])
-    args = [ '-a', '14', '--fred', 'sally', 'ethel', 'dwight' ]
-    o, a = cm.OptionsByGetopt.getopt_with_ignore(args, 'a', ['fred='])
-    do_assert(o, [('-a', ''), ('--fred', 'sally')])
-    do_assert(a,['14', 'ethel', 'dwight'])
-
 
 def test_empty_ConfigurationManager_constructor():
     c = cm.ConfigurationManager(manager_controls=False,
                                 use_config_files=False,
                                 auto_help=False)
     do_assert(c.option_definitions, cm.Namespace())
-
-def test_namespace_constructor_0():
-    """test_namespace_constructor_0: test namespace definition"""
-    n = cm.Namespace('doc string')
-    n.alpha = 1
-    my_birthday = dt.datetime(1960,5,4,15,10)
-    n.beta = my_birthday
-    do_assert(n.alpha.name, 'alpha')
-    do_assert(n.alpha.doc, None)
-    do_assert(n.alpha.default, 1)
-    do_assert(n.alpha.from_string_converter, int)
-    do_assert(n.alpha.value, 1)
-    do_assert(n.beta.name, 'beta')
-    do_assert(n.beta.doc, None)
-    do_assert(n.beta.default, my_birthday)
-    do_assert(n.beta.from_string_converter, cm.datetime_converter)
-    do_assert(n.beta.value, my_birthday)
-    do_assert(n._doc, 'doc string')
-
-
-def test_namespace_constructor_1():
-    """test_namespace_constructor_1: test namespace definition"""
-    n = cm.Namespace()
-    n.a = cm.Option()
-    n.a.name = 'a'
-    n.a.default = 1
-    n.a.doc = 'the a'
-    n.b = 17
-    c = cm.ConfigurationManager([n],
-                                use_config_files=False,
-                                )
-    do_assert(c.option_definitions.a, n.a)
-    do_assert(type(c.option_definitions.b), cm.Option)
-    do_assert(c.option_definitions.b.value, 17)
-    do_assert(c.option_definitions.b.default, 17)
-    do_assert(c.option_definitions.b.name, 'b')
-
-
-
-def test_namespace_constructor_2():
-    """test_namespace_constructor_2: test list definition"""
-    l = [ (None, 'a', True, 1, 'the a'),
-          (None, 'b', True, 17, '') ]
-    c = cm.ConfigurationManager([l],
-                                use_config_files=False,
-                                )
-    do_assert(type(c.option_definitions.a), cm.Option)
-    do_assert(c.option_definitions.a.value, 1)
-    do_assert(c.option_definitions.a.default, 1)
-    do_assert(c.option_definitions.a.name, 'a')
-    do_assert(type(c.option_definitions.b), cm.Option)
-    do_assert(c.option_definitions.b.value, 17)
-    do_assert(c.option_definitions.b.default, 17)
-    do_assert(c.option_definitions.b.name, 'b')
-
-def test_namespace_constructor_3():
-    """test_namespace_constructor_3: test json definition"""
-
-    j = '{ "a": {"name": "a", "default": 1, "doc": "the a"}, "b": 17}'
-    c = cm.ConfigurationManager([j],
-                                use_config_files=False,
-                                )
-    do_assert(type(c.option_definitions.a), cm.Option)
-    do_assert(c.option_definitions.a.value, 1)
-    do_assert(c.option_definitions.a.default, 1)
-    do_assert(c.option_definitions.a.name, 'a')
-    do_assert(type(c.option_definitions.b), cm.Option)
-    do_assert(c.option_definitions.b.value, 17)
-    do_assert(c.option_definitions.b.default, 17)
-    do_assert(c.option_definitions.b.name, 'b')
 
 def test_get_config_1():
     n = cm.Namespace()
@@ -273,7 +97,7 @@ def some_namespaces():
     """set up some namespaces"""
     n = cm.Namespace(doc='top')
     n.aaa = cm.Option('aaa', 'the a', '2011-05-04T15:10:00', short_form='a',
-                      from_string_converter=cm.datetime_converter)
+                      from_string_converter=conv.datetime_converter)
     n.c = cm.Namespace(doc='c space')
     n.c.fred = cm.Option('fred', 'husband from Flintstones', default='stupid')
     n.c.wilma = cm.Option('wilma', 'wife from Flintstones', default='waspish')
@@ -294,7 +118,7 @@ def test_write_flat():
     expected = \
 """# name: aaa
 # doc: the a
-# converter: configman.config_manager.datetime_converter
+# converter: configman.converters.datetime_converter
 aaa=2011-05-04T15:10:00
 
 #-------------------------------------------------------------------------------
@@ -352,7 +176,7 @@ def test_write_ini():
     expected = """[top_level]
 # name: aaa
 # doc: the a
-# converter: configman.config_manager.datetime_converter
+# converter: configman.converters.datetime_converter
 aaa=2011-05-04T15:10:00
 
 [c]
@@ -409,7 +233,7 @@ def test_write_json():
                                 manager_controls=False,
                                 use_config_files=False,
                                 auto_help=False)
-    expected = '{"x": {"password": {"default": "secrets", "name": "password", "from_string_converter": "str", "doc": "the password", "value": "secrets", "short_form": null}, "size": {"default": "100", "name": "size", "from_string_converter": "int", "doc": "how big in tons", "value": "100", "short_form": "s"}}, "c": {"wilma": {"default": "waspish", "name": "wilma", "from_string_converter": "str", "doc": "wife from Flintstones", "value": "waspish", "short_form": null}, "fred": {"default": "stupid", "name": "fred", "from_string_converter": "str", "doc": "husband from Flintstones", "value": "stupid", "short_form": null}}, "aaa": {"default": "2011-05-04T15:10:00", "name": "aaa", "from_string_converter": "configman.config_manager.datetime_converter", "doc": "the a", "value": "2011-05-04T15:10:00", "short_form": "a"}, "d": {"ethel": {"default": "silly", "name": "ethel", "from_string_converter": "str", "doc": "female neighbor from I Love Lucy", "value": "silly", "short_form": null}, "fred": {"default": "crabby", "name": "fred", "from_string_converter": "str", "doc": "male neighbor from I Love Lucy", "value": "crabby", "short_form": null}}}'
+    expected = '{"x": {"password": {"default": "secrets", "name": "password", "from_string_converter": "str", "doc": "the password", "value": "secrets", "short_form": null}, "size": {"default": "100", "name": "size", "from_string_converter": "int", "doc": "how big in tons", "value": "100", "short_form": "s"}}, "c": {"wilma": {"default": "waspish", "name": "wilma", "from_string_converter": "str", "doc": "wife from Flintstones", "value": "waspish", "short_form": null}, "fred": {"default": "stupid", "name": "fred", "from_string_converter": "str", "doc": "husband from Flintstones", "value": "stupid", "short_form": null}}, "aaa": {"default": "2011-05-04T15:10:00", "name": "aaa", "from_string_converter": "configman.converters.datetime_converter", "doc": "the a", "value": "2011-05-04T15:10:00", "short_form": "a"}, "d": {"ethel": {"default": "silly", "name": "ethel", "from_string_converter": "str", "doc": "female neighbor from I Love Lucy", "value": "silly", "short_form": null}, "fred": {"default": "crabby", "name": "fred", "from_string_converter": "str", "doc": "male neighbor from I Love Lucy", "value": "crabby", "short_form": null}}}'
     jexp = json.loads(expected)
     s = sio.StringIO()
     c.write_json(output_stream=s)
@@ -507,7 +331,7 @@ def test_overlay_config_3():
     o = { "a": 2, "c.z": 22, "c.x": 'noob', "c.y": "2.89", "c.n": "not here" }
     try:
         c.overlay_config_recurse(o, ignore_mismatches=False)
-    except cm.NotAnOptionError:
+    except exc.NotAnOptionError:
         pass
 
 def test_overlay_config_4():

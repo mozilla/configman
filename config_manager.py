@@ -2,361 +2,27 @@
 
 import sys
 import os
-import getopt
 import collections as coll
 import datetime as dt
 import json
-import ConfigParser as cp
-import types
 import inspect
 import os.path
 import re
 
 import datetime_util as dtu
 
-#==============================================================================
-class DotDict(dict):
-  __getattr__= dict.__getitem__
-  __setattr__= dict.__setitem__
-  __delattr__= dict.__delitem__
-
+import converters as conv
+import exceptions as exc
 
 #==============================================================================
-class ConfigFileMissingError (IOError):
-    pass
+# for convenience define some external symbols here
+from option import Option
+from dotdict import DotDict
+from namespace import Namespace
+from options_by_getopt import OptionsByGetopt
+from options_by_conf import OptionsByConfFile
+from options_by_configparser import OptionsByIniFile
 
-
-#==============================================================================
-class ConfigFileOptionNameMissingError (Exception):
-    pass
-
-
-#==============================================================================
-class NotAnOptionError (Exception):
-    pass
-ConfigurationManagerNotAnOption = NotAnOptionError  # for legacy compatability
-
-
-#==============================================================================
-class OptionError (Exception):
-    def __init__(self, error_string):
-        super(OptionError, self).__init__(error_string)
-
-
-#==============================================================================
-class CannotConvert (ValueError):
-    pass
-
-
-#==============================================================================
-class Option(object):
-    #--------------------------------------------------------------------------
-    def __init__(self,
-                 name=None,
-                 doc=None,
-                 default=None,
-                 from_string_converter=None,
-                 value=None,
-                 short_form=None,
-                 *args,
-                 **kwargs):
-        self.name = name
-        self.short_form = short_form
-        self.default = default
-        self.doc = doc
-        self.from_string_converter = from_string_converter
-        if value == None:
-            value = default
-        self.set_value(value, from_string_converter)
-
-    #--------------------------------------------------------------------------
-    def deduce_converter(self, from_string_converter=str):
-        if from_string_converter in [str, None] and self.default != None:
-            type_of_default = type(self.default)
-            try:
-                self.from_string_converter = \
-                    from_string_converters[type_of_default]
-            except KeyError:
-                self.from_string_converter = str
-        else:
-            self.from_string_converter = from_string_converter
-
-    #--------------------------------------------------------------------------
-    def set_value(self, val, from_string_converter=None):
-        if not self.from_string_converter:
-            self.deduce_converter(from_string_converter)
-        type_of_val = type(val)
-        if type_of_val in [str, unicode]:
-            try:
-                self.value = self.from_string_converter(val)
-            except TypeError:
-                self.value = val
-        else:
-            self.value = val
-
-    #--------------------------------------------------------------------------
-    @staticmethod
-    def from_dict(a_dict):
-        o = Option()
-        for key, val in a_dict.items():
-            setattr(o, key, val)
-        return o
-
-
-#==============================================================================
-class Namespace(DotDict):
-    #--------------------------------------------------------------------------
-    def __init__(self, doc=''):
-        super(Namespace, self).__init__()
-        object.__setattr__(self, '_doc', doc)  # force into attributes
-
-    #--------------------------------------------------------------------------
-    def __setattr__(self, name, value):
-        if type(value) in [int, float, str,
-                           unicode, dt.datetime, dt.timedelta]:
-            o = Option(name=name, default=value, value=value)
-        else:
-            o = value
-        if type(o) not in (Option, Namespace):
-            raise NotAnOptionError('Namespace can only hold instances of '
-                                   'Option or Namespace, an attempt to assign '
-                                   'a %s has been detected' % type(value))
-        self.__setitem__(name, o)
-
-    #--------------------------------------------------------------------------
-    def option(self,
-               name,
-               doc=None,
-               default=None,
-               from_string_converter=None,
-               short_form=None,):
-        an_option = Option(name=name,
-                           doc=doc,
-                           default=default,
-                           from_string_converter=from_string_converter,
-                           short_form=short_form)
-        self[name] = an_option
-
-    #--------------------------------------------------------------------------
-    def namespace(self, name, doc=''):
-        self[name] = Namespace(doc=doc)
-
-    #--------------------------------------------------------------------------
-    def set_value(self, name, value, strict=True):
-        name_parts = name.split('.', 1)
-        prefix = name_parts[0]
-        try:
-            candidate = self[prefix]
-        except KeyError:
-            if strict:
-                raise
-            self[prefix] = candidate = Option()
-            candidate.name = prefix
-        candidate_type = type(candidate)
-        if candidate_type == Namespace:
-            candidate.set_value(name_parts[1], value, strict)
-        else:
-            candidate.set_value(value)
-
-
-#==============================================================================
-class OptionsByGetopt(object):
-    #--------------------------------------------------------------------------
-    def __init__(self, argv_source=sys.argv):
-        self.argv_source = argv_source
-
-    #--------------------------------------------------------------------------
-    def get_values(self, config_manager, ignore_mismatches):
-        short_options_str, \
-        long_options_list = self.getopt_create_opts(
-                             config_manager.option_definitions)
-        try:
-            if ignore_mismatches:
-                fn = OptionsByGetopt.getopt_with_ignore
-            else:
-                fn = getopt.gnu_getopt
-            getopt_options, self.args = fn(self.argv_source,
-                                           short_options_str,
-                                           long_options_list)
-        except getopt.GetoptError, x:
-            raise NotAnOptionError(str(x))
-        command_line_values = DotDict()
-        for opt_name, opt_val in getopt_options:
-            if opt_name.startswith('--'):
-                name = opt_name[2:]
-            else:
-                name = self.find_name_with_short_form(opt_name[1:],
-                                            config_manager.option_definitions,
-                                            '')
-                if not name:
-                    raise NotAnOptionError('%s is not a valid short '
-                                           'form option' % opt_name[1:])
-            option = config_manager.get_option_by_name(name)
-            if option.from_string_converter == boolean_converter:
-                command_line_values[name] = not option.default
-            else:
-                command_line_values[name] = opt_val
-        return command_line_values
-
-    #--------------------------------------------------------------------------
-    def getopt_create_opts(self, option_definitions):
-        short_options_list = []
-        long_options_list = []
-        self.getopt_create_opts_recursive(option_definitions,
-                                          "",
-                                          short_options_list,
-                                          long_options_list)
-        short_options_str = ''.join(short_options_list)
-        return short_options_str, long_options_list
-
-    #--------------------------------------------------------------------------
-    def getopt_create_opts_recursive(self, source,
-                                     prefix,
-                                     short_options_list,
-                                     long_options_list):
-        for key, val in source.items():
-            if type(val) == Option:
-                boolean_option = type(val.default) == bool
-                if val.short_form:
-                    try:
-                        if boolean_option:
-                            if val.short_form not in short_options_list:
-                                short_options_list.append(val.short_form)
-                        else:
-                            short_with_parameter = "%s:" % val.short_form
-                            if short_with_parameter not in short_options_list:
-                                short_options_list.append(short_with_parameter)
-                    except AttributeError:
-                        pass
-                if boolean_option:
-                    long_options_list.append('%s%s' % (prefix, val.name))
-                else:
-                    long_options_list.append('%s%s=' % (prefix, val.name))
-            else:  # Namespace case
-                new_prefix = '%s%s.' % (prefix, key)
-                self.getopt_create_opts_recursive(val,
-                                                  new_prefix,
-                                                  short_options_list,
-                                                  long_options_list)
-
-    #--------------------------------------------------------------------------
-    @staticmethod
-    def getopt_with_ignore(args, shortopts, longopts=[]):
-        """my_getopt(args, options[, long_options]) -> opts, args
-
-        This function works like gnu_getopt(), except that unknown parameters
-        are ignored rather than raising an error.
-        """
-        opts = []
-        prog_args = []
-        if isinstance(longopts, str):
-            longopts = [longopts]
-        else:
-            longopts = list(longopts)
-        while args:
-            if args[0] == '--':
-                prog_args += args[1:]
-                break
-            if args[0][:2] == '--':
-                try:
-                    opts, args = getopt.do_longs(opts, args[0][2:],
-                                                 longopts, args[1:])
-                except getopt.GetoptError:
-                    prog_args.append(args[0])
-                    args = args[1:]
-            elif args[0][:1] == '-':
-                try:
-                    opts, args = getopt.do_shorts(opts, args[0][1:], shortopts,
-                                                  args[1:])
-                except getopt.GetoptError:
-                    prog_args.append(args[0])
-                    args = args[1:]
-            else:
-                prog_args.append(args[0])
-                args = args[1:]
-        return opts, prog_args
-
-    #--------------------------------------------------------------------------
-    def find_name_with_short_form(self, short_name, source, prefix):
-        for key, val in source.items():
-            type_of_val = type(val)
-            if type_of_val == Namespace:
-                prefix = '%s.' % key
-                name = self.find_name_with_short_form(short_name, val, prefix)
-                if name:
-                    return name
-            else:
-                try:
-                    if short_name == val.short_form:
-                        return '%s%s' % (prefix, val.name)
-                except KeyError:
-                    continue
-        return None
-
-
-#==============================================================================
-class OptionsByConfFile(object):
-    #--------------------------------------------------------------------------
-    def __init__(self, filename, open=open):
-        self.filename = filename
-        self.values = {}
-        try:
-            with open(self.filename) as f:
-                previous_key = None
-                for l in f:
-                    if l[0] in ' \t' and previous_key:
-                        l = l[1:]
-                        self.values[previous_key] = '%s%s' % \
-                                            (self.values[previous_key], l)
-                        continue
-                    l = l.strip()
-                    if not l:
-                        continue
-                    if l[0] in '#':
-                        continue
-                    try:
-                        parts = l.split("=", 1)
-                        key, value = parts
-                        self.values[key.strip()] = value.strip()
-                        previous_key = key
-                    except ValueError:
-                        self.values[parts[0]] = ''
-        except IOError:
-            pass
-
-    #--------------------------------------------------------------------------
-    def get_values(self, config_manager, ignore_mismatches):
-        return self.values
-
-
-#==============================================================================
-class OptionsByIniFile(object):
-    #--------------------------------------------------------------------------
-    def __init__(self, source,
-                 top_level_section_name='top_level'):
-        if isinstance(source, str):
-            parser = cp.RawConfigParser()
-            parser.read(source)
-            self.configparser = parser
-        else:  # a real config parser was loaded
-            self.configparser = source
-        self.top_level_section_name = top_level_section_name
-
-    #--------------------------------------------------------------------------
-    def get_values(self, config_manager, ignore_mismatches):
-        sections_list = self.configparser.sections()
-        options = {}
-        for a_section in sections_list:
-            if a_section == self.top_level_section_name:
-                prefix = ''
-            else:
-                prefix = "%s." % a_section
-            for an_option in self.configparser.options(a_section):
-                name = '%s%s' % (prefix, an_option)
-                options[name] = self.configparser.get(a_section, an_option)
-                if options[name] == None:
-                    options[name] = True
-        return options
 
 
 #==============================================================================
@@ -601,8 +267,8 @@ class ConfigurationManager(object):
                 else:
                     converter = None
             elif number_of_entries < 5 or number_of_entries > 6:
-                raise OptionError('option tuple %s has incorrect number of '
-                                  'parameters' % str(option))
+                raise exc.OptionError('option tuple %s has incorrect number '
+                                      'of parameters' % str(option))
             if not parameters:
                 converter = boolean_converter
                 default = bool(default)
@@ -651,8 +317,8 @@ class ConfigurationManager(object):
                 if ignore_mismatches:
                     continue
                 if key == subkey:
-                    raise NotAnOptionError('%s is not an option' % key)
-                raise NotAnOptionError('%s subpart %s is not an option' %
+                    raise exc.NotAnOptionError('%s is not an option' % key)
+                raise exc.NotAnOptionError('%s subpart %s is not an option' %
                                        (key, subkey))
             except TypeError:
                 pass
@@ -715,7 +381,7 @@ class ConfigurationManager(object):
                 return candidate
             else:
                 source = candidate
-        raise NotAnOptionError('%s is not a known option name' % name)
+        raise exc.NotAnOptionError('%s is not a known option name' % name)
 
     #--------------------------------------------------------------------------
     def get_option_names(self, source=None, names=None, prefix=''):
@@ -812,7 +478,7 @@ class ConfigurationManager(object):
             try:
                 value = output_parameters['value']
                 type_of_value = type(value)
-                converter_function = to_string_converters[type_of_value]
+                converter_function = conv.to_string_converters[type_of_value]
                 output_parameters['default'] = converter_function(value)
             except KeyError:
                 output_parameters['default'] = output_parameters['value']
@@ -847,13 +513,14 @@ class ConfigurationManager(object):
         if an_option.value is None:
             return ''
         try:
-            s = to_string_converters[type(an_option.value)](an_option.value)
+            converter = conv.to_string_converters[type(an_option.value)]
+            s = converter(an_option.value)
         except KeyError:
             if type(an_option.value) is not str:
                 s = str(an_option.value)
             else:
                 s = an_option.value
-        if an_option.from_string_converter in converters_requiring_quotes:
+        if an_option.from_string_converter in conv.converters_requiring_quotes:
             s = "'''%s'''" % s
         return s
 
@@ -870,7 +537,8 @@ class ConfigurationManager(object):
                     print >> output_stream, '# name:', qkey
                     print >> output_stream, '# doc:', val.doc
                     print >> output_stream, '# converter:', \
-                        classes_and_functions_to_str(val.from_string_converter)
+                        conv.classes_and_functions_to_str(
+                                                     val.from_string_converter)
                 if block_password and 'password' in val.name.lower():
                     print >> output_stream, '%s=********\n' % qkey
                 else:
@@ -895,7 +563,7 @@ class ConfigurationManager(object):
                 print >> output_stream, '# name:', qkey
                 print >> output_stream, '# doc:', val.doc
                 print >> output_stream, '# converter:', \
-                      classes_and_functions_to_str(val.from_string_converter)
+                  conv.classes_and_functions_to_str(val.from_string_converter)
                 if block_password and 'password' in val.name.lower():
                     print >> output_stream, '%s=********\n' % key
                 else:
@@ -921,7 +589,7 @@ class ConfigurationManager(object):
                     for attr in ['default', 'value', 'from_string_converter']:
                         try:
                             attr_type = type(d[attr])
-                            f = to_string_converters[attr_type]
+                            f = conv.to_string_converters[attr_type]
                             d[attr] = f(d[attr])
                         except KeyError:
                             pass
@@ -963,153 +631,9 @@ class ConfigurationManager(object):
             else:
                 try:
                     logger.info('%s: %s', key,
-                                to_string_converters[type(key)](val))
+                                conv.to_string_converters[type(key)](val))
                 except KeyError:
                     logger.info('%s: %s', key, val)
-
-
-#------------------------------------------------------------------------------
-def io_converter(input_str):
-    """ a conversion function for to select stdout, stderr or open a file for
-    writing"""
-    if type(input_str) is str:
-        input_str_lower = input_str.lower()
-        if input_str_lower == 'stdout':
-            return sys.stdout
-        if input_str_lower == 'stderr':
-            return sys.stderr
-        return open(input_str, "w")
-    return input_str
-
-
-#------------------------------------------------------------------------------
-def datetime_converter(input_str):
-    """ a conversion function for datetimes
-    """
-    try:
-        if type(input_str) is str:
-            year = int(input_str[:4])
-            month = int(input_str[5:7])
-            day = int(input_str[8:10])
-            hour = 0
-            minute = 0
-            second = 0
-            try:
-                hour = int(input_str[11:13])
-                minute = int(input_str[14:16])
-                second = int(input_str[17:19])
-            except ValueError:
-                pass
-            return dt.datetime(year, month, day, hour, minute, second)
-        return input_str
-    except Exception:
-        return dt.datetime.now()
-
-
-#------------------------------------------------------------------------------
-def timedelta_converter(input_str):
-    """ a conversion function for time deltas
-    """
-    try:
-        if type(input_str) is str:
-            days, hours, minutes, seconds = 0, 0, 0, 0
-            details = input_str.split(':')
-            if len(details) >= 4:
-                days = int(details[-4])
-            if len(details) >= 3:
-                hours = int(details[-3])
-            if len(details) >= 2:
-                minutes = int(details[-2])
-            if len(details) >= 1:
-                seconds = int(details[-1])
-            return dt.timedelta(days=days,
-                                hours=hours,
-                                minutes=minutes,
-                                seconds=seconds)
-    except ValueError:
-        pass
-    return input_str
-
-
-#------------------------------------------------------------------------------
-def boolean_converter(input_str):
-    """ a conversion function for boolean
-    """
-    if type(input_str) is str:
-        return input_str.lower() in ("true", "t", "1")
-    return input_str
-
-
-#------------------------------------------------------------------------------
-def class_converter(input_str):
-    """ a conversion that will import a module and class name
-    """
-    if not input_str:
-        return None
-    parts = input_str.split('.')
-    try:
-        # first try as a complete module
-        package = __import__(input_str)
-    except ImportError:
-        if len(parts) == 1:
-            # maybe this is a builtin
-            return eval(input_str)
-        # it must be a class from a module
-        package = __import__('.'.join(parts[:-1]), globals(), locals(), [])
-    obj = package
-    for name in parts[1:]:
-        obj = getattr(obj, name)
-    return obj
-
-
-#------------------------------------------------------------------------------
-def eval_to_regex_converter(input_str):
-    regex_as_str = eval(input_str)
-    return re.compile(regex_as_str)
-
-compiled_regexp_type = type(re.compile(r'x'))
-
-#------------------------------------------------------------------------------
-from_string_converters = {int: int,
-                          float: float,
-                          str: str,
-                          unicode: unicode,
-                          bool: boolean_converter,
-                          dt.datetime: datetime_converter,
-                          dt.timedelta: timedelta_converter,
-                          type: class_converter,
-                          types.FunctionType: class_converter,
-                          compiled_regexp_type: eval_to_regex_converter,
-                          }
-
-
-#------------------------------------------------------------------------------
-def classes_and_functions_to_str(a_thing):
-    if a_thing is None:
-        return ''
-    if inspect.ismodule(a_thing):
-        return a_thing.__name__
-    if a_thing.__module__ == '__builtin__':
-        return a_thing.__name__
-    return "%s.%s" % (a_thing.__module__, a_thing.__name__)
-
-
-#------------------------------------------------------------------------------
-to_string_converters = {int: str,
-                        float: str,
-                        str: str,
-                        unicode: unicode,
-                        bool: lambda x: 'True' if x else 'False',
-                        dt.datetime: dtu.datetime_to_ISO_string,
-                        dt.timedelta: dtu.timedelta_to_str,
-                        type: classes_and_functions_to_str,
-                        types.FunctionType: classes_and_functions_to_str,
-                        compiled_regexp_type: lambda x: x.pattern,
-                        }
-
-
-#------------------------------------------------------------------------------
-converters_requiring_quotes = [eval, eval_to_regex_converter]
 
 
 #------------------------------------------------------------------------------
