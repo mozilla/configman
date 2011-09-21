@@ -21,6 +21,7 @@ from option import Option
 from dotdict import DotDict
 from namespace import Namespace
 from options_by_getopt import OptionsByGetopt
+from options_by_conf import OptionsByConfFile
 
 
 #==============================================================================
