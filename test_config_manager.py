@@ -16,32 +16,6 @@ from dotdict import DotDict
 def do_assert(r, e):
     assert r == e, 'expected\n%s\nbut got\n%s' % (e, r)
 
-def test_OptionsByGetOpt01():
-    source = [ 'a', 'b', 'c' ]
-    o = cm.OptionsByGetopt(source)
-    do_assert(o.argv_source, source)
-    o = cm.OptionsByGetopt(argv_source=source)
-    do_assert(o.argv_source, source)
-
-def test_OptionsByGetOpt02():
-    args = [ 'a', 'b', 'c' ]
-    o, a = cm.OptionsByGetopt.getopt_with_ignore(args, '', [])
-    do_assert([], o)
-    do_assert(a, args)
-    args = [ '-a', '14', '--fred', 'sally', 'ethel', 'dwight' ]
-    o, a = cm.OptionsByGetopt.getopt_with_ignore(args, '', [])
-    do_assert([], o)
-    do_assert(a, args)
-    args = [ '-a', '14', '--fred', 'sally', 'ethel', 'dwight' ]
-    o, a = cm.OptionsByGetopt.getopt_with_ignore(args, 'a:', [])
-    do_assert(o, [('-a', '14')])
-    do_assert(a,['--fred', 'sally', 'ethel', 'dwight'])
-    args = [ '-a', '14', '--fred', 'sally', 'ethel', 'dwight' ]
-    o, a = cm.OptionsByGetopt.getopt_with_ignore(args, 'a', ['fred='])
-    do_assert(o, [('-a', ''), ('--fred', 'sally')])
-    do_assert(a,['14', 'ethel', 'dwight'])
-
-
 def test_empty_ConfigurationManager_constructor():
     c = cm.ConfigurationManager(manager_controls=False,
                                 use_config_files=False,

@@ -1,5 +1,12 @@
+import datetime as dt
+
 import namespace as nmsp
 import option as opt
+import converters as conv
+import config_manager as cm
+
+def do_assert(r, e):
+    assert r == e, 'expected\n%s\nbut got\n%s' % (e, r)
 
 def test_namespace_constructor_0():
     """test_namespace_constructor_0: test namespace definition"""
