@@ -913,7 +913,11 @@ foo=bar  ; other comment
     def test_create_ConfigurationManager_with_use_config_files(self):
         # XXX incomplete! (peter, 15 Aug)
         c = config_manager.ConfigurationManager([],
-                                    manager_controls=False,
-                                    use_config_files=True,
-                                    auto_help=False,
-                                    argv_source=[])
+                                                manager_controls=False,
+                                                use_config_files=True,
+                                                auto_help=False,
+                                                argv_source=[])
+        self.assertIsNone(c.ini_source)
+        self.assertIsNone(c.conf_source)
+        self.assertIsNone(c.json_source)
+

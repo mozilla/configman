@@ -126,10 +126,10 @@ class ConfigurationManager(object):
     #--------------------------------------------------------------------------
     def read_config_files(self):
         # try ini file
-        app = self.get_option_by_name('_application')
         try:
+            app = self.get_option_by_name('_application')
             application_name = app.value.app_name
-        except AttributeError:
+        except (AttributeError, KeyError):
             self.ini_source = None
             self.conf_source = None
             self.json_source = None
