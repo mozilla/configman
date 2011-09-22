@@ -1,15 +1,11 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 
 import sys
 import os
-import collections as coll
-import datetime as dt
+import collections
 import json
 import inspect
 import os.path
-import re
-
-import datetime_util as dtu
 
 import converters as conv
 import exceptions as exc
@@ -22,7 +18,6 @@ from namespace import Namespace
 from options_by_getopt import OptionsByGetopt
 from options_by_conf import OptionsByConfFile
 from options_by_configparser import OptionsByIniFile
-
 
 
 #==============================================================================
@@ -50,15 +45,24 @@ class ConfigurationManager(object):
 
     #--------------------------------------------------------------------------
     def __init__(self,
-                 definition_source_list=[],
-                 settings_source_list=[],
-                 argv_source=sys.argv[1:],
+                 definition_source_list=None,
+                 settings_source_list=None,
+                 argv_source=None,
                  use_config_files=True,
                  auto_help=True,
                  manager_controls=True,
                  quit_after_admin=True,
-                 options_banned_from_help=['_application'],
+                 options_banned_from_help=None,
                  ):
+        # instead of allowing mutables as default keyword argument values...
+        if definition_source_list is None:
+            definition_source_list = []
+        if settings_source_list is None:
+            settings_source_list = []
+        if argv_source is None:
+            argv_source = sys.argv[1:]
+        if options_banned_from_help is None:
+            options_banned_from_help = ['_application']
 
         self.option_definitions = Namespace()
         self.definition_source_list = definition_source_list
@@ -67,11 +71,10 @@ class ConfigurationManager(object):
             self.settings_source_list = settings_source_list
         else:
             self.custom_settings_source = False
-            command_line_options = OptionsByGetopt()
+            command_line_options = OptionsByGetopt(argv_source=argv_source)
             self.settings_source_list = [os.environ,
                                          command_line_options,
                                         ]
-        self.use_config_files = use_config_files
         self.auto_help = auto_help
         self.help = False
         self.admin_tasks_done = False
@@ -92,12 +95,13 @@ class ConfigurationManager(object):
         self.overlay_settings(ignore_mismatches=True)
 
         # read config files
-        if self.use_config_files and not self.custom_settings_source:
+        if use_config_files and not self.custom_settings_source:
             self.read_config_files()
             # second pass to include config file values - ignore bad options
             self.settings_source_list = [self.ini_source,
                                          self.conf_source,
                                          self.json_source,
+                                         os.environ,
                                          command_line_options]
             self.overlay_settings(ignore_mismatches=True)
 
@@ -121,7 +125,7 @@ class ConfigurationManager(object):
 
     #--------------------------------------------------------------------------
     def read_config_files(self):
-    # try ini file
+        # try ini file
         app = self.get_option_by_name('_application')
         try:
             application_name = app.value.app_name
@@ -195,12 +199,12 @@ class ConfigurationManager(object):
 
     #--------------------------------------------------------------------------
     def setup_definitions(self, source):
-        if isinstance(source, coll.Mapping):
+        if isinstance(source, collections.Mapping):
             self.setup_definitions_for_mappings(source,
                                                 self.option_definitions)
             return
         source_type = type(source)
-        if source_type == type(coll):  # how do you get the Module type?
+        if source_type == type(collections):  # how do you get the Module type?
             module_dict = source.__dict__.copy()
             del module_dict['__builtins__']
             self.setup_definitions_for_mappings(module_dict,
@@ -217,7 +221,7 @@ class ConfigurationManager(object):
 
     #--------------------------------------------------------------------------
     def setup_definitions_for_mappings(self, source, destination):
-        try:
+        if 1:#try:
             for key, val in source.items():
                 if key.startswith('__'):
                     continue  # ignore these
@@ -227,19 +231,17 @@ class ConfigurationManager(object):
                     if not val.name:
                         val.name = key
                     val.set_value(val.default)
-                elif isinstance(val, coll.Mapping):
+                elif isinstance(val, collections.Mapping):
                     if 'name' in val and 'default' in val:
                         # this is an option, not a namespace
                         destination[key] = d = Option(**val)
-                        if isinstance(d.from_string_converter, str):
-                            d.from_string_converter = \
-                             class_converter(d.from_string_converter)
                     else:
                         # this is a namespace
                         try:
                             destination[key] = d = Namespace(doc=val._doc)
                         except AttributeError:
                             destination[key] = d = Namespace()
+                        # recurse!
                         self.setup_definitions_for_mappings(val, d)
                 elif val_type in [int, float, str, unicode]:
                     destination[key] = Option(name=key,
@@ -247,7 +249,7 @@ class ConfigurationManager(object):
                                               default=val)
                 else:
                     pass
-        except AttributeError:
+        else:#except AttributeError:
             pass
 
     #--------------------------------------------------------------------------
@@ -260,17 +262,17 @@ class ConfigurationManager(object):
             number_of_entries = len(option)
             if number_of_entries == 6:
                 option5 = option[5]
-                if isinstance(option5, coll.Iterable):
+                if isinstance(option5, collections.Iterable):
                     combo = option5
-                elif isinstance(option5, coll.Callable):
+                elif isinstance(option5, collections.Callable):
                     converter = option5
                 else:
                     converter = None
             elif number_of_entries < 5 or number_of_entries > 6:
-                raise exc.OptionError('option tuple %s has incorrect number '
-                                      'of parameters' % str(option))
+                raise exc.OptionError('option tuple %r has incorrect number '\
+                                       'of parameters' % option)
             if not parameters:
-                converter = boolean_converter
+                converter = conv.boolean_converter
                 default = bool(default)
 
             # TODO: This needs review
@@ -294,7 +296,7 @@ class ConfigurationManager(object):
     #--------------------------------------------------------------------------
     def overlay_settings(self, ignore_mismatches=True):
         for a_settings_source in self.settings_source_list:
-            if isinstance(a_settings_source, coll.Mapping):
+            if isinstance(a_settings_source, collections.Mapping):
                 self.overlay_config_recurse(a_settings_source,
                                             ignore_mismatches=True)
             elif a_settings_source:
@@ -492,7 +494,7 @@ class ConfigurationManager(object):
         app = self.get_option_by_name('_application')
         try:
             app_name = app.value.app_name
-        except AttributeError, x:
+        except AttributeError:
             app_name = 'unknown-app'
         config_file_name = os.sep.join(
             [self.get_option_by_name('config_path').value,
@@ -516,6 +518,7 @@ class ConfigurationManager(object):
             converter = conv.to_string_converters[type(an_option.value)]
             s = converter(an_option.value)
         except KeyError:
+            # FIXME: use isinstance and basestring
             if type(an_option.value) is not str:
                 s = str(an_option.value)
             else:
@@ -540,6 +543,7 @@ class ConfigurationManager(object):
                         conv.classes_and_functions_to_str(
                                                      val.from_string_converter)
                 if block_password and 'password' in val.name.lower():
+                    # FIXME: consider regex with \bPASSW
                     print >> output_stream, '%s=********\n' % qkey
                 else:
                     val_str = self.option_value_str(val)
@@ -563,7 +567,7 @@ class ConfigurationManager(object):
                 print >> output_stream, '# name:', qkey
                 print >> output_stream, '# doc:', val.doc
                 print >> output_stream, '# converter:', \
-                  conv.classes_and_functions_to_str(val.from_string_converter)
+                   conv.classes_and_functions_to_str(val.from_string_converter)
                 if block_password and 'password' in val.name.lower():
                     print >> output_stream, '%s=********\n' % key
                 else:
@@ -593,7 +597,7 @@ class ConfigurationManager(object):
                             d[attr] = f(d[attr])
                         except KeyError:
                             pass
-                elif isinstance(val, coll.Mapping):
+                elif isinstance(val, collections.Mapping):
                     # this is a namespace
                     destination[key] = d = DotDict()
                     self.str_safe_option_definitions(val, d)
@@ -617,7 +621,7 @@ class ConfigurationManager(object):
         try:
             logger.info("app_name: %s", app.value.app_name)
             logger.info("app_version: %s", app.value.app_version)
-        except AttributeError, x:
+        except AttributeError:
             pass
         logger.info("current configuration:")
         config = [(qkey, val.value) for qkey, key, val in
@@ -636,7 +640,6 @@ class ConfigurationManager(object):
                     logger.info('%s: %s', key, val)
 
 
-#------------------------------------------------------------------------------
 def new_configuration(configurationModule=None,
                       applicationName=None,
                      ):
@@ -647,7 +650,3 @@ def new_configuration(configurationModule=None,
                                           auto_help=True,
                                           application_name=applicationName)
     return config_manager.get_config()
-
-#==============================================================================
-if __name__ == "__main__":
-    pass

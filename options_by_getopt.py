@@ -4,17 +4,17 @@ import getopt
 from dotdict import DotDict
 from option import Option
 from namespace import Namespace
-
-import exceptions as exc
+from exceptions import NotAnOptionError
 import converters as conv
 
-#==============================================================================
+
 class OptionsByGetopt(object):
-    #--------------------------------------------------------------------------
-    def __init__(self, argv_source=sys.argv):
+
+    def __init__(self, argv_source=None):
+        if argv_source is None:
+            argv_source = sys.argv
         self.argv_source = argv_source
 
-    #--------------------------------------------------------------------------
     def get_values(self, config_manager, ignore_mismatches):
         short_options_str, \
         long_options_list = self.getopt_create_opts(
@@ -28,7 +28,7 @@ class OptionsByGetopt(object):
                                            short_options_str,
                                            long_options_list)
         except getopt.GetoptError, x:
-            raise exc.NotAnOptionError(str(x))
+            raise NotAnOptionError(str(x))
         command_line_values = DotDict()
         for opt_name, opt_val in getopt_options:
             if opt_name.startswith('--'):
@@ -47,7 +47,6 @@ class OptionsByGetopt(object):
                 command_line_values[name] = opt_val
         return command_line_values
 
-    #--------------------------------------------------------------------------
     def getopt_create_opts(self, option_definitions):
         short_options_list = []
         long_options_list = []
@@ -58,7 +57,6 @@ class OptionsByGetopt(object):
         short_options_str = ''.join(short_options_list)
         return short_options_str, long_options_list
 
-    #--------------------------------------------------------------------------
     def getopt_create_opts_recursive(self, source,
                                      prefix,
                                      short_options_list,
@@ -141,5 +139,3 @@ class OptionsByGetopt(object):
                 except KeyError:
                     continue
         return None
-
-
