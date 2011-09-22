@@ -1,25 +1,18 @@
-#==============================================================================
-class ConfigFileMissingError (IOError):
+class ConfigFileMissingError(IOError):
     pass
 
 
-#==============================================================================
-class ConfigFileOptionNameMissingError (Exception):
+class ConfigFileOptionNameMissingError(Exception):
     pass
 
 
-#==============================================================================
-class NotAnOptionError (Exception):
+class NotAnOptionError(Exception):
     pass
 
 
-#==============================================================================
-class OptionError (Exception):
+class OptionError(Exception):
     pass
 
 
-#==============================================================================
-class CannotConvert (ValueError):
+class CannotConvertError(ValueError):
     pass
-
-

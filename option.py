@@ -1,7 +1,9 @@
 import converters as conv
+from exceptions import CannotConvertError
 
-#==============================================================================
+
 class Option(object):
+
     #--------------------------------------------------------------------------
     def __init__(self,
                  name=None,
@@ -16,33 +18,41 @@ class Option(object):
         self.short_form = short_form
         self.default = default
         self.doc = doc
+        if from_string_converter is None:
+            if default is not None:
+                # take a qualified guess from the default value
+                from_string_converter = self._deduce_converter(default)
+        if isinstance(from_string_converter, basestring):
+            from_string_converter = conv.class_converter(from_string_converter)
         self.from_string_converter = from_string_converter
-        if value == None:
+        if value is None:
             value = default
-        self.set_value(value, from_string_converter)
+        self.set_value(value)
 
     #--------------------------------------------------------------------------
-    def deduce_converter(self, from_string_converter=str):
-        if from_string_converter in [str, None] and self.default != None:
-            type_of_default = type(self.default)
-            try:
-                self.from_string_converter = \
-                    conv.from_string_converters[type_of_default]
-            except KeyError:
-                self.from_string_converter = str
-        else:
-            self.from_string_converter = from_string_converter
+    def _deduce_converter(self, default):
+        default_type = type(default)
+        return conv.from_string_converters.get(default_type, default_type)
 
     #--------------------------------------------------------------------------
-    def set_value(self, val, from_string_converter=None):
-        if not self.from_string_converter:
-            self.deduce_converter(from_string_converter)
-        type_of_val = type(val)
-        if type_of_val in [str, unicode]:
+    def set_value(self, val):
+        if isinstance(val, basestring):
             try:
                 self.value = self.from_string_converter(val)
             except TypeError:
                 self.value = val
+            except ValueError:
+                raise CannotConvertError(val)
         else:
             self.value = val
 
+# FIXME: can these be deleted?
+#    @staticmethod
+#    def from_dict(a_dict):
+#        o = Option()
+#        for key, val in a_dict.items():
+#            setattr(o, key, val)
+#        return o
+#
+#    def to_dict(self):
+#        return self.__dict__
