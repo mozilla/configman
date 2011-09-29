@@ -917,7 +917,6 @@ foo=bar  ; other comment
                                                 use_config_files=True,
                                                 auto_help=False,
                                                 argv_source=[])
-        self.assertIsNone(c.ini_source)
-        self.assertIsNone(c.conf_source)
-        self.assertIsNone(c.json_source)
-
+        self.assertTrue(c.ini_source is None)
+        self.assertTrue(c.conf_source is None)
+        self.assertTrue(c.json_source is None)
