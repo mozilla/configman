@@ -194,6 +194,67 @@ x.size=100
         received = out.getvalue()
         self.assertEqual(expected.strip(), received.strip())
 
+    def test_write_flat_with_passwords(self):
+
+        n = config_manager.Namespace(doc='top')
+        n.password = config_manager.Option('password', 'the password',
+                                           'secrets')
+
+        n.unpassword = config_manager.Option('unpassword',
+                                            'not a password',
+                                            'notsecret')
+
+        config = config_manager.ConfigurationManager(
+          [n],
+          manager_controls=False,
+          use_config_files=False,
+          auto_help=False,
+          argv_source=[]
+        )
+
+        out = StringIO()
+        config.write_conf(output_stream=out)
+        received = out.getvalue()
+        expected = ("# name: password\n"
+                    "# doc: the password\n"
+                    "# converter: str\n"
+                    "password=********")
+        self.assertTrue(expected in received)
+
+        expected = ("# name: unpassword\n"
+                    "# doc: not a password\n"
+                    "# converter: str\n"
+                    "unpassword=notsecret")
+        self.assertTrue(expected in received)
+
+    def test_write_flat_unrecognized_converter(self):
+        from decimal import Decimal
+        n = config_manager.Namespace(doc='top')
+        n.cost = config_manager.Option('cost', 'the cost',
+                                       Decimal('0.00'),
+          short_form='cost',
+          from_string_converter=Decimal
+        )
+
+        config = config_manager.ConfigurationManager(
+          [n],
+          manager_controls=False,
+          use_config_files=False,
+          auto_help=False,
+          argv_source=[]
+        )
+
+        out = StringIO()
+        config.write_conf(output_stream=out)
+        received = out.getvalue()
+        expected = ("# name: cost\n"
+                   "# doc: the cost\n"
+                   "# converter: decimal.Decimal\n"
+                   "cost=0.00")
+        self.assertEqual(received.strip(), expected.strip())
+
+
+
     def test_write_ini(self):
         n = self._some_namespaces()
         c = config_manager.ConfigurationManager(
@@ -767,19 +828,16 @@ string =   from ini
         self.assertEqual(c.get_option_by_name('d.wilma'), n.d.wilma)
         self.assertEqual(c.get_option_by_name('d.x.size'), n.d.x.size)
 
-    def XXXtest_output_summary():  # FIXME: why is this "commented out"??
+    def test_output_summary(self):
         """test_output_summary: the output from help"""
         n = config_manager.Namespace()
         n.aaa = config_manager.Option('aaa', 'the a', False, short_form='a')
         n.b = 17
         n.c = config_manager.Namespace()
         n.c.fred = config_manager.Option('fred', 'husband from Flintstones')
-        n.c.wilma = config_manager.Option('wilma', 'wife from Flintstones')
         n.d = config_manager.Namespace()
         n.d.fred = config_manager.Option('fred',
                                          'male neighbor from I Love Lucy')
-        n.d.ethel = config_manager.Option('ethel',
-                                          'female neighbor from I Love Lucy')
         n.d.x = config_manager.Namespace()
         n.d.x.size = config_manager.Option('size', 'how big in tons',
                                            100, short_form='s')
@@ -794,28 +852,25 @@ string =   from ini
         c.output_summary(output_stream=s)
         r = s.getvalue()
         s.close()
-        # FIXME: this big fat string contains tabs
-        e = """	-a, --aaa
-		the a
-	    --b
-		no documentation available (default: 17)
-	    --c.fred
-		husband from Flintstones (default: None)
-	    --c.wilma
-		wife from Flintstones (default: None)
-	    --d.ethel
-		female neighbor from I Love Lucy (default: None)
-	    --d.fred
-		male neighbor from I Love Lucy (default: None)
-	    --d.x.password
-		the password (default: ********)
-	-s, --d.x.size
-		how big in tons (default: 100)
-"""
-        self.assertEqual(r, e)
+        expect = [
+          '\t-a, --aaa',
+          '\t\tthe a',
+          '\t    --b',
+          '\t\tno documentation available (default: 17)',
+          '\t    --c.fred',
+          '\t\thusband from Flintstones (default: None)',
+          '\t    --d.fred',
+          '\t\tmale neighbor from I Love Lucy (default: None)',
+          '\t    --d.x.password',
+          '\t\tthe password (default: ********)',
+          '\t-s, --d.x.size',
+          '\t\thow big in tons (default: 100)',
+        ]
+        expect = '\n'.join(expect)
+        self.assertEqual(r.rstrip(), expect.rstrip())
 
     def test_config_manager_output_summary(self):
-        """ FIXME: docstring missing """
+        """Test that ConfigurationManager().output_summary() works"""
         n = config_manager.Namespace()
         n.aaa = config_manager.Option('aaa', 'the a', False, short_form='a')
         n.b = 17
@@ -832,9 +887,9 @@ string =   from ini
                                     argv_source=[])
         s = StringIO()
         c.output_summary(output_stream=s)
-        r = s.getvalue()
+        received = s.getvalue()
         s.close()
-        e = r"""	-a, --aaa
+        expected = r"""	-a, --aaa
 		the a
 	    --b
 		no documentation available (default: 17)
@@ -842,8 +897,8 @@ string =   from ini
 		the doc (default: [('version', 'fred', 100), ('product', 'sally', 100)])
 	    --c.wilma
 		wife from Flintstones (default: None)
-"""
-        self.assertEqual(r, e)
+        """
+        self.assertEqual(received.strip(), expected.strip())
 
     def test_eval_as_converter(self):
         """does eval work as a to string converter on an Option object?"""
@@ -852,6 +907,7 @@ string =   from ini
         self.assertEqual(n.aaa.value, '')
 
     def test_OptionsByIniFile_basics(self):
+        """test basic use of OptionsByIniFile"""
         tmp_filename = os.path.join(tempfile.gettempdir(), 'test.conf')
         open(tmp_filename, 'w').write("""
 ; comment

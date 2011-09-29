@@ -15,9 +15,8 @@ class OptionsByIniFile(object):
         self.top_level_section_name = top_level_section_name
 
     def get_values(self, config_manager, ignore_mismatches):
-        sections_list = self.configparser.sections()
         options = {}
-        for a_section in sections_list:
+        for a_section in self.configparser.sections():
             if a_section == self.top_level_section_name:
                 prefix = ''
             else:
@@ -26,8 +25,10 @@ class OptionsByIniFile(object):
                 name = '%s%s' % (prefix, an_option)
                 options[name] = self.configparser.get(a_section, an_option)
 
-                # FIXME: why these two lines? How can they ever happen??
-                if options[name] == None:
-                    options[name] = True
+                # Commented out as a reminder of old code. I can't find any
+                # reason why self.configparser.get() would return None
+                # /peterbe sept 2011
+                #if options[name] == None:
+                #    options[name] = True
 
         return options

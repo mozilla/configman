@@ -45,14 +45,3 @@ class Option(object):
                 raise CannotConvertError(val)
         else:
             self.value = val
-
-# FIXME: can these be deleted?
-#    @staticmethod
-#    def from_dict(a_dict):
-#        o = Option()
-#        for key, val in a_dict.items():
-#            setattr(o, key, val)
-#        return o
-#
-#    def to_dict(self):
-#        return self.__dict__

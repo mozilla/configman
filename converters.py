@@ -74,7 +74,7 @@ def boolean_converter(input_str):
 
 
 #------------------------------------------------------------------------------
-import __builtin__  # FIXME: there has to be a better way to do this
+import __builtin__
 _all_named_builtins = dir(__builtin__)
 
 
