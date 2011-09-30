@@ -5,38 +5,20 @@ def datetime_from_ISO_string(s):
     """ Take an ISO date string of the form YYYY-MM-DDTHH:MM:SS.S
     and convert it into an instance of datetime.datetime
     """
-    # FIXME: replace with strptime()
-    year = month = day = hour = minute = second = millisecond = 0
     try:
-        year = int(s[0:4])
-        month = int(s[5:7])
-        day = int(s[8:10])
-        if len(s) >= 19:
-            hour = int(s[11:13])
-            minute = int(s[14:16])
-            second = int(s[17:19])
-            if len(s) > 19:
-                millisecond = int(s[20:])
-    except Exception, e:
-        raise ValueError('Invalid timestamp - "%s": %s' % (s, str(e)))
-    return datetime.datetime(year, month, day,
-                             hour, minute, second,
-                             millisecond)
+        return datetime.datetime.strptime(s, '%Y-%m-%dT%H:%M:%S')
+    except ValueError:
+        try:
+            return datetime.datetime.strptime(s, '%Y-%m-%d')
+        except ValueError:
+            return datetime.datetime.strptime(s, '%Y-%m-%dT%H:%M:%S.%f')
 
 
 def date_from_ISO_string(s):
     """ Take an ISO date string of the form YYYY-MM-DD
     and convert it into an instance of datetime.date
     """
-    # FIXME: replace with strptime()
-    year = month = day = 0
-    try:
-        year = int(s[0:4])
-        month = int(s[5:7])
-        day = int(s[8:10])
-    except Exception, e:
-        raise ValueError('Invalid timestamp - "%s": %s' % (s, str(e)))
-    return datetime.date(year, month, day)
+    return datetime.datetime.strptime(s, '%Y-%m-%d').date()
 
 
 def datetime_to_ISO_string(aDate):

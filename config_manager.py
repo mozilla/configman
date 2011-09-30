@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import re
 import sys
 import os
 import collections
@@ -518,9 +519,8 @@ class ConfigurationManager(object):
             converter = conv.to_string_converters[type(an_option.value)]
             s = converter(an_option.value)
         except KeyError:
-            # FIXME: use isinstance and basestring
-            if type(an_option.value) is not str:
-                s = str(an_option.value)
+            if not isinstance(an_option.value, basestring):
+                s = unicode(an_option.value)
             else:
                 s = an_option.value
         if an_option.from_string_converter in conv.converters_requiring_quotes:
@@ -542,8 +542,8 @@ class ConfigurationManager(object):
                     print >> output_stream, '# converter:', \
                         conv.classes_and_functions_to_str(
                                                      val.from_string_converter)
-                if block_password and 'password' in val.name.lower():
-                    # FIXME: consider regex with \bPASSW
+                #if block_password and 'password' in val.name.lower():
+                if block_password and re.findall(r'\bpassword', val.name, re.I):
                     print >> output_stream, '%s=********\n' % qkey
                 else:
                     val_str = self.option_value_str(val)
