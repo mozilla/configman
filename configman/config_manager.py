@@ -11,6 +11,8 @@ import os.path
 import converters as conv
 import config_exceptions as exc
 
+import option_defs
+
 #==============================================================================
 # for convenience define some external symbols here
 from option import Option
@@ -47,7 +49,7 @@ class ConfigurationManager(object):
     #--------------------------------------------------------------------------
     def __init__(self,
                  definition_source_list=None,
-                 settings_source_list=None,
+                 values_source_list=None,
                  argv_source=None,
                  use_config_files=True,
                  auto_help=True,
@@ -58,8 +60,8 @@ class ConfigurationManager(object):
         # instead of allowing mutables as default keyword argument values...
         if definition_source_list is None:
             definition_source_list = []
-        if settings_source_list is None:
-            settings_source_list = []
+        if values_source_list is None:
+            values_source_list = []
         if argv_source is None:
             argv_source = sys.argv[1:]
         if options_banned_from_help is None:
@@ -67,15 +69,15 @@ class ConfigurationManager(object):
 
         self.option_definitions = Namespace()
         self.definition_source_list = definition_source_list
-        if settings_source_list:
-            self.custom_settings_source = True
-            self.settings_source_list = settings_source_list
+        if values_source_list:
+            self.custom_values_source = True
+            self.values_source_list = values_source_list
         else:
-            self.custom_settings_source = False
+            self.custom_values_source = False
             command_line_options = OptionsByGetopt(argv_source=argv_source)
-            self.settings_source_list = [os.environ,
-                                         command_line_options,
-                                        ]
+            self.values_source_list = [os.environ,
+                                       command_line_options,
+                                      ]
         self.auto_help = auto_help
         self.help = False
         self.admin_tasks_done = False
@@ -90,20 +92,21 @@ class ConfigurationManager(object):
             self.setup_manager_controls()
 
         for a_definition_source in self.definition_source_list:
-            self.setup_definitions(a_definition_source)
+            option_defs.setup_definitions(a_definition_source,
+                                          self.option_definitions)
 
         # first pass to get classes & config path - ignore bad options
         self.overlay_settings(ignore_mismatches=True)
 
         # read config files
-        if use_config_files and not self.custom_settings_source:
+        if use_config_files and not self.custom_values_source:
             self.read_config_files()
             # second pass to include config file values - ignore bad options
-            self.settings_source_list = [self.ini_source,
-                                         self.conf_source,
-                                         self.json_source,
-                                         os.environ,
-                                         command_line_options]
+            self.values_source_list = [self.ini_source,
+                                       self.conf_source,
+                                       self.json_source,
+                                       os.environ,
+                                       command_line_options]
             self.overlay_settings(ignore_mismatches=True)
 
         # walk tree expanding class options
@@ -199,104 +202,8 @@ class ConfigurationManager(object):
         self.definition_source_list.append(manager_options)
 
     #--------------------------------------------------------------------------
-    def setup_definitions(self, source):
-        if isinstance(source, collections.Mapping):
-            self.setup_definitions_for_mappings(source,
-                                                self.option_definitions)
-            return
-        source_type = type(source)
-        if source_type == type(collections):  # how do you get the Module type?
-            module_dict = source.__dict__.copy()
-            del module_dict['__builtins__']
-            self.setup_definitions_for_mappings(module_dict,
-                                                self.option_definitions)
-        elif source_type == list:
-            self.setup_definitions_for_tuple_list(source,
-                                                  self.option_definitions)
-        elif source_type == str:  # it must be json
-            import json
-            self.setup_definitions_for_mappings(json.loads(source),
-                                                self.option_definitions)
-        else:
-            pass
-
-    #--------------------------------------------------------------------------
-    def setup_definitions_for_mappings(self, source, destination):
-        if 1:#try:
-            for key, val in source.items():
-                if key.startswith('__'):
-                    continue  # ignore these
-                val_type = type(val)
-                if val_type == Option:
-                    destination[key] = val
-                    if not val.name:
-                        val.name = key
-                    val.set_value(val.default)
-                elif isinstance(val, collections.Mapping):
-                    if 'name' in val and 'default' in val:
-                        # this is an option, not a namespace
-                        destination[key] = d = Option(**val)
-                    else:
-                        # this is a namespace
-                        try:
-                            destination[key] = d = Namespace(doc=val._doc)
-                        except AttributeError:
-                            destination[key] = d = Namespace()
-                        # recurse!
-                        self.setup_definitions_for_mappings(val, d)
-                elif val_type in [int, float, str, unicode]:
-                    destination[key] = Option(name=key,
-                                              doc=key,
-                                              default=val)
-                else:
-                    pass
-        else:#except AttributeError:
-            pass
-
-    #--------------------------------------------------------------------------
-    def setup_definitions_for_tuple_list(self, source, destination):
-        for option in source:
-            short_form,  long_form, parameters, default, doc = option[:5]
-            converter = None
-            combo = None
-            converter = None
-            number_of_entries = len(option)
-            if number_of_entries == 6:
-                option5 = option[5]
-                if isinstance(option5, collections.Iterable):
-                    combo = option5
-                elif isinstance(option5, collections.Callable):
-                    converter = option5
-                else:
-                    converter = None
-            elif number_of_entries < 5 or number_of_entries > 6:
-                raise exc.OptionError('option tuple %r has incorrect number '\
-                                       'of parameters' % option)
-            if not parameters:
-                converter = conv.boolean_converter
-                default = bool(default)
-
-            # TODO: This needs review
-            namespaces = long_form.split('.')
-            a_namespace = destination
-            for a_namespace_name in namespaces[:-1]:
-                a_namespace = a_namespace.setdefault(a_namespace_name,
-                                                     Namespace())
-            name = namespaces[-1]
-            o = Option(name=name,
-                       doc=doc,
-                       default=default,
-                       short_form=short_form,
-                       from_string_coverter=converter,
-
-                       )
-            if combo:  # this is rather unimplemented
-                o.combo = combo
-            a_namespace[o.name] = o
-
-    #--------------------------------------------------------------------------
     def overlay_settings(self, ignore_mismatches=True):
-        for a_settings_source in self.settings_source_list:
+        for a_settings_source in self.values_source_list:
             if isinstance(a_settings_source, collections.Mapping):
                 self.overlay_config_recurse(a_settings_source,
                                             ignore_mismatches=True)

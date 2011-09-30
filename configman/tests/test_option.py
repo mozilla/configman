@@ -2,10 +2,10 @@ import unittest
 import re
 import datetime
 
-import config_manager
-import converters as conv
-import datetime_util as dtu
-from config_exceptions import CannotConvertError
+import configman.config_manager as config_manager
+import configman.converters as conv
+import configman.datetime_util as dtu
+from configman.config_exceptions import CannotConvertError
 
 
 class TestCase(unittest.TestCase):

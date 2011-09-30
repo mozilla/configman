@@ -7,10 +7,10 @@ import io
 from cStringIO import StringIO
 import json
 
-import config_manager
-from dotdict import DotDict
-import datetime_util as dtu
-from config_exceptions import NotAnOptionError
+import configman.config_manager as config_manager
+from configman.dotdict import DotDict
+import configman.datetime_util as dtu
+from configman.config_exceptions import NotAnOptionError
 
 
 class TestCase(unittest.TestCase):
@@ -147,7 +147,7 @@ class TestCase(unittest.TestCase):
         )
         expected = """# name: aaa
 # doc: the a
-# converter: datetime_util.datetime_from_ISO_string
+# converter: configman.datetime_util.datetime_from_ISO_string
 aaa=2011-05-04T15:10:00
 
 #-------------------------------------------------------------------------------
@@ -267,7 +267,7 @@ x.size=100
         expected = """[top_level]
 # name: aaa
 # doc: the a
-# converter: datetime_util.datetime_from_ISO_string
+# converter: configman.datetime_util.datetime_from_ISO_string
 aaa=2011-05-04T15:10:00
 
 [c]
@@ -340,7 +340,7 @@ size=100
           "doc": "the a",
           "value": "2011-05-04T15:10:00",
           "from_string_converter":
-              "datetime_util.datetime_from_ISO_string",
+              "configman.datetime_util.datetime_from_ISO_string",
           "name": "aaa"
         }
         self.assertEqual(jrec['aaa'], expect_to_find)

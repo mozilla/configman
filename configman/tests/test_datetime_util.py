@@ -1,6 +1,6 @@
 import unittest
 import datetime
-import datetime_util
+import configman.datetime_util as datetime_util
 
 
 class TestCase(unittest.TestCase):

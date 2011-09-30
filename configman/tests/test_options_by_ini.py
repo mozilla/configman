@@ -9,8 +9,8 @@ from cStringIO import StringIO
 import json
 import functools
 
-import config_manager
-from dotdict import DotDict
+import configman.config_manager as config_manager
+from configman.dotdict import DotDict
 
 import unittest
 class TestCase(unittest.TestCase):

@@ -2,7 +2,7 @@ import unittest
 import os
 import tempfile
 
-import config_manager
+import configman.config_manager as config_manager
 
 
 class TestCase(unittest.TestCase):

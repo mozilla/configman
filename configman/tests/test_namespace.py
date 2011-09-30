@@ -2,8 +2,8 @@ import unittest
 import datetime
 import functools
 
-import config_manager
-import datetime_util as dtu
+import configman.config_manager as config_manager
+import configman.datetime_util as dtu
 
 
 class TestCase(unittest.TestCase):
