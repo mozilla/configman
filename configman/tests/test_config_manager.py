@@ -10,7 +10,7 @@ import json
 import config_manager
 from dotdict import DotDict
 import datetime_util as dtu
-from exceptions import NotAnOptionError
+from config_exceptions import NotAnOptionError
 
 
 class TestCase(unittest.TestCase):
@@ -147,7 +147,7 @@ class TestCase(unittest.TestCase):
         )
         expected = """# name: aaa
 # doc: the a
-# converter: configman.datetime_util.datetime_from_ISO_string
+# converter: datetime_util.datetime_from_ISO_string
 aaa=2011-05-04T15:10:00
 
 #-------------------------------------------------------------------------------
@@ -267,7 +267,7 @@ x.size=100
         expected = """[top_level]
 # name: aaa
 # doc: the a
-# converter: configman.datetime_util.datetime_from_ISO_string
+# converter: datetime_util.datetime_from_ISO_string
 aaa=2011-05-04T15:10:00
 
 [c]
@@ -316,7 +316,12 @@ size=100
         self.assertEqual(expected.strip(), received.strip())
 
     def test_write_json(self):
-        n = self._some_namespaces()
+        n = config_manager.Namespace(doc='top')
+        n.aaa = config_manager.Option('aaa', 'the a', '2011-05-04T15:10:00',
+          short_form='a',
+          from_string_converter=dtu.datetime_from_ISO_string
+        )
+
         c = config_manager.ConfigurationManager([n],
                                     manager_controls=False,
                                     use_config_files=False,
@@ -335,7 +340,7 @@ size=100
           "doc": "the a",
           "value": "2011-05-04T15:10:00",
           "from_string_converter":
-              "configman.datetime_util.datetime_from_ISO_string",
+              "datetime_util.datetime_from_ISO_string",
           "name": "aaa"
         }
         self.assertEqual(jrec['aaa'], expect_to_find)
@@ -352,6 +357,49 @@ size=100
         s.close()
         jrec2 = json.loads(received2)
         self.assertEqual(jrec2['aaa'], expect_to_find)
+
+    def test_write_json_2(self):
+        n = config_manager.Namespace(doc='top')
+        n.c = config_manager.Namespace(doc='c space')
+        n.c.fred = config_manager.Option('fred', 'husband from Flintstones',
+                                         default=u'stupid')
+
+        c = config_manager.ConfigurationManager([n],
+                                    manager_controls=False,
+                                    use_config_files=False,
+                                    auto_help=False,
+                                    argv_source=[])
+
+        s = StringIO()
+        c.write_json(output_stream=s)
+        received = s.getvalue()
+        s.close()
+        jrec = json.loads(received)
+
+        expect_to_find = {
+          'fred': {
+            'short_form': None,
+            'default': u'stupid',
+            'doc': u'husband from Flintstones',
+            'value': u'stupid',
+            'from_string_converter': 'unicode',
+            'name': u'fred'
+            }
+        }
+        self.assertEqual(jrec['c'], expect_to_find)
+
+        # let's make sure that we can do a complete round trip
+        c2 = config_manager.ConfigurationManager([jrec],
+                                    manager_controls=False,
+                                    use_config_files=False,
+                                    auto_help=False,
+                                    argv_source=[])
+        s = StringIO()
+        c2.write_json(output_stream=s)
+        received2 = s.getvalue()
+        s.close()
+        jrec2 = json.loads(received2)
+        self.assertEqual(jrec2['c'], expect_to_find)
 
     def test_overlay_config_1(self):
         n = config_manager.Namespace()

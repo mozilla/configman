@@ -1,7 +1,7 @@
 import unittest
 
 import config_manager
-from exceptions import NotAnOptionError
+from config_exceptions import NotAnOptionError
 
 
 class TestCase(unittest.TestCase):

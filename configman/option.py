@@ -1,5 +1,5 @@
 import converters as conv
-from exceptions import CannotConvertError
+from config_exceptions import CannotConvertError
 
 
 class Option(object):

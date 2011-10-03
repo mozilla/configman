@@ -5,7 +5,7 @@ import datetime
 import config_manager
 import converters as conv
 import datetime_util as dtu
-from exceptions import CannotConvertError
+from config_exceptions import CannotConvertError
 
 
 class TestCase(unittest.TestCase):
