@@ -4,7 +4,7 @@ import getopt
 from dotdict import DotDict
 from option import Option
 from namespace import Namespace
-from exceptions import NotAnOptionError
+from config_exceptions import NotAnOptionError
 import converters as conv
 
 

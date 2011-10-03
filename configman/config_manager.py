@@ -9,7 +9,7 @@ import inspect
 import os.path
 
 import converters as conv
-import exceptions as exc
+import config_exceptions as exc
 
 #==============================================================================
 # for convenience define some external symbols here
