@@ -50,3 +50,45 @@ class TestCase(unittest.TestCase):
         self.assertRaises(ValueError, function, '2011-05-04T15:10:00')
         self.assertRaises(ValueError, function, '211-05-04')
         self.assertRaises(ValueError, function, '2011-05-32')
+
+    def test_hours_str_to_timedelta(self):
+        function = datetime_util.hours_str_to_timedelta
+        self.assertEqual(function(1), datetime.timedelta(hours=1))
+
+    def test_date_to_ISO_string(self):
+        function = datetime_util.date_to_ISO_string
+        d = datetime.datetime.now()
+        self.assertEqual(function(d),
+                         d.strftime('%Y-%m-%d'))
+
+        d = datetime.date.today()
+        self.assertEqual(function(d),
+                         d.strftime('%Y-%m-%d'))
+
+    def test_timedelta_to_seconds(self):
+        function = datetime_util.timedelta_to_seconds
+        self.assertEqual(function(datetime.timedelta(hours=1)), 3600)
+        self.assertEqual(function(datetime.timedelta(hours=2)), 2 * 3600)
+        self.assertEqual(function(datetime.timedelta(minutes=1)), 60)
+        self.assertEqual(function(datetime.timedelta(seconds=1)), 1)
+
+    def test_str_to_timedelta(self):
+        function = datetime_util.str_to_timedelta
+        self.assertEqual(function('1:1:1:01'),
+                         datetime.timedelta(days=1,
+                                            hours=1,
+                                            minutes=1,
+                                            seconds=1))
+
+        self.assertEqual(function('1:1:1'),
+                         datetime.timedelta(hours=1,
+                                            minutes=1,
+                                            seconds=1))
+
+        self.assertEqual(function('1:1'),
+                         datetime.timedelta(minutes=1,
+                                            seconds=1))
+
+        self.assertEqual(function('1'),
+                         datetime.timedelta(seconds=1))
+        self.assertRaises(ValueError, function, 'not a number')
