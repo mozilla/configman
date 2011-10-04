@@ -14,6 +14,7 @@ Running tests
 We use [nose](http://code.google.com/p/python-nose/) to run all the
 unit tests. To run the whole suite just run: 
 
+    cd configman
     nosetests
     
 If you want to run a specific test in a testcase class you might
