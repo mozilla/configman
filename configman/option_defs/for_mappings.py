@@ -4,6 +4,7 @@ from .. import converters
 from .. import namespace
 from .. import option
 
+
 #------------------------------------------------------------------------------
 def setup_definitions(source, destination):
     for key, val in source.items():

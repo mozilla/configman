@@ -5,10 +5,12 @@ import configman.config_manager as config_manager
 import configman.dotdict as dd
 import configman.option_defs as optdef
 
+
 class TestCase(unittest.TestCase):
 
     def test_setup_definitions_1(self):
         d = dd.DotDict()
+
         def fake_mapping_func(source, destination):
             self.assertTrue(isinstance(source, collections.Mapping))
             self.assertEqual(d, destination)
@@ -24,9 +26,9 @@ class TestCase(unittest.TestCase):
         finally:
             optdef.definition_dispatch = saved_original
 
-
     def test_setup_definitions_2(self):
         d = dd.DotDict()
+
         def fake_mapping_func(source, destination):
             self.assertTrue(source is collections)
             self.assertEqual(d, destination)
@@ -38,9 +40,9 @@ class TestCase(unittest.TestCase):
         finally:
             optdef.definition_dispatch = saved_original
 
-
     def test_setup_definitions_3(self):
         d = dd.DotDict()
+
         def fake_mapping_func(source, destination):
             self.assertTrue(isinstance(source, str))
             self.assertEqual(d, destination)

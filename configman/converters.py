@@ -6,6 +6,7 @@ import inspect
 
 import datetime_util as dtu
 
+
 #------------------------------------------------------------------------------
 def str_dict_keys(a_dict):
     """return a modified dict where all the keys that are anything but str get

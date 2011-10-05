@@ -10,21 +10,24 @@ import for_modules
 import for_json
 #import for_class
 
-definition_dispatch = { collections.Mapping: for_mappings.setup_definitions,
-                        type(for_modules): for_modules.setup_definitions,
-                        #list: for_list.setup_definitions,
-                        str: for_json.setup_definitions,
-                        #type: for_class.setup_definitions,
-                      }
+definition_dispatch = {
+  collections.Mapping: for_mappings.setup_definitions,
+  type(for_modules): for_modules.setup_definitions,
+  #list: for_list.setup_definitions,
+  str: for_json.setup_definitions,
+  #type: for_class.setup_definitions,
+}
+
 
 class UnknownDefinitionTypeException(Exception):
     pass
+
 
 def setup_definitions(source, destination):
     target_setup_func = None
     try:
         target_setup_func = definition_dispatch[type(source)]
-    except KeyError, x:
+    except KeyError:
         for a_key in definition_dispatch.keys():
             if isinstance(source, a_key):
                 target_setup_func = definition_dispatch[a_key]

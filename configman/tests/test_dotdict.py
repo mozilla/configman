@@ -1,5 +1,4 @@
 import unittest
-import datetime
 from configman.dotdict import DotDict
 
 
@@ -42,7 +41,6 @@ class TestCase(unittest.TestCase):
             raise AssertionError("should have raised KeyError")
         except KeyError:
             pass
-
 
         try:
             getattr(dd, 'name')

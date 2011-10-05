@@ -1,18 +1,11 @@
-import re
 import os
-import datetime
 import tempfile
-from contextlib import contextmanager
-import ConfigParser
-import io
-from cStringIO import StringIO
-import json
-import functools
 
 import configman.config_manager as config_manager
-from configman.dotdict import DotDict
 
 import unittest
+
+
 class TestCase(unittest.TestCase):
 
     def test_OptionsByIniFile_basics(self):

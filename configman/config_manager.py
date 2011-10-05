@@ -449,8 +449,8 @@ class ConfigurationManager(object):
                     print >> output_stream, '# converter:', \
                         conv.classes_and_functions_to_str(
                                                      val.from_string_converter)
-                #if block_password and 'password' in val.name.lower():
-                if block_password and re.findall(r'\bpassword', val.name, re.I):
+                if block_password and re.findall(r'\bpassword',
+                                                 val.name, re.I):
                     print >> output_stream, '%s=********\n' % qkey
                 else:
                     val_str = self.option_value_str(val)
