@@ -10,7 +10,7 @@ class TestCase(unittest.TestCase):
     def test_setup_definitions_1(self):
         d = dd.DotDict()
         def fake_mapping_func(source, destination):
-            self.assertIsInstance(source, collections.Mapping)
+            self.assertTrue(isinstance(source, collections.Mapping))
             self.assertEqual(d, destination)
         saved_original = optdef.definition_dispatch.copy()
         try:
@@ -28,7 +28,7 @@ class TestCase(unittest.TestCase):
     def test_setup_definitions_2(self):
         d = dd.DotDict()
         def fake_mapping_func(source, destination):
-            self.assertIs(source, collections)
+            self.assertTrue(source is collections)
             self.assertEqual(d, destination)
         saved_original = optdef.definition_dispatch.copy()
         try:
@@ -42,7 +42,7 @@ class TestCase(unittest.TestCase):
     def test_setup_definitions_3(self):
         d = dd.DotDict()
         def fake_mapping_func(source, destination):
-            self.assertIsInstance(source, str)
+            self.assertTrue(isinstance(source, str))
             self.assertEqual(d, destination)
         saved_original = optdef.definition_dispatch.copy()
         try:
@@ -51,6 +51,3 @@ class TestCase(unittest.TestCase):
             optdef.setup_definitions(s, d)
         finally:
             optdef.definition_dispatch = saved_original
-
-
-
