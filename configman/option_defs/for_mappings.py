@@ -1,7 +1,8 @@
 import collections
 
-import configman.namespace as nmsp
-import configman.option as opt
+from .. import converters
+from .. import namespace
+from .. import option
 
 #------------------------------------------------------------------------------
 def setup_definitions(source, destination):
@@ -9,7 +10,7 @@ def setup_definitions(source, destination):
         if key.startswith('__'):
             continue  # ignore these
         val_type = type(val)
-        if val_type == opt.Option:
+        if val_type == option.Option:
             destination[key] = val
             if not val.name:
                 val.name = key
@@ -17,18 +18,17 @@ def setup_definitions(source, destination):
         elif isinstance(val, collections.Mapping):
             if 'name' in val and 'default' in val:
                 # this is an Option in the form of a dict, not a Namespace
-                destination[key] = d = opt.Option(**val)
+                params = converters.str_dict_keys(val)
+                destination[key] = d = option.Option(**params)
             else:
                 # this is a Namespace
                 try:
-                    destination[key] = d = nmsp.Namespace(doc=val._doc)
+                    destination[key] = d = namespace.Namespace(doc=val._doc)
                 except AttributeError:
-                    destination[key] = d = nmsp.Namespace()
+                    destination[key] = d = namespace.Namespace()
                 # recurse!
                 setup_definitions(val, d)
         elif val_type in [int, float, str, unicode]:
-            destination[key] = opt.Option(name=key,
+            destination[key] = option.Option(name=key,
                                       doc=key,
                                       default=val)
-        else:
-            pass

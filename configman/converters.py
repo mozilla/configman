@@ -6,6 +6,42 @@ import inspect
 
 import datetime_util as dtu
 
+#------------------------------------------------------------------------------
+def str_dict_keys(a_dict):
+    """return a modified dict where all the keys that are anything but str get
+    converted to str.
+    E.g.
+
+      >>> str_dict_keys({u'name': u'Peter', u'age': 99, 1:2})
+      {'name': u'Peter, 'age': 99, 1: 2}
+
+    The reason for this is that in Python <= 2.6.4 doing
+    ``MyClass(**{u'name': u'Peter'})`` would raise a TypeError
+
+    Note that only unicode types are converted to str types.
+    The reason for that is you might have a class that looks like this::
+
+        class Option(object):
+            def __init__(self, foo=None, bar=None, **kwargs):
+                ...
+
+    And it's being used like this::
+
+        Option(**{u'foo':1, u'bar':2, 3:4})
+
+    Then you don't want to change that {3:4} part which becomes part of
+    `**kwargs` inside the __init__ method.
+    Using integers as parameter keys is a silly example but the point is that
+    due to the python 2.6.4 bug only unicode keys are converted to str.
+    """
+    new_dict = {}
+    for key in a_dict:
+        if isinstance(key, unicode):
+            new_dict[str(key)] = a_dict[key]
+        else:
+            new_dict[key] = a_dict[key]
+    return new_dict
+
 
 #------------------------------------------------------------------------------
 def io_converter(input_str):
