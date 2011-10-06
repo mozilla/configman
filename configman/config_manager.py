@@ -18,9 +18,9 @@ import def_sources
 from option import Option
 from dotdict import DotDict
 from namespace import Namespace
-from options_by_getopt import OptionsByGetopt
-from options_by_conf import OptionsByConfFile
-from options_by_configparser import OptionsByIniFile
+from value_sources.for_getopt import GetoptValueSource
+from value_sources.for_conf import ConfValueSource
+from value_sources.for_ini import IniValueSource
 
 
 #==============================================================================
@@ -74,7 +74,7 @@ class ConfigurationManager(object):
             self.values_source_list = values_source_list
         else:
             self.custom_values_source = False
-            command_line_options = OptionsByGetopt(argv_source=argv_source)
+            command_line_options = GetoptValueSource(argv_source=argv_source)
             self.values_source_list = [os.environ,
                                        command_line_options,
                                       ]
@@ -140,10 +140,10 @@ class ConfigurationManager(object):
             return
         path = self.get_option_by_name('config_path').value
         file_name = os.path.join(path, '%s.ini' % application_name)
-        self.ini_source = OptionsByIniFile(file_name)
+        self.ini_source = IniValueSource(file_name)
         # try conf file
         file_name = os.path.join(path, '%s.conf' % application_name)
-        self.conf_source = OptionsByConfFile(file_name)
+        self.conf_source = ConfValueSource(file_name)
         # try json file
         file_name = os.path.join(path, '%s.json' % application_name)
         try:

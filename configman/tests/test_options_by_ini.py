@@ -21,7 +21,7 @@ foo=bar  ; other comment
         """)
 
         try:
-            o = config_manager.OptionsByIniFile(tmp_filename)
+            o = config_manager.IniValueSource(tmp_filename)
             c = config_manager.ConfigurationManager([],
                                         manager_controls=False,
                                         use_config_files=False,

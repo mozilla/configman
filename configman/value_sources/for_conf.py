@@ -1,4 +1,4 @@
-class OptionsByConfFile(object):
+class ConfValueSource(object):
 
     def __init__(self, filename, opener=open):
         self.values = {}

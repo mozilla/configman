@@ -549,7 +549,7 @@ size=100
         n.a = config_manager.Option(name='a', doc='the a', default=1)
         n.b = 17
         n.c = config_manager.Option(name='c', doc='the c', default=False)
-        g = config_manager.OptionsByGetopt(argv_source=['--a', '2', '--c'])
+        g = config_manager.GetoptValueSource(argv_source=['--a', '2', '--c'])
         c = config_manager.ConfigurationManager([n], [g],
                                     manager_controls=False,
                                     use_config_files=False,
@@ -574,7 +574,7 @@ size=100
         n.c.extra = config_manager.Option(name='extra',
                                           short_form='e', doc='the x',
                                           default=3.14159)
-        g = config_manager.OptionsByGetopt(
+        g = config_manager.GetoptValueSource(
           argv_source=['--a', '2', '--c.extra', '11.0']
         )
         c = config_manager.ConfigurationManager([n], [g],
@@ -604,7 +604,7 @@ size=100
           doc='the x',
           default=3.14159
         )
-        g = config_manager.OptionsByGetopt(
+        g = config_manager.GetoptValueSource(
           argv_source=['--a', '2', '-e', '11.0']
         )
         c = config_manager.ConfigurationManager([n], [g],
@@ -642,7 +642,7 @@ size=100
                    'c.extra = 2.0\n',
                    'c.string =   wilma\n'
                   ]
-        g = config_manager.OptionsByConfFile('dummy-filename', dummy_open)
+        g = config_manager.ConfValueSource('dummy-filename', dummy_open)
         c = config_manager.ConfigurationManager([n], [g],
                                     manager_controls=False,
                                     use_config_files=False,
@@ -690,7 +690,7 @@ string =   wilma
 """
         config = ConfigParser.RawConfigParser()
         config.readfp(io.BytesIO(ini_data))
-        g = config_manager.OptionsByIniFile(config)
+        g = config_manager.IniValueSource(config)
         c = config_manager.ConfigurationManager([n], [g],
                                     manager_controls=False,
                                     use_config_files=False,
@@ -737,7 +737,7 @@ string =   from ini
 """
         config = ConfigParser.RawConfigParser()
         config.readfp(io.BytesIO(ini_data))
-        g = config_manager.OptionsByIniFile(config)
+        g = config_manager.IniValueSource(config)
         e = DotDict()
         e.fred = DotDict()  # should be ignored
         e.fred.t = 'T'  # should be ignored
@@ -746,7 +746,7 @@ string =   from ini
         e.c = DotDict()
         e.c.extra = 18.6
         e.c.string = 'from environment'
-        v = config_manager.OptionsByGetopt(
+        v = config_manager.GetoptValueSource(
           argv_source=['--other.t', 'TTT', '--c.extra', '11.0']
         )
         c = config_manager.ConfigurationManager([n], [e, g, v],
@@ -794,7 +794,7 @@ string =   from ini
 """
         config = ConfigParser.RawConfigParser()
         config.readfp(io.BytesIO(ini_data))
-        g = config_manager.OptionsByIniFile(config)
+        g = config_manager.IniValueSource(config)
         e = DotDict()
         e.top_level = DotDict()
         e.top_level.t = 'T'
@@ -803,7 +803,7 @@ string =   from ini
         e.c = DotDict()
         e.c.extra = 18.6
         e.c.string = 'from environment'
-        v = config_manager.OptionsByGetopt(
+        v = config_manager.GetoptValueSource(
           argv_source=['--c.extra', '11.0']
         )
         c = config_manager.ConfigurationManager([n], [e, g, v],
@@ -968,7 +968,7 @@ foo=bar  ; other comment
         """)
 
         try:
-            o = config_manager.OptionsByIniFile(tmp_filename)
+            o = config_manager.IniValueSource(tmp_filename)
             c = config_manager.ConfigurationManager([],
                                         manager_controls=False,
                                         use_config_files=False,

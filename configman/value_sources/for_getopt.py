@@ -1,14 +1,14 @@
 import sys
 import getopt
 
-from dotdict import DotDict
-from option import Option
-from namespace import Namespace
-from config_exceptions import NotAnOptionError
-import converters as conv
+from ..dotdict import DotDict
+from ..option import Option
+from ..namespace import Namespace
+from ..config_exceptions import NotAnOptionError
+from .. import converters as conv
 
 
-class OptionsByGetopt(object):
+class GetoptValueSource(object):
 
     def __init__(self, argv_source=None):
         if argv_source is None:
@@ -21,7 +21,7 @@ class OptionsByGetopt(object):
                              config_manager.option_definitions)
         try:
             if ignore_mismatches:
-                fn = OptionsByGetopt.getopt_with_ignore
+                fn = GetoptValueSource.getopt_with_ignore
             else:
                 fn = getopt.gnu_getopt
             getopt_options, self.args = fn(self.argv_source,

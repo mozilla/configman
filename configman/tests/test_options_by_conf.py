@@ -14,7 +14,7 @@ class TestCase(unittest.TestCase):
             f.write('limit=20\n')
             f.write('\n')
         try:
-            o = config_manager.OptionsByConfFile(tmp_filename)
+            o = config_manager.ConfValueSource(tmp_filename)
             assert o.values == {'limit': '20'}, o.values
             c = config_manager.ConfigurationManager([],
                                         manager_controls=False,

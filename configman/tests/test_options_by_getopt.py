@@ -8,9 +8,9 @@ class TestCase(unittest.TestCase):
 
     def test_OptionsByGetOpt_basics(self):
         source = ['a', 'b', 'c']
-        o = config_manager.OptionsByGetopt(source)
+        o = config_manager.GetoptValueSource(source)
         self.assertEqual(o.argv_source, source)
-        o = config_manager.OptionsByGetopt(argv_source=source)
+        o = config_manager.GetoptValueSource(argv_source=source)
         self.assertEqual(o.argv_source, source)
 
     def test_OptionsByGetOpt_get_values(self):
@@ -22,7 +22,7 @@ class TestCase(unittest.TestCase):
         )
 
         source = ['--limit', '10']
-        o = config_manager.OptionsByGetopt(source)
+        o = config_manager.GetoptValueSource(source)
         self.assertEqual(o.get_values(c, True), {})
         self.assertRaises(NotAnOptionError,
                           o.get_values, c, False)
@@ -32,7 +32,7 @@ class TestCase(unittest.TestCase):
         self.assertEqual(o.get_values(c, True), {'limit': '10'})
 
     def test_OptionsByGetOpt_getopt_with_ignore(self):
-        function = config_manager.OptionsByGetopt.getopt_with_ignore
+        function = config_manager.GetoptValueSource.getopt_with_ignore
         args = ['a', 'b', 'c']
         o, a = function(args, '', [])
         self.assertEqual(o, [])
@@ -56,7 +56,7 @@ class TestCase(unittest.TestCase):
         n.a = config_manager.Option(name='a', doc='the a', default=1)
         n.b = 17
         n.c = config_manager.Option(name='c', doc='the c', default=False)
-        g = config_manager.OptionsByGetopt(argv_source=['--a', '2', '--c'])
+        g = config_manager.GetoptValueSource(argv_source=['--a', '2', '--c'])
         c = config_manager.ConfigurationManager([n], [g],
                                     manager_controls=False,
                                     use_config_files=False,
@@ -80,7 +80,7 @@ class TestCase(unittest.TestCase):
         n.c = config_manager.Namespace()
         n.c.extra = config_manager.Option(name='extra', short_form='e',
                                           doc='the x', default=3.14159)
-        g = config_manager.OptionsByGetopt(
+        g = config_manager.GetoptValueSource(
           argv_source=['--a', '2', '--c.extra', '11.0']
         )
         c = config_manager.ConfigurationManager([n], [g],
@@ -110,7 +110,7 @@ class TestCase(unittest.TestCase):
           doc='the x',
           default=3.14159
         )
-        g = config_manager.OptionsByGetopt(
+        g = config_manager.GetoptValueSource(
           argv_source=['--a', '2', '-e', '11.0']
         )
         c = config_manager.ConfigurationManager([n], [g],

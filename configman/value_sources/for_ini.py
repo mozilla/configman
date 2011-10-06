@@ -1,7 +1,7 @@
 import ConfigParser
 
 
-class OptionsByIniFile(object):
+class IniValueSource(object):
 
     def __init__(self, source,
                  top_level_section_name='top_level'):
