@@ -52,7 +52,7 @@ class ConfigurationManager(object):
                  values_source_list=None,
                  argv_source=None,
                  use_config_files=True,
-                 auto_help=True,
+                 use_auto_help=True,
                  manager_controls=True,
                  quit_after_admin=True,
                  options_banned_from_help=None,
@@ -78,15 +78,15 @@ class ConfigurationManager(object):
             self.values_source_list = [os.environ,
                                        command_line_options,
                                       ]
-        self.auto_help = auto_help
-        self.help = False
+        self.use_auto_help = use_auto_help
+        self.help_done = False
         self.admin_tasks_done = False
         self.manager_controls = manager_controls
         self.manager_controls_list = ['help', '_write', 'config_path',
                                       '_application']
         self.options_banned_from_help = options_banned_from_help
 
-        if self.auto_help:
+        if self.use_auto_help:
             self.setup_auto_help()
         if self.manager_controls:
             self.setup_manager_controls()
@@ -115,9 +115,9 @@ class ConfigurationManager(object):
         # third pass to get values - complain about bad options
         self.overlay_settings(ignore_mismatches=False)
 
-        if self.auto_help and self.get_option_by_name('help').value:
+        if self.use_auto_help and self.get_option_by_name('help').value:
             self.output_summary()
-            self.help = True
+            self.help_done = True
             self.admin_tasks_done = True
 
         if self.manager_controls and self.get_option_by_name('_write').value:
