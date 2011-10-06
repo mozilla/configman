@@ -1,7 +1,7 @@
 import unittest
 
 from configman import option, dotdict, namespace
-from configman.option_defs import for_mappings
+from configman.def_sources import for_mappings
 
 
 class TestCase(unittest.TestCase):

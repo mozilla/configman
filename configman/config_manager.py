@@ -11,7 +11,7 @@ import os.path
 import converters as conv
 import config_exceptions as exc
 
-import option_defs
+import def_sources
 
 #==============================================================================
 # for convenience define some external symbols here
@@ -92,7 +92,7 @@ class ConfigurationManager(object):
             self.setup_manager_controls()
 
         for a_definition_source in self.definition_source_list:
-            option_defs.setup_definitions(a_definition_source,
+            def_sources.setup_definitions(a_definition_source,
                                           self.option_definitions)
 
         # first pass to get classes & config path - ignore bad options
