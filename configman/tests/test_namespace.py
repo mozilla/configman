@@ -27,8 +27,7 @@ class TestCase(unittest.TestCase):
 
     def test_configuration_with_namespace(self):
         namespace = config_manager.Namespace()
-        namespace.a = config_manager.Option()
-        namespace.a.name = 'a'
+        namespace.add_option('a')
         namespace.a.default = 1
         namespace.a.doc = 'the a'
         namespace.b = 17
@@ -67,16 +66,17 @@ class TestCase(unittest.TestCase):
     def test_walk_expanding_class_options(self):
         class A(config_manager.RequiredConfig):
             required_config = {
-              'a': config_manager.Option('a', 'the a', 1),
+              'a': config_manager.Option('a', 1, 'the a'),
               'b': 17,
             }
         n = config_manager.Namespace()
         n.source = config_manager.Namespace()
-        n.source.c = config_manager.Option(name='c', default=A,
-                                           doc='the A class')
+        n.source.add_option('c', A, 'the A class')
+        assert n.source.c.doc == 'the A class'
+
         n.dest = config_manager.Namespace()
-        n.dest.c = config_manager.Option(name='c', default=A,
-                                         doc='the A class')
+        n.dest.add_option('c', A, doc='the A class')
+        assert n.dest.c.doc == 'the A class'
         c = config_manager.ConfigurationManager([n],
                                     manager_controls=False,
                                     use_config_files=False,
@@ -84,13 +84,13 @@ class TestCase(unittest.TestCase):
                                     argv_source=[])
         e = config_manager.Namespace()
         e.s = config_manager.Namespace()
-        e.s.c = config_manager.Option(name='c', default=A, doc='the A class')
-        e.s.a = config_manager.Option('a', 'the a', 1)
-        e.s.b = config_manager.Option('b', default=17)
+        e.s.add_option('c', A, doc='the A class')
+        e.s.add_option('a', 1, 'the a')
+        e.s.add_option('b', default=17)
         e.d = config_manager.Namespace()
-        e.d.c = config_manager.Option(name='c', default=A, doc='the A class')
-        e.d.a = config_manager.Option('a', 'the a', 1)
-        e.d.b = config_manager.Option('b', default=17)
+        e.d.add_option('c', A, doc='the A class')
+        e.d.add_option('a', 1, 'the a')
+        e.d.add_option('b', default=17)
 
         def namespace_test(val):
             self.assertEqual(type(val), config_manager.Namespace)
@@ -99,6 +99,7 @@ class TestCase(unittest.TestCase):
             self.assertEqual(val.name, expected.name)
             self.assertEqual(val.default, expected.default)
             self.assertEqual(val.doc, expected.doc)
+
         e = [
           ('dest', 'dest', namespace_test),
           ('dest.a', 'a', functools.partial(option_test, expected=e.d.a)),
@@ -109,6 +110,7 @@ class TestCase(unittest.TestCase):
           ('source.b', 'b', functools.partial(option_test, expected=e.s.b)),
           ('source.c', 'c', functools.partial(option_test, expected=e.s.c)),
         ]
+
         c_contents = [(qkey, key, val) for qkey, key, val in c.walk_config()]
         c_contents.sort()
         e.sort()
@@ -123,19 +125,19 @@ class TestCase(unittest.TestCase):
         n = config_manager.Namespace()
         n.namespace('sub')
         sub_n = n.sub
-        sub_n.option('name')
+        sub_n.add_option('name')
         self.assertTrue(n.sub)
         self.assertTrue(isinstance(n.sub.name, config_manager.Option))
 
     def test_editing_values_on_namespace(self):
         n = config_manager.Namespace()
         self.assertRaises(KeyError, n.set_value, 'name', 'Peter')
-        n.option('name', 'Lars')
+        n.add_option('name', 'Lars')
         n.set_value('name', 'Peter')
         self.assertTrue(n.name)
         self.assertEqual(n.name.value, 'Peter')
         n.namespace('user')
-        n.user.option('age', 100)
+        n.user.add_option('age', 100)
         n.set_value('user.age', 200)
         self.assertTrue(n.user.age)
         self.assertEqual(n.user.age.value, 200)

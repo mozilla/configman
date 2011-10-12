@@ -18,13 +18,12 @@ class Namespace(dotdict.DotDict):
         self.__setitem__(name, o)
 
     #--------------------------------------------------------------------------
-    def option(self,
-               name,
-               doc=None,
-               default=None,
-               from_string_converter=None,
-               short_form=None,):
-        an_option = Option(name=name,
+    def add_option(self, name,
+                   default=None,
+                   doc=None,
+                   from_string_converter=None,
+                   short_form=None):
+        an_option = Option(name,
                            doc=doc,
                            default=default,
                            from_string_converter=from_string_converter,
@@ -45,8 +44,7 @@ class Namespace(dotdict.DotDict):
         except KeyError:
             if strict:
                 raise
-            self[prefix] = candidate = Option()
-            candidate.name = prefix
+            self[prefix] = candidate = Option(name)
         candidate_type = type(candidate)
         if candidate_type == Namespace:
             candidate.set_value(name_parts[1], value, strict)
