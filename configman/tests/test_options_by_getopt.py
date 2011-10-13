@@ -27,7 +27,7 @@ class TestCase(unittest.TestCase):
         self.assertRaises(NotAnOptionError,
                           o.get_values, c, False)
 
-        c.option_definitions.option('limit', default=0)
+        c.option_definitions.add_option('limit', default=0)
         self.assertEqual(o.get_values(c, False), {'limit': '10'})
         self.assertEqual(o.get_values(c, True), {'limit': '10'})
 
@@ -53,9 +53,9 @@ class TestCase(unittest.TestCase):
     def test_overlay_config_5(self):
         """test namespace definition w/getopt"""
         n = config_manager.Namespace()
-        n.a = config_manager.Option(name='a', doc='the a', default=1)
+        n.add_option('a', 1, doc='the a')
         n.b = 17
-        n.c = config_manager.Option(name='c', doc='the c', default=False)
+        n.add_option('c', False, doc='the c')
         g = config_manager.OptionsByGetopt(argv_source=['--a', '2', '--c'])
         c = config_manager.ConfigurationManager([n], [g],
                                     manager_controls=False,
@@ -75,11 +75,10 @@ class TestCase(unittest.TestCase):
     def test_overlay_config_6(self):
         """test namespace definition w/getopt"""
         n = config_manager.Namespace()
-        n.a = config_manager.Option(name='a', doc='the a', default=1)
+        n.add_option('a', doc='the a', default=1)
         n.b = 17
         n.c = config_manager.Namespace()
-        n.c.extra = config_manager.Option(name='extra', short_form='e',
-                                          doc='the x', default=3.14159)
+        n.c.add_option('extra', doc='the x', default=3.14159, short_form='e')
         g = config_manager.OptionsByGetopt(
           argv_source=['--a', '2', '--c.extra', '11.0']
         )
@@ -101,15 +100,10 @@ class TestCase(unittest.TestCase):
     def test_overlay_config_6a(self):
         """test namespace w/getopt w/short form"""
         n = config_manager.Namespace()
-        n.a = config_manager.Option(name='a', doc='the a', default=1)
+        n.add_option('a', 1, doc='the a')
         n.b = 17
         n.c = config_manager.Namespace()
-        n.c.extra = config_manager.Option(
-          name='extra',
-          short_form='e',
-          doc='the x',
-          default=3.14159
-        )
+        n.c.add_option('extra', 3.14159, 'the x', short_form='e')
         g = config_manager.OptionsByGetopt(
           argv_source=['--a', '2', '-e', '11.0']
         )

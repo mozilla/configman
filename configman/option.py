@@ -5,10 +5,9 @@ from config_exceptions import CannotConvertError
 class Option(object):
 
     #--------------------------------------------------------------------------
-    def __init__(self,
-                 name=None,
-                 doc=None,
+    def __init__(self, name,
                  default=None,
+                 doc=None,
                  from_string_converter=None,
                  value=None,
                  short_form=None,
@@ -28,6 +27,12 @@ class Option(object):
         if value is None:
             value = default
         self.set_value(value)
+
+    def __repr__(self):
+        if self.default is None:
+            return '<Option: %r>' % self.name
+        else:
+            return '<Option: %r, default=%r>' % (self.name, self.default)
 
     #--------------------------------------------------------------------------
     def _deduce_converter(self, default):

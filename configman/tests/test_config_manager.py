@@ -28,8 +28,8 @@ class TestCase(unittest.TestCase):
 
     def test_get_config_1(self):
         n = config_manager.Namespace()
-        n.a = config_manager.Option('a', 'the a', 1)
-        n.b = 17
+        n.add_option('a', 1, 'the a')
+        n.add_option('b', 17)
         c = config_manager.ConfigurationManager(
           [n],
           manager_controls=False,
@@ -45,12 +45,12 @@ class TestCase(unittest.TestCase):
 
     def test_get_config_2(self):
         n = config_manager.Namespace()
-        n.a = config_manager.Option(name='a', default=1, doc='the a')
+        n.add_option('a', 1, 'the a')
         n.b = 17
         n.c = c = config_manager.Namespace()
         c.x = 'fred'
         c.y = 3.14159
-        c.z = config_manager.Option('z', 'the 99', 99)
+        c.add_option('z', 99, 'the 99')
         c = config_manager.ConfigurationManager(
           [n],
           manager_controls=False,
@@ -71,20 +71,16 @@ class TestCase(unittest.TestCase):
     def test_walk_config(self):
         """step through them all"""
         n = config_manager.Namespace(doc='top')
-        n.aaa = config_manager.Option('aaa', 'the a', False, short_form='a')
+        n.add_option('aaa', False, 'the a', short_form='a')
         n.c = config_manager.Namespace(doc='c space')
-        n.c.fred = config_manager.Option('fred', 'husband from Flintstones')
-        n.c.wilma = config_manager.Option('wilma', 'wife from Flintstones')
+        n.c.add_option('fred', doc='husband from Flintstones')
+        n.c.add_option('wilma', doc='wife from Flintstones')
         n.d = config_manager.Namespace(doc='d space')
-        n.d.fred = config_manager.Option('fred',
-                                          'male neighbor from I Love Lucy')
-        n.d.ethel = config_manager.Option('ethel',
-                                          'female neighbor from I Love Lucy')
+        n.d.add_option('fred', doc='male neighbor from I Love Lucy')
+        n.d.add_option('ethel', doc='female neighbor from I Love Lucy')
         n.d.x = config_manager.Namespace(doc='x space')
-        n.d.x.size = config_manager.Option('size', 'how big in tons', 100,
-                                           short_form='s')
-        n.d.x.password = config_manager.Option('password', 'the password',
-                                               'secrets')
+        n.d.x.add_option('size', 100, 'how big in tons', short_form='s')
+        n.d.x.add_option('password', 'secrets', 'the password')
         c = config_manager.ConfigurationManager(
           [n],
           manager_controls=False,
@@ -113,27 +109,19 @@ class TestCase(unittest.TestCase):
     def _some_namespaces(self):
         """set up some namespaces"""
         n = config_manager.Namespace(doc='top')
-        n.aaa = config_manager.Option('aaa', 'the a', '2011-05-04T15:10:00',
+        n.add_option('aaa', '2011-05-04T15:10:00','the a',
           short_form='a',
           from_string_converter=dtu.datetime_from_ISO_string
         )
         n.c = config_manager.Namespace(doc='c space')
-        n.c.fred = config_manager.Option('fred', 'husband from Flintstones',
-                                         default='stupid')
-        n.c.wilma = config_manager.Option('wilma', 'wife from Flintstones',
-                                          default='waspish')
+        n.c.add_option('fred', 'stupid', 'husband from Flintstones')
+        n.c.add_option('wilma', 'waspish', 'wife from Flintstones')
         n.d = config_manager.Namespace(doc='d space')
-        n.d.fred = config_manager.Option('fred',
-                                         'male neighbor from I Love Lucy',
-                                         default='crabby')
-        n.d.ethel = config_manager.Option('ethel',
-                                          'female neighbor from I Love Lucy',
-                                          default='silly')
+        n.d.add_option('fred', 'crabby', 'male neighbor from I Love Lucy')
+        n.d.add_option('ethel', 'silly', 'female neighbor from I Love Lucy')
         n.x = config_manager.Namespace(doc='x space')
-        n.x.size = config_manager.Option('size', 'how big in tons', 100,
-                                         short_form='s')
-        n.x.password = config_manager.Option('password', 'the password',
-                                             'secrets')
+        n.x.add_option('size', 100, 'how big in tons', short_form='s')
+        n.x.add_option('password', 'secret', 'the password')
         return n
 
     def test_write_flat(self):
@@ -197,12 +185,8 @@ x.size=100
     def test_write_flat_with_passwords(self):
 
         n = config_manager.Namespace(doc='top')
-        n.password = config_manager.Option('password', 'the password',
-                                           'secrets')
-
-        n.unpassword = config_manager.Option('unpassword',
-                                            'not a password',
-                                            'notsecret')
+        n.add_option('password', 'secrets', 'the password')
+        n.add_option('unpassword', 'notsecret', 'not a password')
 
         config = config_manager.ConfigurationManager(
           [n],
@@ -230,8 +214,7 @@ x.size=100
     def test_write_flat_unrecognized_converter(self):
         from decimal import Decimal
         n = config_manager.Namespace(doc='top')
-        n.cost = config_manager.Option('cost', 'the cost',
-                                       Decimal('0.00'),
+        n.add_option('cost', Decimal('0.00'), 'the cost',
           short_form='cost',
           from_string_converter=Decimal
         )
@@ -317,7 +300,7 @@ size=100
 
     def test_write_json(self):
         n = config_manager.Namespace(doc='top')
-        n.aaa = config_manager.Option('aaa', 'the a', '2011-05-04T15:10:00',
+        n.add_option('aaa', '2011-05-04T15:10:00', 'the a',
           short_form='a',
           from_string_converter=dtu.datetime_from_ISO_string
         )
@@ -361,8 +344,7 @@ size=100
     def test_write_json_2(self):
         n = config_manager.Namespace(doc='top')
         n.c = config_manager.Namespace(doc='c space')
-        n.c.fred = config_manager.Option('fred', 'husband from Flintstones',
-                                         default=u'stupid')
+        n.c.add_option('fred', u'stupid', 'husband from Flintstones')
 
         c = config_manager.ConfigurationManager([n],
                                     manager_controls=False,
@@ -403,15 +385,14 @@ size=100
 
     def test_overlay_config_1(self):
         n = config_manager.Namespace()
-        n.a = config_manager.Option()
-        n.a.name = 'a'
+        n.add_option('a')
         n.a.default = 1
         n.a.doc = 'the a'
         n.b = 17
         n.c = c = config_manager.Namespace()
         c.x = 'fred'
         c.y = 3.14159
-        c.z = config_manager.Option()
+        c.add_option('z')
         c.z.default = 99
         c.z.doc = 'the 99'
         c = config_manager.ConfigurationManager([n],
@@ -433,15 +414,14 @@ size=100
 
     def test_overlay_config_2(self):
         n = config_manager.Namespace()
-        n.a = config_manager.Option()
-        n.a.name = 'a'
+        n.add_option('a')
         n.a.default = 1
         n.a.doc = 'the a'
         n.b = 17
         n.c = c = config_manager.Namespace()
         c.x = 'fred'
         c.y = 3.14159
-        c.z = config_manager.Option()
+        c.add_option('z')
         c.z.default = 99
         c.z.doc = 'the 99'
         c = config_manager.ConfigurationManager([n],
@@ -463,15 +443,14 @@ size=100
 
     def test_overlay_config_3(self):
         n = config_manager.Namespace()
-        n.a = config_manager.Option()
-        n.a.name = 'a'
+        n.add_option('a')
         n.a.default = 1
         n.a.doc = 'the a'
         n.b = 17
         n.c = c = config_manager.Namespace()
         c.x = 'fred'
         c.y = 3.14159
-        c.z = config_manager.Option()
+        c.add_option('z')
         c.z.default = 99
         c.z.doc = 'the 99'
         c = config_manager.ConfigurationManager([n],
@@ -493,12 +472,10 @@ size=100
     def test_overlay_config_4(self):
         """test overlay dict w/flat source dict"""
         n = config_manager.Namespace()
-        n.a = config_manager.Option(name='a', doc='the a', default=1)
+        n.add_option('a', doc='the a', default=1)
         n.b = 17
         n.c = config_manager.Namespace()
-        n.c.extra = config_manager.Option(name='extra',
-                                          doc='the x',
-                                          default=3.14159)
+        n.c.add_option('extra', doc='the x', default=3.14159)
         g = {'a': 2, 'c.extra': 2.89}
         c = config_manager.ConfigurationManager([n], [g],
                                     manager_controls=False,
@@ -520,11 +497,10 @@ size=100
     def test_overlay_config_4a(self):
         """test overlay dict w/deep source dict"""
         n = config_manager.Namespace()
-        n.a = config_manager.Option(name='a', doc='the a', default=1)
+        n.add_option('a', 1, doc='the a')
         n.b = 17
         n.c = config_manager.Namespace()
-        n.c.extra = config_manager.Option(name='extra', doc='the x',
-                                          default=3.14159)
+        n.c.add_option('extra', doc='the x', default=3.14159)
         g = {'a': 2, 'c': {'extra': 2.89}}
         c = config_manager.ConfigurationManager([n], [g],
                                     manager_controls=False,
@@ -546,9 +522,9 @@ size=100
     def test_overlay_config_5(self):
         """test namespace definition w/getopt"""
         n = config_manager.Namespace()
-        n.a = config_manager.Option(name='a', doc='the a', default=1)
+        n.add_option('a', doc='the a', default=1)
         n.b = 17
-        n.c = config_manager.Option(name='c', doc='the c', default=False)
+        n.add_option('c', doc='the c', default=False)
         g = config_manager.OptionsByGetopt(argv_source=['--a', '2', '--c'])
         c = config_manager.ConfigurationManager([n], [g],
                                     manager_controls=False,
@@ -568,12 +544,10 @@ size=100
     def test_overlay_config_6(self):
         """test namespace definition w/getopt"""
         n = config_manager.Namespace()
-        n.a = config_manager.Option(name='a', doc='the a', default=1)
+        n.add_option('a', doc='the a', default=1)
         n.b = 17
         n.c = config_manager.Namespace()
-        n.c.extra = config_manager.Option(name='extra',
-                                          short_form='e', doc='the x',
-                                          default=3.14159)
+        n.c.add_option('extra', short_form='e', doc='the x', default=3.14159)
         g = config_manager.OptionsByGetopt(
           argv_source=['--a', '2', '--c.extra', '11.0']
         )
@@ -595,15 +569,10 @@ size=100
     def test_overlay_config_6a(self):
         """test namespace w/getopt w/short form"""
         n = config_manager.Namespace()
-        n.a = config_manager.Option(name='a', doc='the a', default=1)
+        n.add_option('a', doc='the a', default=1)
         n.b = 17
         n.c = config_manager.Namespace()
-        n.c.extra = config_manager.Option(
-          name='extra',
-          short_form='e',
-          doc='the x',
-          default=3.14159
-        )
+        n.c.add_option('extra', 3.14159, 'the x', short_form='e')
         g = config_manager.OptionsByGetopt(
           argv_source=['--a', '2', '-e', '11.0']
         )
@@ -625,13 +594,11 @@ size=100
     def test_overlay_config_7(self):
         """test namespace definition flat file"""
         n = config_manager.Namespace()
-        n.a = config_manager.Option(name='a', doc='the a', default=1)
+        n.add_option('a', doc='the a', default=1)
         n.b = 17
         n.c = config_manager.Namespace()
-        n.c.extra = config_manager.Option(name='extra', doc='the x',
-                                          default=3.14159)
-        n.c.string = config_manager.Option(name='string', doc='str',
-                                           default='fred')
+        n.c.add_option('extra', 3.14159, 'the x')
+        n.c.add_option('string', 'fred', doc='str')
 
         @contextmanager
         def dummy_open(filename):
@@ -666,17 +633,13 @@ size=100
         """test namespace definition ini file"""
         n = config_manager.Namespace()
         n.other = config_manager.Namespace()
-        n.other.t = config_manager.Option('t', 'the t', 'tee')
+        n.other.add_option('t', 'tee', 'the t')
         n.d = config_manager.Namespace()
-        n.d.a = config_manager.Option(name='a', doc='the a', default=1)
+        n.d.add_option('a', 1, doc='the a')
         n.d.b = 17
         n.c = config_manager.Namespace()
-        n.c.extra = config_manager.Option(
-          name='extra', doc='the x', default=3.14159
-        )
-        n.c.string = config_manager.Option(
-          name='string', doc='str', default='fred'
-        )
+        n.c.add_option('extra', 3.14159, 'the x')
+        n.c.add_option('string', 'fred', doc='str')
         ini_data = """
 [other]
 t=tea
@@ -716,15 +679,13 @@ string =   wilma
         """test namespace definition ini file"""
         n = config_manager.Namespace()
         n.other = config_manager.Namespace()
-        n.other.t = config_manager.Option('t', 'the t', 'tee')
+        n.other.add_option('t', 'tee', 'the t')
         n.d = config_manager.Namespace()
-        n.d.a = config_manager.Option(name='a', doc='the a', default=1)
+        n.d.add_option('a', 1, doc='the a')
         n.d.b = 17
         n.c = config_manager.Namespace()
-        n.c.extra = config_manager.Option(name='extra', doc='the x',
-                                          default=3.14159)
-        n.c.string = config_manager.Option(name='string', doc='str',
-                                           default='fred')
+        n.c.add_option('extra', 3.14159, 'the x')
+        n.c.add_option('string', 'fred', 'str')
         ini_data = """
 [other]
 t=tea
@@ -773,15 +734,13 @@ string =   from ini
     def test_overlay_config_10(self):
         """test namespace definition ini file"""
         n = config_manager.Namespace()
-        n.t = config_manager.Option('t', 'the t', 'tee')
+        n.add_option('t', 'tee', 'the t')
         n.d = config_manager.Namespace()
-        n.d.a = config_manager.Option(name='a', doc='the a', default=1)
+        n.d.add_option('a', 1, 'the a')
         n.d.b = 17
         n.c = config_manager.Namespace()
-        n.c.extra = config_manager.Option(name='extra', doc='the x',
-                                          default=3.14159)
-        n.c.string = config_manager.Option(name='string', doc='str',
-                                           default='fred')
+        n.c.add_option('extra', 3.14159, 'the x')
+        n.c.add_option('string', 'fred', doc='str')
         ini_data = """
 [top_level]
 t=tea
@@ -829,16 +788,16 @@ string =   from ini
 
     def test_get_option_names(self):
         n = config_manager.Namespace()
-        n.a = config_manager.Option('a', 'the a', 1)
+        n.add_option('a', 1, 'the a')
         n.b = 17
         n.c = config_manager.Namespace()
-        n.c.fred = config_manager.Option('fred')
-        n.c.wilma = config_manager.Option('wilma')
+        n.c.add_option('fred')
+        n.c.add_option('wilma')
         n.d = config_manager.Namespace()
-        n.d.fred = config_manager.Option('fred')
-        n.d.wilma = config_manager.Option('wilma')
+        n.d.add_option('fred')
+        n.d.add_option('wilma')
         n.d.x = config_manager.Namespace()
-        n.d.x.size = config_manager.Option('size')
+        n.d.x.add_option('size')
         c = config_manager.ConfigurationManager([n],
                                     manager_controls=False,
                                     use_config_files=False,
@@ -852,16 +811,16 @@ string =   from ini
 
     def test_get_option_by_name(self):
         n = config_manager.Namespace()
-        n.a = config_manager.Option('a', 'the a', 1)
+        n.add_option('a', 1, 'the a')
         n.b = 17
         n.c = config_manager.Namespace()
-        n.c.fred = config_manager.Option('fred')
-        n.c.wilma = config_manager.Option('wilma')
+        n.c.add_option('fred')
+        n.c.add_option('wilma')
         n.d = config_manager.Namespace()
-        n.d.fred = config_manager.Option('fred')
-        n.d.wilma = config_manager.Option('wilma')
+        n.d.add_option('fred')
+        n.d.add_option('wilma')
         n.d.x = config_manager.Namespace()
-        n.d.x.size = config_manager.Option('size')
+        n.d.x.add_option('size')
         c = config_manager.ConfigurationManager([n],
                                     manager_controls=False,
                                     use_config_files=False,
@@ -879,18 +838,15 @@ string =   from ini
     def test_output_summary(self):
         """test_output_summary: the output from help"""
         n = config_manager.Namespace()
-        n.aaa = config_manager.Option('aaa', 'the a', False, short_form='a')
+        n.add_option('aaa', False, 'the a', short_form='a')
         n.b = 17
         n.c = config_manager.Namespace()
-        n.c.fred = config_manager.Option('fred', 'husband from Flintstones')
+        n.c.add_option('fred', doc='husband from Flintstones')
         n.d = config_manager.Namespace()
-        n.d.fred = config_manager.Option('fred',
-                                         'male neighbor from I Love Lucy')
+        n.d.add_option('fred', doc='male neighbor from I Love Lucy')
         n.d.x = config_manager.Namespace()
-        n.d.x.size = config_manager.Option('size', 'how big in tons',
-                                           100, short_form='s')
-        n.d.x.password = config_manager.Option('password',
-                                               'the password', 'secrets')
+        n.d.x.add_option('size', 100, 'how big in tons', short_form='s')
+        n.d.x.add_option('password', 'secrets', 'the password')
         c = config_manager.ConfigurationManager([n],
                                     manager_controls=False,
                                     use_config_files=False,
@@ -920,14 +876,14 @@ string =   from ini
     def test_config_manager_output_summary(self):
         """Test that ConfigurationManager().output_summary() works"""
         n = config_manager.Namespace()
-        n.aaa = config_manager.Option('aaa', 'the a', False, short_form='a')
+        n.add_option('aaa', False, 'the a', short_form='a')
         n.b = 17
         n.c = config_manager.Namespace()
-        n.c.fred = config_manager.Option('rules', 'the doc',
-                             default="[ ('version', 'fred', 100), "
+        n.c.add_option('fred', doc='the doc',
+                              default="[ ('version', 'fred', 100), "
                                      "('product', 'sally', 100)]",
                              from_string_converter=eval)
-        n.c.wilma = config_manager.Option('wilma', 'wife from Flintstones')
+        n.c.add_option('wilma', doc='wife from Flintstones')
         c = config_manager.ConfigurationManager([n],
                                     manager_controls=False,
                                     use_config_files=False,
@@ -951,7 +907,7 @@ string =   from ini
     def test_eval_as_converter(self):
         """does eval work as a to string converter on an Option object?"""
         n = config_manager.Namespace()
-        n.option('aaa', doc='the a', default='', short_form='a')
+        n.add_option('aaa', doc='the a', default='', short_form='a')
         self.assertEqual(n.aaa.value, '')
 
     def test_OptionsByIniFile_basics(self):
@@ -990,7 +946,7 @@ foo=bar  ; other comment
             #self.assertRaises(config_manager.NotAnOptionError,
             #                  o.get_values, c, False)
 
-            #c.option_definitions.option('limit', default=0)
+            #c.option_definitions.add_option('limit', default=0)
             #self.assertEqual(o.get_values(c, False), {'limit': '20'})
             #self.assertEqual(o.get_values(c, True), {'limit': '20'})
         finally:
