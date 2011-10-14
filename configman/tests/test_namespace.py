@@ -161,4 +161,4 @@ class TestCase(unittest.TestCase):
 
         n4 = config_manager.Namespace()
         n4.add_option('name', 'Peter')
-        self.assertNotEqual(n4, n3)
+        self.assertEqual(n4, n3)
