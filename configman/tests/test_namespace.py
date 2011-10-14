@@ -145,3 +145,20 @@ class TestCase(unittest.TestCase):
         # let's not be strict once
         n.set_value('user.gender', u'male', strict=False)
         self.assertEqual(n.user.gender.value, u'male')
+
+    def test_comparing_namespace_instances(self):
+        n = config_manager.Namespace()
+        n2 = config_manager.Namespace()
+        self.assertEqual(n, n2)
+
+        n3 = config_manager.Namespace()
+        n3.add_option('name', 'Peter')
+        self.assertNotEqual(n, n3)
+
+        n2.add_option('name', 'Peter', 'Name of a person')
+        self.assertNotEqual(n, n2)
+        self.assertNotEqual(n2, n3)
+
+        n4 = config_manager.Namespace()
+        n4.add_option('name', 'Peter')
+        self.assertNotEqual(n4, n3)
