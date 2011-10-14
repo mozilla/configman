@@ -67,6 +67,7 @@ class ConfigurationManager(object):
         if options_banned_from_help is None:
             options_banned_from_help = ['_application']
 
+
         self.option_definitions = Namespace()
         self.definition_source_list = definition_source_list
         if values_source_list:
@@ -78,17 +79,15 @@ class ConfigurationManager(object):
             self.values_source_list = [os.environ,
                                        command_line_options,
                                       ]
-        self.auto_help = auto_help
         self.help = False
-        self.admin_tasks_done = False
-        self.manager_controls = manager_controls
+        admin_tasks_done = False
         self.manager_controls_list = ['help', '_write', 'config_path',
                                       '_application']
         self.options_banned_from_help = options_banned_from_help
 
-        if self.auto_help:
+        if auto_help:
             self.setup_auto_help()
-        if self.manager_controls:
+        if manager_controls:
             self.setup_manager_controls()
 
         for a_definition_source in self.definition_source_list:
@@ -115,16 +114,16 @@ class ConfigurationManager(object):
         # third pass to get values - complain about bad options
         self.overlay_settings(ignore_mismatches=False)
 
-        if self.auto_help and self.get_option_by_name('help').value:
+        if auto_help and self.get_option_by_name('help').value:
             self.output_summary()
             self.help = True
-            self.admin_tasks_done = True
+            admin_tasks_done = True
 
-        if self.manager_controls and self.get_option_by_name('_write').value:
+        if manager_controls and self.get_option_by_name('_write').value:
             self.write_config()
-            self.admin_tasks_done = True
+            admin_tasks_done = True
 
-        if quit_after_admin and self.admin_tasks_done:
+        if quit_after_admin and admin_tasks_done:
             exit()
 
     #--------------------------------------------------------------------------

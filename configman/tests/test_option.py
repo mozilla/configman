@@ -66,7 +66,7 @@ class TestCase(unittest.TestCase):
         }
         o = Option(**data)
         self.assertEqual(o.name, 'lucy')
-        self.assertEqual(o.default, '1')
+        self.assertEqual(o.default, 1)  # converted using `int`
         self.assertEqual(o.doc, "lucy's integer")
         self.assertEqual(o.from_string_converter, int)
         self.assertEqual(o.value, 1)
@@ -80,7 +80,7 @@ class TestCase(unittest.TestCase):
         }
         o = Option(**data)
         self.assertEqual(o.name, 'lucy')
-        self.assertEqual(o.default, '1')
+        self.assertEqual(o.default, 1)
         self.assertEqual(o.doc, "lucy's integer")
         self.assertEqual(o.from_string_converter, int)
         self.assertEqual(o.value, 1)
@@ -93,7 +93,7 @@ class TestCase(unittest.TestCase):
         }
         o = Option('now', **data)
         self.assertEqual(o.name, 'now')
-        self.assertEqual(o.default, '1')
+        self.assertEqual(o.default, 1)
         self.assertEqual(o.doc, "lucy's integer")
         self.assertEqual(o.from_string_converter, int)
         self.assertEqual(o.value, 1)
@@ -106,6 +106,47 @@ class TestCase(unittest.TestCase):
         self.assertEqual(o.from_string_converter,
                          dtu.datetime_from_ISO_string)
         self.assertEqual(o.value, d)
+
+        data = {
+          'default': '1.0',
+          'doc': "lucy's height",
+          'from_string_converter': float,
+          'other': ''
+        }
+        o = Option('now', **data)
+        self.assertEqual(o.name, 'now')
+        self.assertEqual(o.default, 1.0)
+        self.assertEqual(o.doc, "lucy's height")
+        self.assertEqual(o.from_string_converter, float)
+        self.assertEqual(o.value, 1.0)
+
+    def test_option_constructor_more_complex_default_converters(self):
+        data = {
+          'default': '2011-12-31',
+          'doc': "lucy's bday",
+          'from_string_converter': dtu.date_from_ISO_string,
+          'other': ''
+        }
+        o = Option('now', **data)
+        self.assertEqual(o.name, 'now')
+        self.assertEqual(o.default, datetime.date(2011, 12, 31))
+        self.assertEqual(o.doc, "lucy's bday")
+        self.assertEqual(o.from_string_converter, dtu.date_from_ISO_string)
+        self.assertEqual(o.value, datetime.date(2011, 12, 31))
+
+        data = {
+          'default': '2011-12-31',
+          'doc': "lucy's bday",
+          'from_string_converter': \
+            'configman.datetime_util.date_from_ISO_string',
+          'other': ''
+        }
+        o = Option('now', **data)
+        self.assertEqual(o.name, 'now')
+        self.assertEqual(o.default, datetime.date(2011, 12, 31))
+        self.assertEqual(o.doc, "lucy's bday")
+        self.assertEqual(o.from_string_converter, dtu.date_from_ISO_string)
+        self.assertEqual(o.value, datetime.date(2011, 12, 31))
 
     def test_setting_known_from_string_converter_onOption(self):
         opt = Option('name', default=u'Peter')
