@@ -5,27 +5,28 @@ import datetime
 import configman.config_manager as config_manager
 import configman.converters as conv
 import configman.datetime_util as dtu
+from configman.option import Option
 from configman.config_exceptions import CannotConvertError
 
 
 class TestCase(unittest.TestCase):
 
     def test_option_constructor_basics(self):
-        o = config_manager.Option()
-        self.assertEqual(o.name, None)
+        o = Option('name')
+        self.assertEqual(o.name, 'name')
         self.assertEqual(o.default, None)
         self.assertEqual(o.doc, None)
         self.assertEqual(o.from_string_converter, None)
         self.assertEqual(o.value, None)
 
-        o = config_manager.Option('lucy')
+        o = Option('lucy')
         self.assertEqual(o.name, 'lucy')
         self.assertEqual(o.default, None)
         self.assertEqual(o.doc, None)
         self.assertEqual(o.from_string_converter, None)
         self.assertEqual(o.value, None)
 
-        o = config_manager.Option(u'spa\xa0e')
+        o = Option(u'spa\xa0e')
         self.assertEqual(o.name, u'spa\xa0e')
         self.assertEqual(o.default, None)
         self.assertEqual(o.doc, None)
@@ -37,7 +38,7 @@ class TestCase(unittest.TestCase):
           'default': 1,
           'doc': "lucy's integer"
         }
-        o = config_manager.Option(**data)
+        o = Option(**data)
         self.assertEqual(o.name, 'lucy')
         self.assertEqual(o.default, 1)
         self.assertEqual(o.doc, "lucy's integer")
@@ -50,7 +51,7 @@ class TestCase(unittest.TestCase):
           'doc': "lucy's integer",
           'value': '1'
         }
-        o = config_manager.Option(**data)
+        o = Option(**data)
         self.assertEqual(o.name, 'lucy')
         self.assertEqual(o.default, 1)
         self.assertEqual(o.doc, "lucy's integer")
@@ -63,9 +64,9 @@ class TestCase(unittest.TestCase):
           'doc': "lucy's integer",
           'from_string_converter': int
         }
-        o = config_manager.Option(**data)
+        o = Option(**data)
         self.assertEqual(o.name, 'lucy')
-        self.assertEqual(o.default, '1')
+        self.assertEqual(o.default, 1)  # converted using `int`
         self.assertEqual(o.doc, "lucy's integer")
         self.assertEqual(o.from_string_converter, int)
         self.assertEqual(o.value, 1)
@@ -77,9 +78,9 @@ class TestCase(unittest.TestCase):
           'from_string_converter': int,
           'other': 'no way'
         }
-        o = config_manager.Option(**data)
+        o = Option(**data)
         self.assertEqual(o.name, 'lucy')
-        self.assertEqual(o.default, '1')
+        self.assertEqual(o.default, 1)
         self.assertEqual(o.doc, "lucy's integer")
         self.assertEqual(o.from_string_converter, int)
         self.assertEqual(o.value, 1)
@@ -90,15 +91,15 @@ class TestCase(unittest.TestCase):
           'from_string_converter': int,
           'other': 'no way'
         }
-        o = config_manager.Option(**data)
-        self.assertEqual(o.name, None)
-        self.assertEqual(o.default, '1')
+        o = Option('now', **data)
+        self.assertEqual(o.name, 'now')
+        self.assertEqual(o.default, 1)
         self.assertEqual(o.doc, "lucy's integer")
         self.assertEqual(o.from_string_converter, int)
         self.assertEqual(o.value, 1)
 
         d = datetime.datetime.now()
-        o = config_manager.Option(name='now', default=d)
+        o = Option('now', default=d)
         self.assertEqual(o.name, 'now')
         self.assertEqual(o.default, d)
         self.assertEqual(o.doc, None)
@@ -106,47 +107,88 @@ class TestCase(unittest.TestCase):
                          dtu.datetime_from_ISO_string)
         self.assertEqual(o.value, d)
 
-    def test_setting_known_from_string_converter_on_Option(self):
-        opt = config_manager.Option(default=u'Peter')
+        data = {
+          'default': '1.0',
+          'doc': "lucy's height",
+          'from_string_converter': float,
+          'other': ''
+        }
+        o = Option('now', **data)
+        self.assertEqual(o.name, 'now')
+        self.assertEqual(o.default, 1.0)
+        self.assertEqual(o.doc, "lucy's height")
+        self.assertEqual(o.from_string_converter, float)
+        self.assertEqual(o.value, 1.0)
+
+    def test_option_constructor_more_complex_default_converters(self):
+        data = {
+          'default': '2011-12-31',
+          'doc': "lucy's bday",
+          'from_string_converter': dtu.date_from_ISO_string,
+          'other': ''
+        }
+        o = Option('now', **data)
+        self.assertEqual(o.name, 'now')
+        self.assertEqual(o.default, datetime.date(2011, 12, 31))
+        self.assertEqual(o.doc, "lucy's bday")
+        self.assertEqual(o.from_string_converter, dtu.date_from_ISO_string)
+        self.assertEqual(o.value, datetime.date(2011, 12, 31))
+
+        data = {
+          'default': '2011-12-31',
+          'doc': "lucy's bday",
+          'from_string_converter': \
+            'configman.datetime_util.date_from_ISO_string',
+          'other': ''
+        }
+        o = Option('now', **data)
+        self.assertEqual(o.name, 'now')
+        self.assertEqual(o.default, datetime.date(2011, 12, 31))
+        self.assertEqual(o.doc, "lucy's bday")
+        self.assertEqual(o.from_string_converter, dtu.date_from_ISO_string)
+        self.assertEqual(o.value, datetime.date(2011, 12, 31))
+
+    def test_setting_known_from_string_converter_onOption(self):
+        opt = Option('name', default=u'Peter')
         self.assertEqual(opt.default, u'Peter')
         self.assertEqual(opt.from_string_converter, unicode)
 
-        opt = config_manager.Option(default=100)
+        opt = Option('name', default=100)
         self.assertEqual(opt.default, 100)
         self.assertEqual(opt.from_string_converter, int)
 
-        opt = config_manager.Option(default=100L)
+        opt = Option('name', default=100L)
         self.assertEqual(opt.default, 100L)
         self.assertEqual(opt.from_string_converter, long)
 
-        opt = config_manager.Option(default=100.0)
+        opt = Option('name', default=100.0)
         self.assertEqual(opt.default, 100.0)
         self.assertEqual(opt.from_string_converter, float)
 
         from decimal import Decimal
-        opt = config_manager.Option(default=Decimal('100.0'))
+        opt = Option('name', default=Decimal('100.0'))
         self.assertEqual(opt.default, Decimal('100.0'))
         self.assertEqual(opt.from_string_converter, Decimal)
 
-        opt = config_manager.Option(default=False)
+        opt = Option('name', default=False)
         self.assertEqual(opt.default, False)
         self.assertEqual(opt.from_string_converter,
                          conv.boolean_converter)
 
         dt = datetime.datetime(2011, 8, 10, 0, 0, 0)
-        opt = config_manager.Option(default=dt)
+        opt = Option('name', default=dt)
         self.assertEqual(opt.default, dt)
         self.assertEqual(opt.from_string_converter,
                          dtu.datetime_from_ISO_string)
 
         dt = datetime.date(2011, 8, 10)
-        opt = config_manager.Option(default=dt)
+        opt = Option('name', default=dt)
         self.assertEqual(opt.default, dt)
         self.assertEqual(opt.from_string_converter,
                          dtu.date_from_ISO_string)
 
-    def test_boolean_converter_in_Option(self):
-        opt = config_manager.Option(default=False)
+    def test_boolean_converter_inOption(self):
+        opt = Option('name', default=False)
         self.assertEqual(opt.default, False)
         self.assertEqual(opt.from_string_converter,
                          conv.boolean_converter)
@@ -190,9 +232,9 @@ class TestCase(unittest.TestCase):
         opt.set_value(u't')
         self.assertEqual(opt.value, True)
 
-    def test_timedelta_converter_in_Option(self):
+    def test_timedelta_converter_inOption(self):
         one_day = datetime.timedelta(days=1)
-        opt = config_manager.Option(default=one_day)
+        opt = Option('some name', default=one_day)
         self.assertEqual(opt.default, one_day)
         self.assertEqual(opt.from_string_converter,
                          conv.timedelta_converter)
@@ -215,13 +257,43 @@ class TestCase(unittest.TestCase):
         self.assertRaises(CannotConvertError,
                           opt.set_value, '0:x:0:0')
 
-    def test_regexp_converter_in_Option(self):
+    def test_regexp_converter_inOption(self):
         regex_str = '\w+'
         sample_regex = re.compile(regex_str)
-        opt = config_manager.Option(default=sample_regex)
+        opt = Option('name', default=sample_regex)
         self.assertEqual(opt.default, sample_regex)
         self.assertEqual(opt.from_string_converter,
                          conv.regex_converter)
 
         opt.set_value(regex_str)
         self.assertEqual(opt.value.pattern, sample_regex.pattern)
+
+    def test_option_comparison(self):
+        o1 = Option('name')
+        o2 = Option('name')
+        self.assertEqual(o1, o2)
+
+        o1 = Option('name', 'Peter')
+        o2 = Option('name', u'Peter')
+        self.assertEqual(o1, o2)
+
+        o1 = Option('name', 'Peter')
+        o2 = Option('name', 'Ashley')
+        self.assertNotEqual(o1, o2)
+
+        o1 = Option('name', doc='Aaa')
+        o2 = Option('name', doc='Bee')
+        self.assertNotEqual(o1, o2)
+
+        o1 = Option('name', doc='Aaa')
+        o2 = Option('name', doc='Aaa')
+        self.assertEqual(o1, o2)
+
+        o1 = Option('name', doc='Aaa', short_form='n')
+        o2 = Option('name', doc='Aaa', short_form='N')
+        self.assertNotEqual(o1, o2)
+
+        o1 = Option('name')
+        o1.set_value('Peter')
+        o2 = Option('name')
+        self.assertNotEqual(o1, o2)

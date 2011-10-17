@@ -68,6 +68,7 @@ class ConfigurationManager(object):
         if options_banned_from_help is None:
             options_banned_from_help = ['_application']
 
+
         self.option_definitions = Namespace()
         self.definition_source_list = definition_source_list
         if values_source_list:
@@ -89,7 +90,7 @@ class ConfigurationManager(object):
 
         if self.use_auto_help:
             self.setup_auto_help()
-        if self.manager_controls:
+        if manager_controls:
             self.setup_manager_controls()
 
         for a_definition_source in self.definition_source_list:
@@ -121,11 +122,11 @@ class ConfigurationManager(object):
             self.help_done = True
             self.admin_tasks_done = True
 
-        if self.manager_controls and self.get_option_by_name('_write').value:
+        if manager_controls and self.get_option_by_name('_write').value:
             self.write_config()
-            self.admin_tasks_done = True
+            admin_tasks_done = True
 
-        if quit_after_admin and self.admin_tasks_done:
+        if quit_after_admin and admin_tasks_done:
             exit()
 
     #--------------------------------------------------------------------------

@@ -36,16 +36,6 @@ foo=bar  ; other comment
                              {'othersection.foo': 'bar',
                               'name': 'Peter',
                               'awesome': ''})
-            # XXX (peterbe): commented out because I'm not sure if
-            # OptionsByIniFile get_values() should depend on the configuration
-            # manager it is given as first argument or not.
-            #self.assertEqual(o.get_values(c, True), {})
-            #self.assertRaises(config_manager.NotAnOptionError,
-            #                  o.get_values, c, False)
-
-            #c.option_definitions.option('limit', default=0)
-            #self.assertEqual(o.get_values(c, False), {'limit': '20'})
-            #self.assertEqual(o.get_values(c, True), {'limit': '20'})
         finally:
             if os.path.isfile(tmp_filename):
                 os.remove(tmp_filename)

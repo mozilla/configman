@@ -5,10 +5,9 @@ from config_exceptions import CannotConvertError
 class Option(object):
 
     #--------------------------------------------------------------------------
-    def __init__(self,
-                 name=None,
-                 doc=None,
+    def __init__(self, name,
                  default=None,
+                 doc=None,
                  from_string_converter=None,
                  value=None,
                  short_form=None,
@@ -25,9 +24,32 @@ class Option(object):
         if isinstance(from_string_converter, basestring):
             from_string_converter = conv.class_converter(from_string_converter)
         self.from_string_converter = from_string_converter
+
         if value is None:
             value = default
         self.set_value(value)
+        if type(self.value) != type(self.default) and self.from_string_converter:
+            # need to convert the default too
+            self.default = self.from_string_converter(self.default)
+
+    def __eq__(self, other):
+        if isinstance(other, Option):
+            return (self.name == other.name
+                    and
+                    self.default == other.default
+                    and
+                    self.doc == other.doc
+                    and
+                    self.short_form == other.short_form
+                    and
+                    self.value == other.value
+                    )
+
+    def __repr__(self):
+        if self.default is None:
+            return '<Option: %r>' % self.name
+        else:
+            return '<Option: %r, default=%r>' % (self.name, self.default)
 
     #--------------------------------------------------------------------------
     def _deduce_converter(self, default):
