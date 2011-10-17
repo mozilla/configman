@@ -24,9 +24,13 @@ class Option(object):
         if isinstance(from_string_converter, basestring):
             from_string_converter = conv.class_converter(from_string_converter)
         self.from_string_converter = from_string_converter
+
         if value is None:
             value = default
         self.set_value(value)
+        if type(self.value) != type(self.default) and self.from_string_converter:
+            # need to convert the default too
+            self.default = self.from_string_converter(self.default)
 
     def __repr__(self):
         if self.default is None:

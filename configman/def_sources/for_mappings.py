@@ -20,7 +20,7 @@ def setup_definitions(source, destination):
             if 'name' in val and 'default' in val:
                 # this is an Option in the form of a dict, not a Namespace
                 params = converters.str_dict_keys(val)
-                destination[key] = d = option.Option(**params)
+                destination[key] = d = option.Option(**params)  # FIXME: why is 'd' defined here?
             else:
                 # this is a Namespace
                 try:
