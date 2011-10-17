@@ -32,6 +32,19 @@ class Option(object):
             # need to convert the default too
             self.default = self.from_string_converter(self.default)
 
+    def __eq__(self, other):
+        if isinstance(other, Option):
+            return (self.name == other.name
+                    and
+                    self.default == other.default
+                    and
+                    self.doc == other.doc
+                    and
+                    self.short_form == other.short_form
+                    and
+                    self.value == other.value
+                    )
+
     def __repr__(self):
         if self.default is None:
             return '<Option: %r>' % self.name

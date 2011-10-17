@@ -267,3 +267,33 @@ class TestCase(unittest.TestCase):
 
         opt.set_value(regex_str)
         self.assertEqual(opt.value.pattern, sample_regex.pattern)
+
+    def test_option_comparison(self):
+        o1 = Option('name')
+        o2 = Option('name')
+        self.assertEqual(o1, o2)
+
+        o1 = Option('name', 'Peter')
+        o2 = Option('name', u'Peter')
+        self.assertEqual(o1, o2)
+
+        o1 = Option('name', 'Peter')
+        o2 = Option('name', 'Ashley')
+        self.assertNotEqual(o1, o2)
+
+        o1 = Option('name', doc='Aaa')
+        o2 = Option('name', doc='Bee')
+        self.assertNotEqual(o1, o2)
+
+        o1 = Option('name', doc='Aaa')
+        o2 = Option('name', doc='Aaa')
+        self.assertEqual(o1, o2)
+
+        o1 = Option('name', doc='Aaa', short_form='n')
+        o2 = Option('name', doc='Aaa', short_form='N')
+        self.assertNotEqual(o1, o2)
+
+        o1 = Option('name')
+        o1.set_value('Peter')
+        o2 = Option('name')
+        self.assertNotEqual(o1, o2)
