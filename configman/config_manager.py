@@ -10,6 +10,7 @@ import os.path
 
 import converters as conv
 import config_exceptions as exc
+import value_sources
 
 import def_sources
 
@@ -71,7 +72,7 @@ class ConfigurationManager(object):
         self.definition_source_list = definition_source_list
         if values_source_list:
             self.custom_values_source = True
-            self.values_source_list = values_source_list
+            self.values_source_list = value_sources.wrap(values_source_list)
         else:
             self.custom_values_source = False
             command_line_options = GetoptValueSource(argv_source=argv_source)

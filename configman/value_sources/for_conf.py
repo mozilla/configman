@@ -1,4 +1,4 @@
-class ConfValueSource(object):
+class ValueSource(object):
 
     def __init__(self, filename, opener=open):
         self.values = {}

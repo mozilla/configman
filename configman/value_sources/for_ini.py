@@ -1,7 +1,7 @@
 import ConfigParser
 
 
-class IniValueSource(object):
+class ValueSource(dict):
 
     def __init__(self, source,
                  top_level_section_name='top_level'):
@@ -15,7 +15,7 @@ class IniValueSource(object):
         self.top_level_section_name = top_level_section_name
 
     def get_values(self, config_manager, ignore_mismatches):
-        options = {}
+        options = self
         for a_section in self.configparser.sections():
             if a_section == self.top_level_section_name:
                 prefix = ''
