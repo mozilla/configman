@@ -1,18 +1,22 @@
-class ConfigFileMissingError(IOError):
+class ConfigmanException(Exception):
     pass
 
 
-class ConfigFileOptionNameMissingError(Exception):
+class ConfigFileMissingError(IOError, ConfigmanException):
     pass
 
 
-class NotAnOptionError(Exception):
+class ConfigFileOptionNameMissingError(ConfigmanException):
     pass
 
 
-class OptionError(Exception):
+class NotAnOptionError(ConfigmanException):
     pass
 
 
-class CannotConvertError(ValueError):
+class OptionError(ConfigmanException):
+    pass
+
+
+class CannotConvertError(ConfigmanException):
     pass

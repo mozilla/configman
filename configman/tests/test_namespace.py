@@ -33,7 +33,7 @@ class TestCase(unittest.TestCase):
         namespace.b = 17
         config = config_manager.ConfigurationManager(
           [namespace],
-          use_config_files=False,
+          #use_config_files=False,
           argv_source=[]
         )
         self.assertEqual(config.option_definitions.a, namespace.a)
@@ -49,7 +49,7 @@ class TestCase(unittest.TestCase):
         j = '{ "a": {"name": "a", "default": 1, "doc": "the a"}, "b": 17}'
         config = config_manager.ConfigurationManager(
           [j],
-          use_config_files=False,
+          #use_config_files=False,
           argv_source=[]
         )
         self.assertTrue(isinstance(config.option_definitions.a,
@@ -73,8 +73,8 @@ class TestCase(unittest.TestCase):
              u'"short_form": null}}')
         config = config_manager.ConfigurationManager(
           [j],
-          use_config_files=False,
-          auto_help=False,
+          #use_config_files=False,
+          use_auto_help=False,
           manager_controls=False,
           argv_source=[]
         )
@@ -106,8 +106,8 @@ class TestCase(unittest.TestCase):
         assert n.dest.c.doc == 'the A class'
         c = config_manager.ConfigurationManager([n],
                                     manager_controls=False,
-                                    use_config_files=False,
-                                    auto_help=False,
+                                    #use_config_files=False,
+                                    use_auto_help=False,
                                     argv_source=[])
         e = config_manager.Namespace()
         e.s = config_manager.Namespace()

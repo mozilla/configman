@@ -7,6 +7,7 @@ import collections
 import json
 import inspect
 import os.path
+import functools
 
 import converters as conv
 import config_exceptions as exc
@@ -19,9 +20,9 @@ import def_sources
 from option import Option
 from dotdict import DotDict
 from namespace import Namespace
-from value_sources.for_getopt import GetoptValueSource
-from value_sources.for_conf import ConfValueSource
-from value_sources.for_ini import IniValueSource
+#from value_sources.for_getopt import GetoptValueSource
+#from value_sources.for_conf import ConfValueSource
+#from value_sources.for_ini import IniValueSource
 
 
 #==============================================================================
@@ -52,7 +53,7 @@ class ConfigurationManager(object):
                  definition_source_list=None,
                  values_source_list=None,
                  argv_source=None,
-                 use_config_files=True,
+                 #use_config_files=True,
                  use_auto_help=True,
                  manager_controls=True,
                  quit_after_admin=True,
@@ -69,17 +70,10 @@ class ConfigurationManager(object):
             options_banned_from_help = ['_application']
 
 
+        self.argv_source = argv_source
         self.option_definitions = Namespace()
         self.definition_source_list = definition_source_list
-        if values_source_list:
-            self.custom_values_source = True
-            self.values_source_list = value_sources.wrap(values_source_list)
-        else:
-            self.custom_values_source = False
-            command_line_options = GetoptValueSource(argv_source=argv_source)
-            self.values_source_list = [os.environ,
-                                       command_line_options,
-                                      ]
+
         self.use_auto_help = use_auto_help
         self.help_done = False
         self.admin_tasks_done = False
@@ -97,19 +91,42 @@ class ConfigurationManager(object):
             def_sources.setup_definitions(a_definition_source,
                                           self.option_definitions)
 
+        try:
+            app_name = self.get_option_by_name('_application')
+        except (exc.NotAnOptionError, KeyError):
+            app_name = None
+
+        if values_source_list:
+            self.custom_values_source = True
+        else:
+            import getopt
+            self.custom_values_source = False
+            self.values_source_list = [os.environ,
+                                       getopt,
+                                       "%s.ini" % app_name,
+                                       "%s.conf" % app_name,
+                                       "%s.json" % app_name
+                                      ]
+        self.values_source_list = value_sources.wrap(values_source_list,
+                                                     self)
+
+
         # first pass to get classes & config path - ignore bad options
         self.overlay_settings(ignore_mismatches=True)
 
         # read config files
-        if use_config_files and not self.custom_values_source:
-            self.read_config_files()
-            # second pass to include config file values - ignore bad options
-            self.values_source_list = [self.ini_source,
-                                       self.conf_source,
-                                       self.json_source,
-                                       os.environ,
-                                       command_line_options]
-            self.overlay_settings(ignore_mismatches=True)
+        #if use_config_files and not self.custom_values_source:
+            #self.read_config_files()
+            ## second pass to include config file values - ignore bad options
+            #self.values_source_list = [self.ini_source,
+                                       #self.conf_source,
+                                       #self.json_source,
+                                       #os.environ,
+                                       #command_line_options]
+            #self.overlay_settings(ignore_mismatches=True)
+
+        # second pass to include config file values - ignore bad options
+        self.overlay_settings(ignore_mismatches=True)
 
         # walk tree expanding class options
         self.walk_expanding_class_options()
@@ -126,33 +143,33 @@ class ConfigurationManager(object):
             self.write_config()
             admin_tasks_done = True
 
-        if quit_after_admin and admin_tasks_done:
+        if quit_after_admin and self.admin_tasks_done:
             exit()
 
     #--------------------------------------------------------------------------
-    def read_config_files(self):
-        # try ini file
-        try:
-            app = self.get_option_by_name('_application')
-            application_name = app.value.app_name
-        except (AttributeError, KeyError):
-            self.ini_source = None
-            self.conf_source = None
-            self.json_source = None
-            return
-        path = self.get_option_by_name('config_path').value
-        file_name = os.path.join(path, '%s.ini' % application_name)
-        self.ini_source = IniValueSource(file_name)
-        # try conf file
-        file_name = os.path.join(path, '%s.conf' % application_name)
-        self.conf_source = ConfValueSource(file_name)
-        # try json file
-        file_name = os.path.join(path, '%s.json' % application_name)
-        try:
-            with open(file_name) as j_file:
-                self.json_source = json.load(j_file)
-        except IOError:
-            self.json_source = {}
+    #def read_config_files(self):
+        ## try ini file
+        #try:
+            #app = self.get_option_by_name('_application')
+            #application_name = app.value.app_name
+        #except (AttributeError, KeyError):
+            #self.ini_source = None
+            #self.conf_source = None
+            #self.json_source = None
+            #return
+        #path = self.get_option_by_name('config_path').value
+        #file_name = os.path.join(path, '%s.ini' % application_name)
+        #self.ini_source = IniValueSource(file_name)
+        ## try conf file
+        #file_name = os.path.join(path, '%s.conf' % application_name)
+        #self.conf_source = ConfValueSource(file_name)
+        ## try json file
+        #file_name = os.path.join(path, '%s.json' % application_name)
+        #try:
+            #with open(file_name) as j_file:
+                #self.json_source = json.load(j_file)
+        #except IOError:
+            #self.json_source = {}
 
     #--------------------------------------------------------------------------
     def walk_expanding_class_options(self, source=None):
@@ -206,14 +223,26 @@ class ConfigurationManager(object):
     #--------------------------------------------------------------------------
     def overlay_settings(self, ignore_mismatches=True):
         for a_settings_source in self.values_source_list:
-            if isinstance(a_settings_source, collections.Mapping):
-                self.overlay_config_recurse(a_settings_source,
-                                            ignore_mismatches=True)
-            elif a_settings_source:
-                options = a_settings_source.get_values(self,
-                                        ignore_mismatches=ignore_mismatches)
-                self.overlay_config_recurse(options,
-                                        ignore_mismatches=ignore_mismatches)
+            #if isinstance(a_settings_source, collections.Mapping):
+                #self.overlay_config_recurse(a_settings_source,
+                                            #ignore_mismatches=True)
+            #elif a_settings_source:
+                #options = a_settings_source.get_values(self,
+                                        #ignore_mismatches=ignore_mismatches)
+                #self.overlay_config_recurse(options,
+                                        #ignore_mismatches=ignore_mismatches)
+            try:
+                ignore_mismatches = ignore_mismatches or \
+                                    a_settings_source.always_ignore_mismatches
+            except AttributeError:
+                # the settings source doesn't have the concept of always
+                # ignoring mismatches, so the original value of
+                # ignore_mismatches stands
+                pass
+            options = a_settings_source.get_values(self,
+                                    ignore_mismatches=ignore_mismatches)
+            self.overlay_config_recurse(options,
+                                    ignore_mismatches=ignore_mismatches)
 
     #--------------------------------------------------------------------------
     def overlay_config_recurse(self, source, destination=None, prefix='',
@@ -260,20 +289,34 @@ class ConfigurationManager(object):
             return key
 
     #--------------------------------------------------------------------------
-    def walk_config(self, source=None, prefix=''):
+    @staticmethod
+    def block_password(qkey, key, value, block_password=True):
+        if block_password and 'password' in option.name.lower():
+            value = '*********'
+        return (qkey, key, value)
+
+    #--------------------------------------------------------------------------
+    def walk_config(self, source=None, prefix='', blocked_keys=[],
+                    block_password=False):
         if source == None:
             source = self.option_definitions
         options_list = source.items()
         options_list.sort(key=ConfigurationManager.option_sort)
         for key, val in options_list:
             qualified_key = '%s%s' % (prefix, key)
+            if key in blocked_keys:
+                continue
             value_type = type(val)
             if value_type == Option:
-                yield qualified_key, key, val
+                yield self.block_password(qualified_key, key, val,
+                                          block_password)
             elif value_type == Namespace:
                 yield qualified_key, key, val
                 new_prefix = '%s%s.' % (prefix, key)
-                for xqkey, xkey, xval in self.walk_config(val, new_prefix):
+                for xqkey, xkey, xval in self.walk_config(val,
+                                                          new_prefix,
+                                                          blocked_keys,
+                                                          block_password):
                     yield xqkey, xkey, xval
 
     #--------------------------------------------------------------------------
@@ -397,31 +440,30 @@ class ConfigurationManager(object):
             print >> output_stream, template.format(**output_parameters)
 
     #--------------------------------------------------------------------------
-    def write_config(self):
+    def write_config(self, block_password=True, opener=open):
         config_file_type = self.get_option_by_name('_write').value
-        if config_file_type not in ('conf', 'ini', 'json'):
-            raise Exception('unknown config file type')
+        option_iterator = functools.partial(self.walk_config,
+                                    blocked_keys=self.manager_controls_list)
         app = self.get_option_by_name('_application')
         try:
             app_name = app.value.app_name
         except AttributeError:
             app_name = 'unknown-app'
-        config_file_name = os.sep.join(
-            [self.get_option_by_name('config_path').value,
-             '%s.%s' % (app_name, config_file_type)])
-        with open(config_file_name, 'w') as f:
-            if config_file_type == 'conf':
-                self.write_conf(output_stream=f,
-                                block_password=False)
-            elif config_file_type == 'ini':
-                self.write_ini(output_stream=f,
-                               block_password=False)
-            elif config_file_type == 'json':
-                self.write_json(output_stream=f,
-                                block_password=False)
+        try:
+            config_path = self.get_option_by_name('config_path')
+        except KeyError:
+            config_path = ''
+        config_pathname = os.path.join(config_path,
+                                       '.'.join((app_name, config_file_type)))
+
+        with opener(config_pathname, 'w') as config_fp:
+            value_sources.write(config_file_type,
+                                option_iterator,
+                                config_fp)
 
     #--------------------------------------------------------------------------
-    def option_value_str(self, an_option):
+    @staticmethod
+    def option_value_str(an_option):
         if an_option.value is None:
             return ''
         try:
@@ -436,93 +478,6 @@ class ConfigurationManager(object):
             s = "'''%s'''" % s
         return s
 
-    #--------------------------------------------------------------------------
-    def write_conf(self,
-                   output_stream=sys.stdout,
-                   block_password=True,
-                   comments=True):
-        for qkey, key, val in self.walk_config(self.option_definitions):
-            if qkey in self.manager_controls_list:
-                continue
-            if isinstance(val, Option):
-                if comments:
-                    print >> output_stream, '# name:', qkey
-                    print >> output_stream, '# doc:', val.doc
-                    print >> output_stream, '# converter:', \
-                        conv.classes_and_functions_to_str(
-                                                     val.from_string_converter)
-                if block_password and re.findall(r'\bpassword',
-                                                 val.name, re.I):
-                    print >> output_stream, '%s=********\n' % qkey
-                else:
-                    val_str = self.option_value_str(val)
-                    print >> output_stream, '%s=%s\n' % (qkey, val_str)
-            else:
-                print >> output_stream, '#%s' % ('-' * 79)
-                print >> output_stream, '# %s - %s\n' % (key, val._doc)
-
-    #--------------------------------------------------------------------------
-    def write_ini(self,
-                  output_stream=sys.stdout,
-                  block_password=True):
-        print >> output_stream, '[top_level]'
-        for qkey, key, val in self.walk_config(self.option_definitions):
-            if qkey in self.manager_controls_list:
-                continue
-            if isinstance(val, Namespace):
-                print >> output_stream, '[%s]' % key
-                print >> output_stream, '# %s\n' % val._doc
-            else:
-                print >> output_stream, '# name:', qkey
-                print >> output_stream, '# doc:', val.doc
-                print >> output_stream, '# converter:', \
-                   conv.classes_and_functions_to_str(val.from_string_converter)
-                if block_password and 'password' in val.name.lower():
-                    print >> output_stream, '%s=********\n' % key
-                else:
-                    val_str = self.option_value_str(val)
-                    print >> output_stream, '%s=%s\n' % (key, val_str)
-
-    #--------------------------------------------------------------------------
-    def str_safe_option_definitions(self, source=None, destination=None):
-        """ creats a string only dictionary of the option definitions"""
-        if source is None:
-            source = self.option_definitions
-        if destination is None:
-            destination = DotDict()
-        try:
-            for key, val in source.items():
-                if key in self.manager_controls_list:
-                    continue
-                if key.startswith('__'):
-                    continue  # ignore these
-                val_type = type(val)
-                if val_type == Option:
-                    destination[key] = d = DotDict(val.__dict__.copy())
-                    for attr in ['default', 'value', 'from_string_converter']:
-                        try:
-                            attr_type = type(d[attr])
-                            f = conv.to_string_converters[attr_type]
-                            d[attr] = f(d[attr])
-                        except KeyError:
-                            pass
-                elif isinstance(val, collections.Mapping):
-                    # this is a namespace
-                    destination[key] = d = DotDict()
-                    self.str_safe_option_definitions(val, d)
-                else:
-                    pass
-        except AttributeError:
-            pass
-        return destination
-
-    #--------------------------------------------------------------------------
-    def write_json(self,
-                   output_stream=sys.stdout,
-                   block_password=True):
-        json_dict = self.str_safe_option_definitions()
-        json_str = json.dumps(json_dict)
-        print >> output_stream, json_str
 
     #--------------------------------------------------------------------------
     def log_config(self, logger):
@@ -556,6 +511,6 @@ def new_configuration(configurationModule=None,
     if configurationModule:
         definition_source.append(configurationModule)
     config_manager = ConfigurationManager(definition_source,
-                                          auto_help=True,
+                                          use_auto_help=True,
                                           application_name=applicationName)
     return config_manager.get_config()

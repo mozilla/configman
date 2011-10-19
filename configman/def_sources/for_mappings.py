@@ -1,8 +1,8 @@
 import collections
 
-from .. import converters
-from .. import namespace
-from .. import option
+import configman.converters as converters
+import configman.namespace as namespace
+import configman.option as option
 
 
 #------------------------------------------------------------------------------

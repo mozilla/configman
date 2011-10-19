@@ -6,6 +6,7 @@ import ConfigParser
 import io
 from cStringIO import StringIO
 import json
+import getopt
 
 import configman.config_manager as config_manager
 from configman.dotdict import DotDict
@@ -20,8 +21,8 @@ class TestCase(unittest.TestCase):
         # have to mock that
         c = config_manager.ConfigurationManager(
           manager_controls=False,
-          use_config_files=False,
-          auto_help=False,
+          #use_config_files=False,
+          use_auto_help=False,
           argv_source=[]
         )
         self.assertEqual(c.option_definitions, config_manager.Namespace())
@@ -33,8 +34,8 @@ class TestCase(unittest.TestCase):
         c = config_manager.ConfigurationManager(
           [n],
           manager_controls=False,
-          use_config_files=False,
-          auto_help=False,
+          #use_config_files=False,
+          use_auto_help=False,
           argv_source=[]
         )
         d = c.get_config()
@@ -54,8 +55,8 @@ class TestCase(unittest.TestCase):
         c = config_manager.ConfigurationManager(
           [n],
           manager_controls=False,
-          use_config_files=False,
-          auto_help=False,
+          #use_config_files=False,
+          use_auto_help=False,
           argv_source=[]
         )
         d = c.get_config()
@@ -84,8 +85,8 @@ class TestCase(unittest.TestCase):
         c = config_manager.ConfigurationManager(
           [n],
           manager_controls=False,
-          use_config_files=False,
-          auto_help=False,
+          #use_config_files=False,
+          use_auto_help=False,
           argv_source=[]
         )
         e = [('aaa', 'aaa', n.aaa.name),
@@ -124,264 +125,8 @@ class TestCase(unittest.TestCase):
         n.x.add_option('password', 'secret', 'the password')
         return n
 
-    def test_write_flat(self):
-        n = self._some_namespaces()
-        config = config_manager.ConfigurationManager(
-          [n],
-          manager_controls=False,
-          use_config_files=False,
-          auto_help=False,
-          argv_source=[]
-        )
-        expected = """# name: aaa
-# doc: the a
-# converter: configman.datetime_util.datetime_from_ISO_string
-aaa=2011-05-04T15:10:00
-
-#-------------------------------------------------------------------------------
-# c - c space
-
-# name: c.fred
-# doc: husband from Flintstones
-# converter: str
-c.fred=stupid
-
-# name: c.wilma
-# doc: wife from Flintstones
-# converter: str
-c.wilma=waspish
-
-#-------------------------------------------------------------------------------
-# d - d space
-
-# name: d.ethel
-# doc: female neighbor from I Love Lucy
-# converter: str
-d.ethel=silly
-
-# name: d.fred
-# doc: male neighbor from I Love Lucy
-# converter: str
-d.fred=crabby
-
-#-------------------------------------------------------------------------------
-# x - x space
-
-# name: x.password
-# doc: the password
-# converter: str
-x.password=********
-
-# name: x.size
-# doc: how big in tons
-# converter: int
-x.size=100
-"""
-        out = StringIO()
-        config.write_conf(output_stream=out)
-        received = out.getvalue()
-        self.assertEqual(expected.strip(), received.strip())
-
-    def test_write_flat_with_passwords(self):
-
-        n = config_manager.Namespace(doc='top')
-        n.add_option('password', 'secrets', 'the password')
-        n.add_option('unpassword', 'notsecret', 'not a password')
-
-        config = config_manager.ConfigurationManager(
-          [n],
-          manager_controls=False,
-          use_config_files=False,
-          auto_help=False,
-          argv_source=[]
-        )
-
-        out = StringIO()
-        config.write_conf(output_stream=out)
-        received = out.getvalue()
-        expected = ("# name: password\n"
-                    "# doc: the password\n"
-                    "# converter: str\n"
-                    "password=********")
-        self.assertTrue(expected in received)
-
-        expected = ("# name: unpassword\n"
-                    "# doc: not a password\n"
-                    "# converter: str\n"
-                    "unpassword=notsecret")
-        self.assertTrue(expected in received)
-
-    def test_write_flat_unrecognized_converter(self):
-        from decimal import Decimal
-        n = config_manager.Namespace(doc='top')
-        n.add_option('cost', Decimal('0.00'), 'the cost',
-          short_form='cost',
-          from_string_converter=Decimal
-        )
-
-        config = config_manager.ConfigurationManager(
-          [n],
-          manager_controls=False,
-          use_config_files=False,
-          auto_help=False,
-          argv_source=[]
-        )
-
-        out = StringIO()
-        config.write_conf(output_stream=out)
-        received = out.getvalue()
-        expected = ("# name: cost\n"
-                   "# doc: the cost\n"
-                   "# converter: decimal.Decimal\n"
-                   "cost=0.00")
-        self.assertEqual(received.strip(), expected.strip())
 
 
-
-    def test_write_ini(self):
-        n = self._some_namespaces()
-        c = config_manager.ConfigurationManager(
-          [n],
-          manager_controls=False,
-          use_config_files=False,
-          auto_help=False,
-          argv_source=[]
-        )
-        expected = """[top_level]
-# name: aaa
-# doc: the a
-# converter: configman.datetime_util.datetime_from_ISO_string
-aaa=2011-05-04T15:10:00
-
-[c]
-# c space
-
-# name: c.fred
-# doc: husband from Flintstones
-# converter: str
-fred=stupid
-
-# name: c.wilma
-# doc: wife from Flintstones
-# converter: str
-wilma=waspish
-
-[d]
-# d space
-
-# name: d.ethel
-# doc: female neighbor from I Love Lucy
-# converter: str
-ethel=silly
-
-# name: d.fred
-# doc: male neighbor from I Love Lucy
-# converter: str
-fred=crabby
-
-[x]
-# x space
-
-# name: x.password
-# doc: the password
-# converter: str
-password=********
-
-# name: x.size
-# doc: how big in tons
-# converter: int
-size=100
-"""
-        out = StringIO()
-        c.write_ini(output_stream=out)
-        received = out.getvalue()
-        out.close()
-        self.assertEqual(expected.strip(), received.strip())
-
-    def test_write_json(self):
-        n = config_manager.Namespace(doc='top')
-        n.add_option('aaa', '2011-05-04T15:10:00', 'the a',
-          short_form='a',
-          from_string_converter=dtu.datetime_from_ISO_string
-        )
-
-        c = config_manager.ConfigurationManager([n],
-                                    manager_controls=False,
-                                    use_config_files=False,
-                                    auto_help=False,
-                                    argv_source=[])
-
-        s = StringIO()
-        c.write_json(output_stream=s)
-        received = s.getvalue()
-        s.close()
-        jrec = json.loads(received)
-
-        expect_to_find = {
-          "short_form": "a",
-          "default": "2011-05-04T15:10:00",
-          "doc": "the a",
-          "value": "2011-05-04T15:10:00",
-          "from_string_converter":
-              "configman.datetime_util.datetime_from_ISO_string",
-          "name": "aaa"
-        }
-        self.assertEqual(jrec['aaa'], expect_to_find)
-
-        # let's make sure that we can do a complete round trip
-        c2 = config_manager.ConfigurationManager([jrec],
-                                    manager_controls=False,
-                                    use_config_files=False,
-                                    auto_help=False,
-                                    argv_source=[])
-        s = StringIO()
-        c2.write_json(output_stream=s)
-        received2 = s.getvalue()
-        s.close()
-        jrec2 = json.loads(received2)
-        self.assertEqual(jrec2['aaa'], expect_to_find)
-
-    def test_write_json_2(self):
-        n = config_manager.Namespace(doc='top')
-        n.c = config_manager.Namespace(doc='c space')
-        n.c.add_option('fred', u'stupid', 'husband from Flintstones')
-
-        c = config_manager.ConfigurationManager([n],
-                                    manager_controls=False,
-                                    use_config_files=False,
-                                    auto_help=False,
-                                    argv_source=[])
-
-        s = StringIO()
-        c.write_json(output_stream=s)
-        received = s.getvalue()
-        s.close()
-        jrec = json.loads(received)
-
-        expect_to_find = {
-          'fred': {
-            'short_form': None,
-            'default': u'stupid',
-            'doc': u'husband from Flintstones',
-            'value': u'stupid',
-            'from_string_converter': 'unicode',
-            'name': u'fred'
-            }
-        }
-        self.assertEqual(jrec['c'], expect_to_find)
-
-        # let's make sure that we can do a complete round trip
-        c2 = config_manager.ConfigurationManager([jrec],
-                                    manager_controls=False,
-                                    use_config_files=False,
-                                    auto_help=False,
-                                    argv_source=[])
-        s = StringIO()
-        c2.write_json(output_stream=s)
-        received2 = s.getvalue()
-        s.close()
-        jrec2 = json.loads(received2)
-        self.assertEqual(jrec2['c'], expect_to_find)
 
     def test_overlay_config_1(self):
         n = config_manager.Namespace()
@@ -397,8 +142,8 @@ size=100
         c.z.doc = 'the 99'
         c = config_manager.ConfigurationManager([n],
                                     manager_controls=False,
-                                    use_config_files=False,
-                                    auto_help=False,
+                                    #use_config_files=False,
+                                    use_auto_help=False,
                                     argv_source=[])
         o = {"a": 2, "c.z": 22, "c.x": 'noob', "c.y": "2.89"}
         c.overlay_config_recurse(o)
@@ -426,8 +171,8 @@ size=100
         c.z.doc = 'the 99'
         c = config_manager.ConfigurationManager([n],
                                     manager_controls=False,
-                                    use_config_files=False,
-                                    auto_help=False,
+                                    #use_config_files=False,
+                                    use_auto_help=False,
                                     argv_source=[])
         o = {"a": 2, "c.z": 22, "c.x": 'noob', "c.y": "2.89", "n": "not here"}
         c.overlay_config_recurse(o, ignore_mismatches=True)
@@ -455,8 +200,8 @@ size=100
         c.z.doc = 'the 99'
         c = config_manager.ConfigurationManager([n],
                                     manager_controls=False,
-                                    use_config_files=False,
-                                    auto_help=False,
+                                    #use_config_files=False,
+                                    use_auto_help=False,
                                     argv_source=[])
         output = {
           "a": 2,
@@ -479,8 +224,8 @@ size=100
         g = {'a': 2, 'c.extra': 2.89}
         c = config_manager.ConfigurationManager([n], [g],
                                     manager_controls=False,
-                                    use_config_files=False,
-                                    auto_help=False,
+                                    #use_config_files=False,
+                                    use_auto_help=False,
                                     argv_source=[])
         self.assertEqual(c.option_definitions.a, n.a)
         self.assertTrue(isinstance(c.option_definitions.b,
@@ -504,8 +249,8 @@ size=100
         g = {'a': 2, 'c': {'extra': 2.89}}
         c = config_manager.ConfigurationManager([n], [g],
                                     manager_controls=False,
-                                    use_config_files=False,
-                                    auto_help=False,
+                                    #use_config_files=False,
+                                    use_auto_help=False,
                                     argv_source=[])
         self.assertEqual(c.option_definitions.a, n.a)
         self.assertTrue(isinstance(c.option_definitions.b,
@@ -525,12 +270,11 @@ size=100
         n.add_option('a', doc='the a', default=1)
         n.b = 17
         n.add_option('c', doc='the c', default=False)
-        g = config_manager.OptionsByGetopt(argv_source=['--a', '2', '--c'])
-        c = config_manager.ConfigurationManager([n], [g],
+        c = config_manager.ConfigurationManager([n], [getopt],
                                     manager_controls=False,
-                                    use_config_files=False,
-                                    auto_help=False,
-                                    argv_source=[])
+                                    #use_config_files=False,
+                                    use_auto_help=False,
+                                    argv_source=['--a', '2', '--c'])
         self.assertEqual(c.option_definitions.a, n.a)
         self.assertTrue(isinstance(c.option_definitions.b,
                                    config_manager.Option))
@@ -548,13 +292,12 @@ size=100
         n.b = 17
         n.c = config_manager.Namespace()
         n.c.add_option('extra', short_form='e', doc='the x', default=3.14159)
-        g = config_manager.OptionsByGetopt(
-          argv_source=['--a', '2', '--c.extra', '11.0']
-        )
-        c = config_manager.ConfigurationManager([n], [g],
+        c = config_manager.ConfigurationManager([n], [getopt],
                                     manager_controls=False,
-                                    use_config_files=False,
-                                    auto_help=False)
+                                    #use_config_files=False,
+                                    use_auto_help=False,
+                                    argv_source=['--a', '2', '--c.extra',
+                                                 '11.0'])
         self.assertEqual(c.option_definitions.a, n.a)
         self.assertEqual(type(c.option_definitions.b), config_manager.Option)
         self.assertEqual(c.option_definitions.a.value, 2)
@@ -573,13 +316,11 @@ size=100
         n.b = 17
         n.c = config_manager.Namespace()
         n.c.add_option('extra', 3.14159, 'the x', short_form='e')
-        g = config_manager.GetoptValueSource(
-          argv_source=['--a', '2', '-e', '11.0']
-        )
-        c = config_manager.ConfigurationManager([n], [g],
+        c = config_manager.ConfigurationManager([n], [getopt],
                                     manager_controls=False,
-                                    use_config_files=False,
-                                    auto_help=False)
+                                    #use_config_files=False,
+                                    use_auto_help=False,
+                                    argv_source=['--a', '2', '-e', '11.0'])
         self.assertEqual(c.option_definitions.a, n.a)
         self.assertEqual(type(c.option_definitions.b), config_manager.Option)
         self.assertEqual(c.option_definitions.a.value, 2)
@@ -601,7 +342,7 @@ size=100
         n.c.add_option('string', 'fred', doc='str')
 
         @contextmanager
-        def dummy_open(filename):
+        def dummy_open():
             yield ['# comment line to be ignored\n',
                    '\n',  # blank line to be ignored
                    'a=22\n',
@@ -609,11 +350,11 @@ size=100
                    'c.extra = 2.0\n',
                    'c.string =   wilma\n'
                   ]
-        g = config_manager.ConfValueSource('dummy-filename', dummy_open)
-        c = config_manager.ConfigurationManager([n], [g],
+        #g = config_manager.ConfValueSource('dummy-filename', dummy_open)
+        c = config_manager.ConfigurationManager([n], [dummy_open],
                                     manager_controls=False,
-                                    use_config_files=False,
-                                    auto_help=False)
+                                    #use_config_files=False,
+                                    use_auto_help=False)
         self.assertEqual(c.option_definitions.a, n.a)
         self.assertEqual(type(c.option_definitions.b), config_manager.Option)
         self.assertEqual(c.option_definitions.a.value, 22)
@@ -653,11 +394,9 @@ string =   wilma
 """
         config = ConfigParser.RawConfigParser()
         config.readfp(io.BytesIO(ini_data))
-        g = config_manager.IniValueSource(config)
-        c = config_manager.ConfigurationManager([n], [g],
+        c = config_manager.ConfigurationManager([n], [config],
                                     manager_controls=False,
-                                    use_config_files=False,
-                                    auto_help=False)
+                                    use_auto_help=False)
         self.assertEqual(c.option_definitions.other.t.name, 't')
         self.assertEqual(c.option_definitions.other.t.value, 'tea')
         self.assertEqual(c.option_definitions.d.a, n.d.a)
@@ -698,7 +437,6 @@ string =   from ini
 """
         config = ConfigParser.RawConfigParser()
         config.readfp(io.BytesIO(ini_data))
-        g = config_manager.IniValueSource(config)
         e = DotDict()
         e.fred = DotDict()  # should be ignored
         e.fred.t = 'T'  # should be ignored
@@ -707,13 +445,23 @@ string =   from ini
         e.c = DotDict()
         e.c.extra = 18.6
         e.c.string = 'from environment'
-        v = config_manager.GetoptValueSource(
-          argv_source=['--other.t', 'TTT', '--c.extra', '11.0']
-        )
-        c = config_manager.ConfigurationManager([n], [e, g, v],
-                                    manager_controls=False,
-                                    use_config_files=False,
-                                    auto_help=False)
+
+        #fake_os_module = DotDict()
+        #fake_os_module.environ = e
+        #import configman.value_sources.for_mapping as fm
+        #saved_os = fm.os
+        #fm.os = fake_os_module
+        saved_environ = os.environ
+        os.environ = e
+        try:
+            c = config_manager.ConfigurationManager([n], [e, config, getopt],
+                                        manager_controls=False,
+                                        use_auto_help=False,
+                                        argv_source=['--other.t', 'TTT',
+                                                     '--c.extra', '11.0'])
+        finally:
+            os.environ = saved_environ
+        #fm.os = saved_os
         self.assertEqual(c.option_definitions.other.t.name, 't')
         self.assertEqual(c.option_definitions.other.t.value, 'TTT')
         self.assertEqual(c.option_definitions.d.a, n.d.a)
@@ -753,22 +501,22 @@ string =   from ini
 """
         config = ConfigParser.RawConfigParser()
         config.readfp(io.BytesIO(ini_data))
-        g = config_manager.IniValueSource(config)
+        #g = config_manager.IniValueSource(config)
         e = DotDict()
-        e.top_level = DotDict()
-        e.top_level.t = 'T'
+        e.t = 'T'
         e.d = DotDict()
         e.d.a = 16
         e.c = DotDict()
         e.c.extra = 18.6
         e.c.string = 'from environment'
-        v = config_manager.GetoptValueSource(
-          argv_source=['--c.extra', '11.0']
-        )
-        c = config_manager.ConfigurationManager([n], [e, g, v],
+        #v = config_manager.GetoptValueSource(
+          #argv_source=['--c.extra', '11.0']
+        #)
+        c = config_manager.ConfigurationManager([n], [e, config, getopt],
                                     manager_controls=False,
-                                    use_config_files=False,
-                                    auto_help=False)
+                                    argv_source=['--c.extra', '11.0'],
+                                    #use_config_files=False,
+                                    use_auto_help=False)
         self.assertEqual(c.option_definitions.t.name, 't')
         self.assertEqual(c.option_definitions.t.value, 'tea')
         self.assertEqual(c.option_definitions.d.a, n.d.a)
@@ -800,8 +548,8 @@ string =   from ini
         n.d.x.add_option('size')
         c = config_manager.ConfigurationManager([n],
                                     manager_controls=False,
-                                    use_config_files=False,
-                                    auto_help=False,
+                                    #use_config_files=False,
+                                    use_auto_help=False,
                                     argv_source=[])
         names = c.get_option_names()
         names.sort()
@@ -823,8 +571,8 @@ string =   from ini
         n.d.x.add_option('size')
         c = config_manager.ConfigurationManager([n],
                                     manager_controls=False,
-                                    use_config_files=False,
-                                    auto_help=False,
+                                    #use_config_files=False,
+                                    use_auto_help=False,
                                     argv_source=[])
         self.assertEqual(c.get_option_by_name('a'), n.a)
         self.assertEqual(c.get_option_by_name('b').name, 'b')
@@ -849,8 +597,8 @@ string =   from ini
         n.d.x.add_option('password', 'secrets', 'the password')
         c = config_manager.ConfigurationManager([n],
                                     manager_controls=False,
-                                    use_config_files=False,
-                                    auto_help=False,
+                                    #use_config_files=False,
+                                    use_auto_help=False,
                                     argv_source=[])
         s = StringIO()
         c.output_summary(output_stream=s)
@@ -886,8 +634,8 @@ string =   from ini
         n.c.add_option('wilma', doc='wife from Flintstones')
         c = config_manager.ConfigurationManager([n],
                                     manager_controls=False,
-                                    use_config_files=False,
-                                    auto_help=False,
+                                    #use_config_files=False,
+                                    use_auto_help=False,
                                     argv_source=[])
         s = StringIO()
         c.output_summary(output_stream=s)
@@ -910,49 +658,6 @@ string =   from ini
         n.add_option('aaa', doc='the a', default='', short_form='a')
         self.assertEqual(n.aaa.value, '')
 
-    def test_OptionsByIniFile_basics(self):
-        """test basic use of OptionsByIniFile"""
-        tmp_filename = os.path.join(tempfile.gettempdir(), 'test.conf')
-        open(tmp_filename, 'w').write("""
-; comment
-[top_level]
-name=Peter
-awesome:
-; comment
-[othersection]
-foo=bar  ; other comment
-        """)
-
-        try:
-            o = config_manager.IniValueSource(tmp_filename)
-            c = config_manager.ConfigurationManager([],
-                                        manager_controls=False,
-                                        use_config_files=False,
-                                        auto_help=False,
-                                        argv_source=[])
-
-            self.assertEqual(o.get_values(c, False),
-                             {'othersection.foo': 'bar',
-                              'name': 'Peter',
-                              'awesome': ''})
-            self.assertEqual(o.get_values(c, True),
-                             {'othersection.foo': 'bar',
-                              'name': 'Peter',
-                              'awesome': ''})
-            # XXX (peterbe): commented out because I'm not sure if
-            # OptionsByIniFile get_values() should depend on the configuration
-            # manager it is given as first argument or not.
-            #self.assertEqual(o.get_values(c, True), {})
-            #self.assertRaises(config_manager.NotAnOptionError,
-            #                  o.get_values, c, False)
-
-            #c.option_definitions.add_option('limit', default=0)
-            #self.assertEqual(o.get_values(c, False), {'limit': '20'})
-            #self.assertEqual(o.get_values(c, True), {'limit': '20'})
-        finally:
-            if os.path.isfile(tmp_filename):
-                os.remove(tmp_filename)
-
     def test_RequiredConfig_get_required_config(self):
 
         class Foo:
@@ -970,13 +675,13 @@ foo=bar  ; other comment
         result = Combined.get_required_config()
         self.assertEqual(result, {'foo': True, 'bar': False})
 
-    def test_create_ConfigurationManager_with_use_config_files(self):
-        # XXX incomplete! (peter, 15 Aug)
-        c = config_manager.ConfigurationManager([],
-                                                manager_controls=False,
-                                                use_config_files=True,
-                                                auto_help=False,
-                                                argv_source=[])
-        self.assertTrue(c.ini_source is None)
-        self.assertTrue(c.conf_source is None)
-        self.assertTrue(c.json_source is None)
+    #def test_create_ConfigurationManager_with_use_config_files(self):
+        ## XXX incomplete! (peter, 15 Aug)
+        #c = config_manager.ConfigurationManager([],
+                                                #manager_controls=False,
+                                                ##use_config_files=True,
+                                                #use_auto_help=False,
+                                                #argv_source=[])
+        #self.assertTrue(c.ini_source is None)
+        #self.assertTrue(c.conf_source is None)
+        #self.assertTrue(c.json_source is None)
