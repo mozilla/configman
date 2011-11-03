@@ -2,11 +2,39 @@ import unittest
 import ConfigParser
 import os
 import tempfile
+from cStringIO import StringIO
+import contextlib
 
+import configman.datetime_util as dtu
 import configman.config_manager as config_manager
 from ..value_sources.for_configparse import ValueSource
 
+
+def stringIO_context_wrapper(a_stringIO_instance):
+    @contextlib.contextmanager
+    def stringIS_context_manager(dummy1, dummy2):
+        yield a_stringIO_instance
+    return stringIS_context_manager
+
 class TestCase(unittest.TestCase):
+    def _some_namespaces(self):
+        """set up some namespaces"""
+        n = config_manager.Namespace(doc='top')
+        n.add_option('aaa', '2011-05-04T15:10:00','the a',
+          short_form='a',
+          from_string_converter=dtu.datetime_from_ISO_string
+        )
+        n.c = config_manager.Namespace(doc='c space')
+        n.c.add_option('fred', 'stupid', 'husband from Flintstones')
+        n.c.add_option('wilma', 'waspish', 'wife from Flintstones')
+        n.d = config_manager.Namespace(doc='d space')
+        n.d.add_option('fred', 'crabby', 'male neighbor from I Love Lucy')
+        n.d.add_option('ethel', 'silly', 'female neighbor from I Love Lucy')
+        n.x = config_manager.Namespace(doc='x space')
+        n.x.add_option('size', 100, 'how big in tons', short_form='s')
+        n.x.add_option('password', 'secret', 'the password')
+        return n
+
     def test_for_configparse_basics(self):
         """test basic use of for_configparse"""
         tmp_filename = os.path.join(tempfile.gettempdir(), 'test.ini')
@@ -133,7 +161,7 @@ fred=crabby
 # name: x.password
 # doc: the password
 # converter: str
-password=********
+password=secret
 
 # name: x.size
 # doc: how big in tons
@@ -141,7 +169,7 @@ password=********
 size=100
 """
         out = StringIO()
-        c.write_ini(output_stream=out)
+        c.write_config('ini', opener=stringIO_context_wrapper(out))
         received = out.getvalue()
         out.close()
         self.assertEqual(expected.strip(), received.strip())

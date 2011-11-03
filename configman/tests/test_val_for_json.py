@@ -69,15 +69,14 @@ class TestCase(unittest.TestCase):
         n.add_option('_write', 'json')
         #t = tempfile.NamedTemporaryFile('w', suffix='.json', delete=False)
         name = '/tmp/test.json'
-        class App(object):
-            app_name = name[:-5]
-            app_version = '1.1'
-        n.add_option('_application', App())
         c1 = config_manager.ConfigurationManager([n],[],
                             manager_controls=False,
                             use_auto_help=False,
+                            app_name='/tmp/test',
+                            app_version='0',
+                            app_description='',
                             argv_source=[])
-        c1.write_config()
+        c1.write_config(config_file_type='json')
         d1 = {'bbb': 88}
         d2 = {'bbb': '-99'}
         try:

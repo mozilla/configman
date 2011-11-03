@@ -52,7 +52,17 @@ class TestCase(unittest.TestCase):
         result = out.getvalue()
         expected = ("# name: x\n"
                     "# doc: the x\n"
-                    "# converter: int\n")
+                    "# converter: int\n"
+                    "x=13\n\n"
+                    "# name: y\n"
+                    "# doc: the y\n"
+                    "# converter: int\n"
+                    "y=-1\n\n"
+                    "# name: z\n"
+                    "# doc: the z\n"
+                    "# converter: str\n"
+                    "z=fred\n\n"
+                    )
         self.assertEqual(expected, result,
                          "exepected %s\nbut got\n%s" % (expected, result))
         #config.write_conf(output_stream=out)

@@ -99,7 +99,7 @@ class ConfigurationManager(object):
             self.app_name = app_option.app_name
             self.app_version = app_option.app_version
             self.app_description = app_option.app_description
-        except (exc.NotAnOptionError, KeyError):
+        except (exc.NotAnOptionError, KeyError, AttributeError):
             self.app_name = app_name if app_name else ''
             self.app_version = app_version if app_version else ''
             self.app_description = app_description if app_description else ''
@@ -399,9 +399,10 @@ class ConfigurationManager(object):
           outputTemplatePrefixForNo: a string template for the first part of a
           listing where there is no single letter form of the command
         """
-        print >> output_stream, self.app_name, self.app_version
-        if self.app_doc:
-            print >> output_stream, self.app_doc
+        if self.app_name:
+            print >> output_stream, self.app_name, self.app_version
+        if self.app_description:
+            print >> output_stream, self.app_description
         names_list = self.get_option_names()
         names_list.sort()
         for x in names_list:
@@ -438,21 +439,20 @@ class ConfigurationManager(object):
             print >> output_stream, template.format(**output_parameters)
 
     #--------------------------------------------------------------------------
-    def write_config(self, block_password=True, opener=open):
-        config_file_type = self.get_option_by_name('_write').value
+    def write_config(self, config_file_type=None,
+                     block_password=True,
+                     opener=open):
+        if not config_file_type:
+            config_file_type = self.get_option_by_name('_write').value
         option_iterator = functools.partial(self.walk_config,
                                     blocked_keys=self.manager_controls_list)
-        app = self.get_option_by_name('_application')
-        try:
-            app_name = app.value.app_name
-        except AttributeError:
-            app_name = 'unknown-app'
         try:
             config_path = self.get_option_by_name('config_path')
         except KeyError:
             config_path = ''
         config_pathname = os.path.join(config_path,
-                                       '.'.join((app_name, config_file_type)))
+                                       '.'.join((self.app_name,
+                                                 config_file_type)))
 
         with opener(config_pathname, 'w') as config_fp:
             value_sources.write(config_file_type,

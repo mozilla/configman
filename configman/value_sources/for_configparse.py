@@ -2,6 +2,9 @@ import sys
 import ConfigParser
 
 import exceptions
+import configman.namespace as ns
+import configman.converters as conv
+import configman
 
 
 class NotEnoughInformationException(exceptions.ValueException):
@@ -66,7 +69,7 @@ class ValueSource(dict):
     def write(option_iter, output_stream=sys.stdout):
         print >> output_stream, '[top_level]'
         for qkey, key, val in option_iter():
-            if isinstance(val, Namespace):
+            if isinstance(val, ns.Namespace):
                 print >> output_stream, '[%s]' % key
                 print >> output_stream, '# %s\n' % val._doc
             else:
