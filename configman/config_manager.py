@@ -58,6 +58,9 @@ class ConfigurationManager(object):
                  manager_controls=True,
                  quit_after_admin=True,
                  options_banned_from_help=None,
+                 app_name=None,
+                 app_version=None,
+                 app_description=None
                  ):
         # instead of allowing mutables as default keyword argument values...
         if definition_source_list is None:
@@ -92,9 +95,14 @@ class ConfigurationManager(object):
                                           self.option_definitions)
 
         try:
-            app_name = self.get_option_by_name('_application')
+            app_option = self.get_option_by_name('_application')
+            self.app_name = app_option.app_name
+            self.app_version = app_option.app_version
+            self.app_description = app_option.app_description
         except (exc.NotAnOptionError, KeyError):
-            app_name = None
+            self.app_name = app_name if app_name else ''
+            self.app_version = app_version if app_version else ''
+            self.app_description = app_description if app_description else ''
 
         if values_source_list:
             self.custom_values_source = True
@@ -102,10 +110,10 @@ class ConfigurationManager(object):
             import getopt
             self.custom_values_source = False
             self.values_source_list = [os.environ,
+                                       "%s.ini" % self.app_name,
+                                       "%s.conf" % self.app_name,
+                                       "%s.json" % self.app_name,
                                        getopt,
-                                       "%s.ini" % app_name,
-                                       "%s.conf" % app_name,
-                                       "%s.json" % app_name
                                       ]
         self.values_source_list = value_sources.wrap(values_source_list,
                                                      self)
@@ -391,19 +399,9 @@ class ConfigurationManager(object):
           outputTemplatePrefixForNo: a string template for the first part of a
           listing where there is no single letter form of the command
         """
-        try:
-            app = self.get_option_by_name('_application')
-            try:
-                print >> output_stream, "%s %s" % (app.value.app_name,
-                                                   app.value.app_version)
-            except AttributeError, x:
-                pass
-            try:
-                print >> output_stream, app.value.app_doc
-            except AttributeError:
-                pass
-        except KeyError:
-            pass  # there is no _application class
+        print >> output_stream, self.app_name, self.app_version
+        if self.app_doc:
+            print >> output_stream, self.app_doc
         names_list = self.get_option_names()
         names_list.sort()
         for x in names_list:
