@@ -157,7 +157,7 @@ from_string_converters = {int: int,
 
 
 #------------------------------------------------------------------------------
-def classes_and_functions_to_str(a_thing):
+def py_obj_to_str(a_thing):
     if a_thing is None:
         return ''
     if inspect.ismodule(a_thing):
@@ -176,8 +176,8 @@ to_string_converters = {int: str,
                         datetime.datetime: dtu.datetime_to_ISO_string,
                         datetime.date: dtu.date_to_ISO_string,
                         datetime.timedelta: dtu.timedelta_to_str,
-                        type: classes_and_functions_to_str,
-                        types.FunctionType: classes_and_functions_to_str,
+                        type: py_obj_to_str,
+                        types.FunctionType: py_obj_to_str,
                         compiled_regexp_type: lambda x: x.pattern,
                         }
 

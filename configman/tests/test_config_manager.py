@@ -125,9 +125,6 @@ class TestCase(unittest.TestCase):
         n.x.add_option('password', 'secret', 'the password')
         return n
 
-
-
-
     def test_overlay_config_1(self):
         n = config_manager.Namespace()
         n.add_option('a')

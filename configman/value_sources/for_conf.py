@@ -80,8 +80,7 @@ class ValueSource(object):
                     print >> output_stream, '# name:', qkey
                     print >> output_stream, '# doc:', val.doc
                     print >> output_stream, '# converter:', \
-                        conv.classes_and_functions_to_str(
-                                                     val.from_string_converter)
+                        conv.py_obj_to_str(val.from_string_converter)
                 val_str = configman.ConfigurationManager.option_value_str(val)
                 print >> output_stream, '%s=%s\n' % (qkey, val_str)
             else:

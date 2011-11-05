@@ -58,6 +58,9 @@ class ConfigurationManager(object):
                  manager_controls=True,
                  quit_after_admin=True,
                  options_banned_from_help=None,
+                 app_name=None,
+                 app_version=None,
+                 app_description=None
                  ):
         # instead of allowing mutables as default keyword argument values...
         if definition_source_list is None:
@@ -91,11 +94,6 @@ class ConfigurationManager(object):
             def_sources.setup_definitions(a_definition_source,
                                           self.option_definitions)
 
-        try:
-            app_name = self.get_option_by_name('_application')
-        except (exc.NotAnOptionError, KeyError):
-            app_name = None
-
         if values_source_list:
             self.custom_values_source = True
         else:
@@ -103,27 +101,32 @@ class ConfigurationManager(object):
             self.custom_values_source = False
             self.values_source_list = [os.environ,
                                        getopt,
-                                       "%s.ini" % app_name,
-                                       "%s.conf" % app_name,
-                                       "%s.json" % app_name
                                       ]
         self.values_source_list = value_sources.wrap(values_source_list,
                                                      self)
 
-
         # first pass to get classes & config path - ignore bad options
         self.overlay_settings(ignore_mismatches=True)
 
-        # read config files
-        #if use_config_files and not self.custom_values_source:
-            #self.read_config_files()
-            ## second pass to include config file values - ignore bad options
-            #self.values_source_list = [self.ini_source,
-                                       #self.conf_source,
-                                       #self.json_source,
-                                       #os.environ,
-                                       #command_line_options]
-            #self.overlay_settings(ignore_mismatches=True)
+        # walk tree expanding class options
+        self.walk_expanding_class_options()
+
+        # the app_name, app_version and app_description are to come from
+        # if '_application' option if it is present.  If it is not present,
+        # get the app_name,et al, from parameters passed into the constructor.
+        # if those are empty, set app_name, et al, to empty strings
+        try:
+            app_option = self.get_option_by_name('_application')
+            self.app_name = getattr(app_option.value, 'app_name', '')
+            self.app_version = getattr(app_option.value, 'app_version', '')
+            self.app_description = getattr(app_option.value,
+                                           'app_description', '')
+        except exc.NotAnOptionError:
+            # there is no '_application' option, get the 'app_name'
+            # from the parameters passed in, if they exist.
+            self.app_name = app_name if app_name else ''
+            self.app_version = app_version if app_version else ''
+            self.app_description = app_description if app_description else ''
 
         # second pass to include config file values - ignore bad options
         self.overlay_settings(ignore_mismatches=True)
@@ -330,12 +333,16 @@ class ConfigurationManager(object):
     #--------------------------------------------------------------------------
     def get_option_by_name(self, name):
         source = self.option_definitions
-        for sub_name in name.split('.'):
-            candidate = source[sub_name]
-            if isinstance(candidate, Option):
-                return candidate
-            else:
-                source = candidate
+        try:
+            for sub_name in name.split('.'):
+                candidate = source[sub_name]
+                if isinstance(candidate, Option):
+                    return candidate
+                else:
+                    source = candidate
+        except KeyError:
+            pass # we need to raise the exception below in either case
+                 # of a key error or execution falling through the loop
         raise exc.NotAnOptionError('%s is not a known option name' % name)
 
     #--------------------------------------------------------------------------
@@ -391,19 +398,10 @@ class ConfigurationManager(object):
           outputTemplatePrefixForNo: a string template for the first part of a
           listing where there is no single letter form of the command
         """
-        try:
-            app = self.get_option_by_name('_application')
-            try:
-                print >> output_stream, "%s %s" % (app.value.app_name,
-                                                   app.value.app_version)
-            except AttributeError, x:
-                pass
-            try:
-                print >> output_stream, app.value.app_doc
-            except AttributeError:
-                pass
-        except KeyError:
-            pass  # there is no _application class
+        if self.app_name:
+            print >> output_stream, self.app_name, self.app_version
+        if self.app_description:
+            print >> output_stream, self.app_description
         names_list = self.get_option_names()
         names_list.sort()
         for x in names_list:
@@ -440,21 +438,20 @@ class ConfigurationManager(object):
             print >> output_stream, template.format(**output_parameters)
 
     #--------------------------------------------------------------------------
-    def write_config(self, block_password=True, opener=open):
-        config_file_type = self.get_option_by_name('_write').value
+    def write_config(self, config_file_type=None,
+                     block_password=True,
+                     opener=open):
+        if not config_file_type:
+            config_file_type = self.get_option_by_name('_write').value
         option_iterator = functools.partial(self.walk_config,
                                     blocked_keys=self.manager_controls_list)
-        app = self.get_option_by_name('_application')
         try:
-            app_name = app.value.app_name
-        except AttributeError:
-            app_name = 'unknown-app'
-        try:
-            config_path = self.get_option_by_name('config_path')
-        except KeyError:
+            config_path = self.get_option_by_name('config_path').value
+        except exc.NotAnOptionError:
             config_path = ''
         config_pathname = os.path.join(config_path,
-                                       '.'.join((app_name, config_file_type)))
+                                       '.'.join((self.app_name,
+                                                 config_file_type)))
 
         with opener(config_pathname, 'w') as config_fp:
             value_sources.write(config_file_type,
