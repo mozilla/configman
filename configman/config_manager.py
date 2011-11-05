@@ -100,6 +100,9 @@ class ConfigurationManager(object):
             import getopt
             self.custom_values_source = False
             self.values_source_list = [os.environ,
+                                       "%s.ini" % self.app_name,
+                                       "%s.conf" % self.app_name,
+                                       "%s.json" % self.app_name,
                                        getopt,
                                       ]
         self.values_source_list = value_sources.wrap(values_source_list,
@@ -446,8 +449,13 @@ class ConfigurationManager(object):
         option_iterator = functools.partial(self.walk_config,
                                     blocked_keys=self.manager_controls_list)
         try:
+<<<<<<< HEAD
             config_path = self.get_option_by_name('config_path').value
         except exc.NotAnOptionError:
+=======
+            config_path = self.get_option_by_name('config_path')
+        except KeyError:
+>>>>>>> master
             config_path = ''
         config_pathname = os.path.join(config_path,
                                        '.'.join((self.app_name,
