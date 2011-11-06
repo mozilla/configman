@@ -5,11 +5,7 @@ import exceptions
 import configman.namespace as ns
 import configman.converters as conv
 import configman
-<<<<<<< HEAD
 from configman import config_exceptions
-=======
->>>>>>> master
-
 
 class NotEnoughInformationException(exceptions.ValueException):
     pass
