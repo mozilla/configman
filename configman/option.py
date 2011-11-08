@@ -1,3 +1,5 @@
+import collections
+
 import converters as conv
 from config_exceptions import CannotConvertError
 
@@ -65,5 +67,9 @@ class Option(object):
                 self.value = val
             except ValueError:
                 raise CannotConvertError(val)
+        elif isinstance(val, Option):
+            self.value = val.default
+        elif isinstance(val, collections.Mapping) and 'default' in val:
+            self.value = val["default"]
         else:
             self.value = val

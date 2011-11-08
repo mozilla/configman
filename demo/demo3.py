@@ -4,9 +4,9 @@
 # there are two ways to invoke this app:
 #    .../generic_app.py --_application=demo3_app.Demo3App
 #    .../foo_app.py
-# this demo differs from demo2.py in the manner in which it works with configman.
-# Rather than being a linear procedure, this app defines a app class with
-# five features:
+# this demo differs from demo2.py in the manner in which it works with
+# configman. Rather than being a linear procedure, this app defines a app
+# class with five features:
 #   1) the app class derives from 'RequiredConfig'.  This instruments the class
 #      with the mechanism for discovery of required configuration parameters.
 #   2) closely aligned with point 1, this class defines a class level constant
@@ -75,5 +75,5 @@ Demo3App.required_config.add_option('action', 'echo', doc_string,
 # if you'd rather invoke the app directly with its source file, this will
 # allow it.
 if __name__ == "__main__":
-    import generic_app as ga
-    ga.main(Demo3App)
+    import generic_app
+    generic_app.main(Demo3App)

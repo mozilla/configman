@@ -29,7 +29,8 @@ class ValueSource(object):
                 raise ex.NotEnoughInformationException("Can't setup an json "
                                                        "file without knowing "
                                                        "the file name")
-        if isinstance(source, basestring):
+        if (isinstance(source, basestring) and
+           source.endswith(file_name_extension)):
             try:
                 with open(source) as fp:
                     self.values = json.load(fp)

@@ -1,16 +1,14 @@
 #!/usr/bin/env python
 
-"""This sample application demonstrates a simple way to use configman."""
-# this second demo shows how to use configman in the same manner that one would
+"""This sample application demonstrates the simlpest way to use configman."""
+# this first demo shows how to use configman in the same manner that one would
 # use other libraries like argparse.  We have a collection of functions that
 # embody the business logic of the application.  We setup configuration
 # parameters that will control the command line and config file forms.  Then
 # we run the application.
-# In this case, there is no need for a 'main' function.  The action done by the
-# application is specified in configuration.  The last line of the file invokes
-# the action.
 
 import os
+import sys
 import getopt
 import configman as cm
 import configman.converters as conv
@@ -28,36 +26,21 @@ def backwards(x):
 def upper(x):
     print x.upper()
 
-action_dispatch = {'echo': echo,
-                   'backwards': backwards,
-                   'upper': upper
-                  }
-
-
-def action_converter(action):
-    try:
-        return action_dispatch[action]
-    except KeyError:
-        try:
-            f = conv.class_converter(action)
-        except Exception:
-            raise Exception("'%s' is not a valid action" % action)
-        if f in action_dispatch.values():
-            return f
-        raise Exception("'%s' is not a valid action" % action)
-
 # create the definitions for the parameters that are to come from
-# the command line or config file.
+# the command line or config file.  First we create a container called a
+# namespace for the configuration parameters.
 n = cm.Namespace()
+# now we start adding options to the container. This first option
+# defines on the command line '--text' and '-t' swiches.  For configuration
+# files, this defines a top level entry of 'text' and assigns the value
+# 'Socorro Forever' to it.
 n.add_option('text', 'Socorro Forever', 'the text input value',
              short_form='t')
-# this application doesn't have a main function. This parameter
-# definition sets up what function will be executed on invocation of
-# of this script.
+# this second option definition defines the command line switches '--action'
+# and '-a'
 n.add_option('action', 'echo',
-             'the action to take [%s]' % ','.join(action_dispatch.keys()),
-             short_form='a',
-             from_string_converter=action_converter)
+             'the action to take [echo, backwards, upper]',
+             short_form='a')
 
 # create an iterable collection of definition sources
 # internally, this list will be appended to, so a tuple won't do
@@ -69,16 +52,28 @@ the_definition_source = [n]
 # os.environ values will be applied.  Then any values from an ini file
 # parsed by ConfigParse.  Finally any values supplied on the command line will
 # be applied.
-the_value_sources = (os.environ, 'demo2.ini', getopt)
+the_value_sources = (os.environ, 'demo1.ini', getopt)
 
 # set up the manager with the definitions and values
+# we set the sources for definition and value sources, and then define the
+# 'app_name' and 'app_description'.  The former will be used to define the
+# default basename for any configuration files that we may want to have the
+# application write.  Both the former and the latter will be used to create
+# the output of the automatically created '--help' command line switch.
 c = cm.ConfigurationManager(the_definition_source,
                             the_value_sources,
-                            app_name='demo2',
+                            app_name='demo1',
                             app_description=__doc__)
 
-# fetch the DotDict version of the values
+# fetch the DOM-like instance that gives access to the configuration info
 config = c.get_config()
 
 # use the config
-config.action(config.text)
+if config.action == 'echo':
+    echo(config.text)
+elif config.action == 'backwards':
+    backwards(config.text)
+elif config.action == 'upper':
+    upper(config.text)
+else:
+    print >>sys.stderr, config.action, "is not a valid action"

@@ -1,0 +1,1 @@
+{"action": {"name": "action", "default": "barf", "doc": "the action to take [echo, backwards, upper]", "value": "upper", "from_string_converter": "str", "short_form": "a"}, "text": {"name": "text", "default": "Socorro Forever", "doc": "the text input value", "value": "Socorro Forever", "from_string_converter": "str", "short_form": "t"}}

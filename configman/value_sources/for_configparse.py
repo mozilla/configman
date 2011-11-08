@@ -19,6 +19,10 @@ can_handle = (ConfigParser,
              )
 
 
+class LoadingIniFileFailsException(exceptions.ValueException):
+    pass
+
+
 class ValueSource(object):
 
     def __init__(self, source,
@@ -40,13 +44,20 @@ class ValueSource(object):
                                                         "the file name")
                 self.delayed_parser_instantiation = True
                 return
-        if isinstance(source, basestring):
-            self.configparser = self._create_parser(source)
+        if (isinstance(source, basestring) and
+            source.endswith(file_name_extension)):
+            try:
+                self.configparser = self._create_parser(source)
+            except Exception, x:
+                raise LoadingIniFileFailsException("Cannot load ini: %s"
+                                                   % str(x))
+
         elif isinstance(source, ConfigParser.RawConfigParser):
             self.configparser = source
         else:
-            raise exceptions.CantHandleTypeException("don't know how to handle"
-                                                     " %s." % str(source))
+            raise exceptions.CantHandleTypeException("ConfigParser doesn't "
+                                                     "know how to handle "
+                                                     "%s." % str(source))
 
     @staticmethod
     def _create_parser(source):
