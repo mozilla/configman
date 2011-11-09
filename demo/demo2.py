@@ -16,7 +16,7 @@ import configman as cm
 import configman.converters as conv
 
 
-# the following four functions are the business logic of the application.
+# the following three functions are the business logic of the application.
 def echo(x):
     print x
 
@@ -55,7 +55,7 @@ n.add_option('text', 'Socorro Forever', 'the text input value',
 # definition sets up what function will be executed on invocation of
 # of this script.
 n.add_option('action', 'echo',
-             'the action to take [%s]' % ','.join(action_dispatch.keys()),
+             'the action to take [%s]' % ', '.join(action_dispatch),
              short_form='a',
              from_string_converter=action_converter)
 

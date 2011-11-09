@@ -57,7 +57,7 @@ def main(app_object=None):
         # invocation of the app if the app_object was a class
         instance = app_object(config)
         instance.main()
-    elif inspect.ismodule(app_obect):
+    elif inspect.ismodule(app_object):
         # invocation of the app if the app_object was a module
         app_object.main(config)
     elif inspect.isfunction(app_object):
