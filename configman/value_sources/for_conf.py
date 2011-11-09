@@ -24,7 +24,7 @@ can_handle = (basestring,
                              # context manager
              )
 
-file_name_extension = '.conf'
+file_name_extension = 'conf'
 
 
 class NotAConfigFileException(exceptions.ValueException):
