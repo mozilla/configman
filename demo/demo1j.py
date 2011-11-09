@@ -28,7 +28,7 @@ def upper(x):
 
 # create an iterable collection of definition sources
 # internally, this list will be appended to, so a tuple won't do.
-# the definitions are in the json file listed below.'
+# the definitions are in the json file listed below.
 the_definition_source = ['demo1j.json']
 
 # create an iterable collection of value sources
