@@ -2,3 +2,7 @@
 build/
 cover/
 demo/sample-chain.*
+demo/demo1.conf
+demo/demo1.ini
+demo/demo1.json
+demo/demo2.ini
