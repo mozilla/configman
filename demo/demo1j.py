@@ -12,10 +12,9 @@ import os
 import sys
 import getopt
 import configman as cm
-import configman.converters as conv
 
 
-# the following four functions are the business logic of the application.
+# the following three functions are the business logic of the application.
 def echo(x):
     print x
 

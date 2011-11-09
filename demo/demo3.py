@@ -2,8 +2,8 @@
 
 """This sample application demonstrates the app class way to use configman."""
 # there are two ways to invoke this app:
-#    .../generic_app.py --_application=demo3_app.Demo3App
-#    .../foo_app.py
+#    .../generic_app.py --_application=demo3.Demo3App
+#    .../demo3.py
 # this demo differs from demo2.py in the manner in which it works with
 # configman. Rather than being a linear procedure, this app defines a app
 # class with five features:
@@ -59,7 +59,7 @@ class Demo3App(config_man.RequiredConfig):
     def action_converter(action):
         try:
             return getattr(Demo3App, "%s_action" % action)
-        except AttributeError, x:
+        except AttributeError:
             raise Exception("'%s' is not a valid action" % action)
 
 # normally, all the parameters are defined within the class, but
@@ -68,7 +68,7 @@ class Demo3App(config_man.RequiredConfig):
 # defined.  This tag along code injects the final config parameter after
 # the class has been fully defined
 list_of_actions = [x[:-7] for x in dir(Demo3App) if x.endswith('_action')]
-doc_string = 'the action to take [%s]' % ','.join(list_of_actions)
+doc_string = 'the action to take [%s]' % ', '.join(list_of_actions)
 Demo3App.required_config.add_option('action', 'echo', doc_string,
                                 short_form='a')
 
