@@ -10,10 +10,7 @@ import exceptions as ex
 import for_getopt
 import for_json
 import for_configparse
-try:
-    import for_configobj
-except ImportError:
-    for_configobj = None
+import for_configobj
 import for_conf
 import for_mapping
 
@@ -21,7 +18,7 @@ import for_mapping
 for_handlers = [for_mapping,
                 for_getopt,
                 for_json,
-                for_configobj if for_configobj else for_configparse,
+                for_configobj if for_configobj.can_handle else for_configparse,
                 for_conf
                ]
 
