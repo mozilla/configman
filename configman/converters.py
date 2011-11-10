@@ -164,6 +164,8 @@ def py_obj_to_str(a_thing):
         return a_thing.__name__
     if a_thing.__module__ == '__builtin__':
         return a_thing.__name__
+    if a_thing.__module__ == "__main__":
+        return a_thing.__name__
     return "%s.%s" % (a_thing.__module__, a_thing.__name__)
 
 
