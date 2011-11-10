@@ -43,7 +43,7 @@ the_definition_source = ['demo1j.json']
 # values.  Adding it to this tuple wolud mean that the default get applied
 # a second time and would override any values from the sources to the left in
 # the tuple.
-the_value_sources = (os.environ, 'demo1j.ini', getopt)
+the_value_sources = ('demo1j.ini', os.environ, getopt)
 
 # set up the manager with the definitions and values
 # we set the sources for definition and value sources, and then define the

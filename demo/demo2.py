@@ -69,7 +69,7 @@ the_definition_source = [n]
 # os.environ values will be applied.  Then any values from an ini file
 # parsed by ConfigParse.  Finally any values supplied on the command line will
 # be applied.
-the_value_sources = (os.environ, 'demo2.ini', getopt)
+the_value_sources = ('demo2.ini', os.environ, getopt)
 
 # set up the manager with the definitions and values
 c = cm.ConfigurationManager(the_definition_source,

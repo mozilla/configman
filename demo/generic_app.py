@@ -38,8 +38,8 @@ def main(app_object=None):
     # First the os.environ values will be applied.  Then any values from an ini
     # file parsed by getopt.  Finally any values supplied on the command line
     # will be applied.
-    value_sources = (os.environ,
-                     ConfigParser,
+    value_sources = (ConfigParser,
+                     os.environ,
                      getopt)
 
     # set up the manager with the definitions and values
