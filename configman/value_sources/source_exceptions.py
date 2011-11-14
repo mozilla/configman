@@ -1,6 +1,15 @@
-import configman.config_exceptions as ex
+from .. import config_exceptions
 
-class ValueException(ex.ConfigmanException):
+
+class ValueException(config_exceptions.ConfigmanException):
+    pass
+
+
+class NotEnoughInformationException(ValueException):
+    pass
+
+
+class LoadingIniFileFailsException(ValueException):
     pass
 
 

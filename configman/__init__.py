@@ -7,5 +7,5 @@ __version__ = '0.0.1'
 #    from configman import Namespace, ConfigurationManager
 #
 
-from config_manager import ConfigurationManager
-from namespace import Namespace
+from .config_manager import ConfigurationManager
+from .namespace import Namespace

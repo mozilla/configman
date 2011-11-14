@@ -12,16 +12,16 @@ represents the argv source."""
 import getopt
 import collections
 
-import configman.dotdict as dotdict
-import configman.option as option
-import configman.namespace as namespace
-import configman.config_exceptions as ex
-import configman.converters as conv
+from .. import dotdict
+from .. import option
+from .. import namespace
+from ..config_exceptions import NotAnOptionError
+from .. import converters as conv
 
-import exceptions
+from source_exceptions import ValueException, CantHandleTypeException
 
 
-class GetOptFailureException(exceptions.ValueException):
+class GetOptFailureException(ValueException):
     pass
 
 can_handle = (getopt,
@@ -38,7 +38,7 @@ class ValueSource(object):
         elif isinstance(source, collections.Sequence):
             self.argv_source = source
         else:
-            raise ex.CantHandleTypeException("don't know how to handle"
+            raise CantHandleTypeException("don't know how to handle"
                                              " %s." % str(source))
 
     def get_values(self, config_manager, ignore_mismatches):
@@ -63,7 +63,7 @@ class ValueSource(object):
                                            short_options_str,
                                            long_options_list)
         except getopt.GetoptError, x:
-            raise ex.NotAnOptionError(str(x))
+            raise NotAnOptionError(str(x))
         command_line_values = dotdict.DotDict()
         for opt_name, opt_val in getopt_options:
             if opt_name.startswith('--'):
@@ -73,7 +73,7 @@ class ValueSource(object):
                                             config_manager.option_definitions,
                                             '')
                 if not name:
-                    raise ex.NotAnOptionError('%s is not a valid short'
+                    raise NotAnOptionError('%s is not a valid short'
                                               ' form option' % opt_name[1:])
             option = config_manager.get_option_by_name(name)
             if option.from_string_converter == conv.boolean_converter:

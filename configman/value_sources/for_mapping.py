@@ -1,7 +1,7 @@
 import collections
 import os
 
-import exceptions
+from source_exceptions import CantHandleTypeException
 
 can_handle = (os.environ,
               collections.Mapping,
@@ -15,8 +15,8 @@ class ValueSource(object):
         elif isinstance(source, collections.Mapping):
             self.always_ignore_mismatches = False
         else:
-            raise exceptions.CantHandleTypeException("don't know how to handle"
-                                                     " %s." % str(source))
+            raise CantHandleTypeException(
+                                      "don't know how to handle %s." % source)
         self.source = source
 
     def get_values(self, config_manager, ignore_mismatches):
