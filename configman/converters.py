@@ -28,6 +28,7 @@ def option_value_str(an_option):
         s = "'''%s'''" % s
     return s
 
+
 #------------------------------------------------------------------------------
 def str_dict_keys(a_dict):
     """return a modified dict where all the keys that are anything but str get

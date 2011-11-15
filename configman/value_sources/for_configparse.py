@@ -1,8 +1,9 @@
 import sys
 import ConfigParser
 
-from source_exceptions import CantHandleTypeException, ValueException
-from ..namespace import Namespace
+from source_exceptions import (CantHandleTypeException, ValueException,
+                               NotEnoughInformationException)
+from .. import namespace
 from .. import converters as conv
 
 
@@ -46,7 +47,8 @@ class ValueSource(object):
                 self.configparser = self._create_parser(source)
             except Exception, x:
                 # FIXME: this doesn't give you a clue why it fail.
-                #  Was it because the file didn't exist (IOError) or because it was badly formatted??
+                #  Was it because the file didn't exist (IOError) or because it
+                #  was badly formatted??
                 raise LoadingIniFileFailsException("Cannot load ini: %s"
                                                    % str(x))
 
@@ -92,7 +94,7 @@ class ValueSource(object):
     def write(option_iter, output_stream=sys.stdout):
         print >> output_stream, '[top_level]'
         for qkey, key, val in option_iter():
-            if isinstance(val, Namespace):
+            if isinstance(val, namespace.Namespace):
                 print >> output_stream, '[%s]' % key
                 print >> output_stream, '# %s\n' % val._doc
             else:

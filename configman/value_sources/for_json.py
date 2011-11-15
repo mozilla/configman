@@ -18,6 +18,7 @@ file_name_extension = 'json'
 class LoadingJsonFileFailsException(ValueException):
     pass
 
+
 class ValueSource(object):
 
     def __init__(self, source, the_config_manager=None):
@@ -36,10 +37,12 @@ class ValueSource(object):
                 with open(source) as fp:
                     self.values = json.load(fp)
             except Exception, x:
-                # FIXME: this magically merges two otherwise interesting exceptions:
+                # FIXME: this magically merges two otherwise interesting
+                # exceptions:
                 #  IOError and ValueError.
-                # If you get a LoadingJsonFileFailsException exception you won't
-                # know for certain what caused in. File missing or file badly formatted.
+                # If you get a LoadingJsonFileFailsException exception you
+                # won't know for certain what caused in. File missing or file
+                # badly formatted.
                 raise LoadingJsonFileFailsException("Cannot load json: %s" %
                                                     str(x))
         else:

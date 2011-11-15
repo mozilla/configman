@@ -75,6 +75,7 @@ for a_handler in for_handlers:
         # therefore it is not eligibe for the write file dispatcher
         pass
 
+
 def wrap(value_source_list, a_config_manager):
     wrapped_sources = []
     for a_source in value_source_list:
@@ -97,6 +98,7 @@ def wrap(value_source_list, a_config_manager):
             raise AllHandlersFailedException(errors)
         wrapped_sources.append(wrapped_source)
     return wrapped_sources
+
 
 def write(file_name_extension,
           option_iterator,

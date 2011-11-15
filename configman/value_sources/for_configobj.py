@@ -6,6 +6,7 @@ except ImportError:
     file_name_extension = 'not in use'
     can_handle = ()
 else:
+    import ConfigParser
 
     file_name_extension = 'ini'
 
@@ -17,14 +18,12 @@ else:
 
 
 import collections
-import ConfigParser
 
-from .. import namespace as ns
+from .. import namespace
 from .. import converters as conv
-from .. import config_exceptions
-from source_exceptions import (ValueException, NotEnoughInformationException,
-                               LoadingIniFileFailsException, CantHandleTypeException)
-
+from source_exceptions import (NotEnoughInformationException,
+                               LoadingIniFileFailsException,
+                               CantHandleTypeException)
 
 
 class ValueSource(object):
