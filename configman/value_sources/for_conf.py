@@ -8,14 +8,15 @@ to open it.
 
 import functools
 import sys
-import exceptions
 
-import configman.option as opt
-import configman.converters as conv
-import configman
+from .. import option as opt
+from .. import converters as conv
+
+from source_exceptions import ValueException, CantHandleTypeException
 
 function_type = type(lambda x: x)  # TODO: just how do you express the Fuction
                                    # type as a constant?
+                                   # (peter: why not use inspect.isfunction()?)
 
 # the list of types that the contstuctor can handle.
 can_handle = (basestring,
@@ -27,7 +28,7 @@ can_handle = (basestring,
 file_name_extension = 'conf'
 
 
-class NotAConfigFileException(exceptions.ValueException):
+class NotAConfigFileError(ValueException):
     pass
 
 
@@ -42,7 +43,7 @@ class ValueSource(object):
             # will return a Context Manager Type.
             opener = candidate
         else:
-            raise exceptions.CantHandleTypeException("don't know how to handle"
+            raise CantHandleTypeException("don't know how to handle"
                                                      " %s." % str(candidate))
         self.values = {}
         try:
@@ -64,7 +65,7 @@ class ValueSource(object):
                     except ValueError:
                         self.values[line] = ''
         except Exception, x:
-            raise NotAConfigFileException("couldn't interpret %s as a context "
+            raise NotAConfigFileError("couldn't interpret %s as a context "
                                           "file: %s" % (candidate, str(x)))
 
     def get_values(self, config_manager, ignore_mismatches):
@@ -81,7 +82,7 @@ class ValueSource(object):
                     print >> output_stream, '# doc:', val.doc
                     print >> output_stream, '# converter:', \
                         conv.py_obj_to_str(val.from_string_converter)
-                val_str = configman.ConfigurationManager.option_value_str(val)
+                val_str = conv.option_value_str(val)
                 print >> output_stream, '%s=%s\n' % (qkey, val_str)
             else:
                 print >> output_stream, '#%s' % ('-' * 79)

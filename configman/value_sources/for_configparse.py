@@ -1,14 +1,11 @@
 import sys
 import ConfigParser
 
-import exceptions
-import configman.namespace as ns
-import configman.converters as conv
-import configman
-from configman import config_exceptions
+from source_exceptions import (CantHandleTypeException, ValueException,
+                               NotEnoughInformationException)
+from .. import namespace
+from .. import converters as conv
 
-class NotEnoughInformationException(exceptions.ValueException):
-    pass
 
 file_name_extension = 'ini'
 
@@ -19,7 +16,7 @@ can_handle = (ConfigParser,
              )
 
 
-class LoadingIniFileFailsException(exceptions.ValueException):
+class LoadingIniFileFailsException(ValueException):
     pass
 
 
@@ -49,15 +46,17 @@ class ValueSource(object):
             try:
                 self.configparser = self._create_parser(source)
             except Exception, x:
+                # FIXME: this doesn't give you a clue why it fail.
+                #  Was it because the file didn't exist (IOError) or because it
+                #  was badly formatted??
                 raise LoadingIniFileFailsException("Cannot load ini: %s"
                                                    % str(x))
 
         elif isinstance(source, ConfigParser.RawConfigParser):
             self.configparser = source
         else:
-            raise exceptions.CantHandleTypeException("ConfigParser doesn't "
-                                                     "know how to handle "
-                                                     "%s." % str(source))
+            raise CantHandleTypeException(
+                        "ConfigParser doesn't know how to handle %s." % source)
 
     @staticmethod
     def _create_parser(source):
@@ -95,7 +94,7 @@ class ValueSource(object):
     def write(option_iter, output_stream=sys.stdout):
         print >> output_stream, '[top_level]'
         for qkey, key, val in option_iter():
-            if isinstance(val, ns.Namespace):
+            if isinstance(val, namespace.Namespace):
                 print >> output_stream, '[%s]' % key
                 print >> output_stream, '# %s\n' % val._doc
             else:
@@ -103,6 +102,5 @@ class ValueSource(object):
                 print >> output_stream, '# doc:', val.doc
                 print >> output_stream, '# converter:', \
                    conv.py_obj_to_str(val.from_string_converter)
-                val_str = configman.ConfigurationManager.option_value_str(val)
+                val_str = conv.option_value_str(val)
                 print >> output_stream, '%s=%s\n' % (key, val_str)
-

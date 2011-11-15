@@ -12,7 +12,6 @@ import functools
 import converters as conv
 import config_exceptions as exc
 import value_sources
-
 import def_sources
 
 #==============================================================================
@@ -20,9 +19,6 @@ import def_sources
 from option import Option
 from dotdict import DotDict
 from namespace import Namespace
-#from value_sources.for_getopt import GetoptValueSource
-#from value_sources.for_conf import ConfValueSource
-#from value_sources.for_ini import IniValueSource
 
 
 #==============================================================================
@@ -461,19 +457,11 @@ class ConfigurationManager(object):
     #--------------------------------------------------------------------------
     @staticmethod
     def option_value_str(an_option):
-        if an_option.value is None:
-            return ''
-        try:
-            converter = conv.to_string_converters[type(an_option.value)]
-            s = converter(an_option.value)
-        except KeyError:
-            if not isinstance(an_option.value, basestring):
-                s = unicode(an_option.value)
-            else:
-                s = an_option.value
-        if an_option.from_string_converter in conv.converters_requiring_quotes:
-            s = "'''%s'''" % s
-        return s
+        import warnings
+        warnings.warn(DeprecationWarning,
+                      "This staticmethod is deprecated in favor of "
+                      "option_value_str() in converters.py")
+        return conv.option_value_str(an_option)
 
 
     #--------------------------------------------------------------------------

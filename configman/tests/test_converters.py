@@ -16,3 +16,22 @@ class TestCase(unittest.TestCase):
                 self.assertTrue(isinstance(key, str))
             else:
                 self.assertTrue(isinstance(key, int))
+
+    def test_option_value_str(self):
+        function = converters.option_value_str
+
+        class _Option(object):
+            def __init__(self, value=None, from_string_converter=None):
+                self.value = value
+                self.from_string_converter = from_string_converter
+
+        opt = _Option()
+        self.assertEqual(function(opt), '')
+        opt = _Option(3.14)
+        self.assertEqual(function(opt), '3.14')
+
+        from decimal import Decimal
+        opt = _Option(Decimal('3.14'))
+        self.assertEqual(function(opt), '3.14')
+
+        # FIXME: need a way to test a value whose 'from_string_converter' requires quotes

@@ -2,7 +2,10 @@ import collections
 import inspect
 import sys
 
-import exceptions as ex
+from source_exceptions import (NoHandlerForType, ModuleHandlesNothingException,
+                               AllHandlersFailedException,
+                               UnknownFileExtensionException,
+                               ValueException)
 
 # replace with dynamic discovery and loading
 #import for_argparse
@@ -33,8 +36,8 @@ class DispatchByType(collections.defaultdict):
                     (inspect.ismodule(key) and candidate is key)):
                 handlers_set.update(handler_list)
         if not handlers_set:
-            raise ex.NoHandlerForType("no hander for %s is available" %
-                                       str(candidate))
+            raise NoHandlerForType("no hander for %s is available" %
+                                   candidate)
         return handlers_set
 
     @staticmethod
@@ -58,7 +61,7 @@ for a_handler in for_handlers:
     except AttributeError:
         # this module has no can_handle attribute, therefore cannot really
         # be a handler and an error should be raised
-        raise ex.ModuleHandlesNothingException(
+        raise ModuleHandlesNothingException(
                                         "%s has no 'can_handle' attribute"
                                         % str(a_handler))
 
@@ -71,6 +74,7 @@ for a_handler in for_handlers:
         # this handler doesn't have a 'file_name_extension' or ValueSource
         # therefore it is not eligibe for the write file dispatcher
         pass
+
 
 def wrap(value_source_list, a_config_manager):
     wrapped_sources = []
@@ -85,15 +89,16 @@ def wrap(value_source_list, a_config_manager):
                 wrapped_source = a_handler.ValueSource(a_source,
                                                        a_config_manager)
                 break
-            except ex.ValueException, x:
+            except ValueException, x:
                 # a failure is not necessarily fatal, we need to try all of
                 # the handlers.  It's only fatal when they've all failed
                 error_history.append(str(x))
         if wrapped_source is None:
             errors = '; '.join(error_history)
-            raise ex.AllHandlersFailedException(errors)
+            raise AllHandlersFailedException(errors)
         wrapped_sources.append(wrapped_source)
     return wrapped_sources
+
 
 def write(file_name_extension,
           option_iterator,
@@ -102,6 +107,6 @@ def write(file_name_extension,
         file_extension_dispatch[file_name_extension](option_iterator,
                                                      output_stream)
     except KeyError:
-        raise ex.UnknownFileExtensionException("%s isn't a registered file"
+        raise UnknownFileExtensionException("%s isn't a registered file"
                                                " name extension" %
                                                file_name_extension)

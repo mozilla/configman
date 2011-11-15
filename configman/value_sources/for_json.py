@@ -2,10 +2,11 @@ import json
 import collections
 import sys
 
-import configman.converters as conv
-from configman.namespace import Namespace
+from .. import converters as conv
+from ..namespace import Namespace
 
-import exceptions as ex
+from source_exceptions import (ValueException, NotEnoughInformationException,
+                               NoHandlerForType)
 
 can_handle = (basestring,
               json
@@ -14,8 +15,9 @@ can_handle = (basestring,
 file_name_extension = 'json'
 
 
-class LoadingJsonFileFailsException(ex.ValueException):
+class LoadingJsonFileFailsException(ValueException):
     pass
+
 
 class ValueSource(object):
 
@@ -26,7 +28,7 @@ class ValueSource(object):
                 app = the_config_manager.get_option_by_name('_application')
                 source = "%s.%s" % (app.value.app_name, file_name_extension)
             except (AttributeError, KeyError):
-                raise ex.NotEnoughInformationException("Can't setup an json "
+                raise NotEnoughInformationException("Can't setup an json "
                                                        "file without knowing "
                                                        "the file name")
         if (isinstance(source, basestring) and
@@ -35,10 +37,16 @@ class ValueSource(object):
                 with open(source) as fp:
                     self.values = json.load(fp)
             except Exception, x:
+                # FIXME: this magically merges two otherwise interesting
+                # exceptions:
+                #  IOError and ValueError.
+                # If you get a LoadingJsonFileFailsException exception you
+                # won't know for certain what caused in. File missing or file
+                # badly formatted.
                 raise LoadingJsonFileFailsException("Cannot load json: %s" %
                                                     str(x))
         else:
-            raise ex.NoHandlerForType("json can't handle: %s" %
+            raise NoHandlerForType("json can't handle: %s" %
                                       str(source))
 
     def get_values(self, config_manager, ignore_mismatches):
