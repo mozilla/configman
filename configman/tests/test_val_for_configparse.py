@@ -83,7 +83,7 @@ foo=bar  ; other comment
 
 
     def test_for_configparse_basics_2(self):
-        tmp_filename = os.path.join(tempfile.gettempdir(), 'test.conf')
+        tmp_filename = os.path.join(tempfile.gettempdir(), 'test.ini')
         open(tmp_filename, 'w').write("""
 ; comment
 [top_level]

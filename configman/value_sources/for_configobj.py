@@ -6,13 +6,10 @@ except ImportError:
     file_name_extension = 'not in use'
     can_handle = ()
 else:
-    import ConfigParser
-
     file_name_extension = 'ini'
 
     can_handle = (configobj,
                   configobj.ConfigObj,
-                  ConfigParser,
                   basestring,
                  )
 
@@ -33,7 +30,7 @@ class ValueSource(object):
                  top_level_section_name='top_level'):
         self.delayed_parser_instantiation = False
         self.top_level_section_name = top_level_section_name
-        if source is configobj or source is ConfigParser:
+        if source is configobj:
             try:
                 app = config_manager.get_option_by_name('_application')
                 source = "%s.%s" % (app.value.app_name,
@@ -55,9 +52,6 @@ class ValueSource(object):
             except Exception, x:
                 raise LoadingIniFileFailsException("Cannot load ini: %s"
                                                    % str(x))
-
-        elif isinstance(source, ConfigParser.RawConfigParser):
-            self.config_dict = source
         else:
             raise CantHandleTypeException(
                         "ConfigParser doesn't know how to handle %s."

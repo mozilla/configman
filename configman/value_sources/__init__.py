@@ -21,7 +21,8 @@ import for_mapping
 for_handlers = [for_mapping,
                 for_getopt,
                 for_json,
-                for_configobj if for_configobj.can_handle else for_configparse,
+                for_configobj,
+                for_configparse,
                 for_conf
                ]
 
