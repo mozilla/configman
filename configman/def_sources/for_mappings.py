@@ -1,9 +1,8 @@
 import collections
 
-import configman.converters as converters
-import configman.namespace as namespace
-import configman.option as option
-
+from .. import converters
+from .. import namespace
+from .. import option
 
 #------------------------------------------------------------------------------
 def setup_definitions(source, destination):
