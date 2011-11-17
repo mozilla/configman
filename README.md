@@ -24,8 +24,4 @@ consider this command:
     
 To run with test coverage calculation run ``nosetests`` like this:
 
-    nosetests --with-coverage --cover-html \
-     --cover-package=config_manager,converters,datetime_util,\
-     config_exceptions,dotdict,namespace,option,options_by_conf,\
-     options_by_configparser,options_by_getopt
-     
+    nosetests --with-coverage --cover-html --cover-package=configman
