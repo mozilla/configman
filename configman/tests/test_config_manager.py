@@ -7,6 +7,7 @@ import io
 from cStringIO import StringIO
 import json
 import getopt
+import sys
 
 import configman.config_manager as config_manager
 from configman.dotdict import DotDict
@@ -672,6 +673,12 @@ string =   from ini
         result = Combined.get_required_config()
         self.assertEqual(result, {'foo': True, 'bar': False})
 
+        c = Combined()
+        c.config_assert({'foo': True, 'bar': False})
+
+        self.assertRaises(AssertionError, c.config_assert, ({},))
+
+
     #def test_create_ConfigurationManager_with_use_config_files(self):
         ## XXX incomplete! (peter, 15 Aug)
         #c = config_manager.ConfigurationManager([],
@@ -682,3 +689,180 @@ string =   from ini
         #self.assertTrue(c.ini_source is None)
         #self.assertTrue(c.conf_source is None)
         #self.assertTrue(c.json_source is None)
+
+    def test_app_name_from_app_obj(self):
+        class MyApp(config_manager.RequiredConfig):
+            app_name = 'fred'
+            app_version = '1.0'
+            app_description = "my app"
+            def __init__(inner_self, config):
+                inner_self.config = config
+
+        n = config_manager.Namespace()
+        n.add_option('_application',
+                     MyApp,
+                     'the app object class')
+        c = config_manager.ConfigurationManager([n],
+                                    manager_controls=False,
+                                    use_auto_help=False,
+                                    argv_source=[])
+        self.assertEqual(c.app_name, MyApp.app_name)
+        self.assertEqual(c.app_version, MyApp.app_version)
+        self.assertEqual(c.app_description, MyApp.app_description)
+
+    def test_help_out(self):
+        class MyApp(config_manager.RequiredConfig):
+            app_name = 'fred'
+            app_version = '1.0'
+            app_description = "my app"
+            required_config = config_manager.Namespace()
+            required_config.add_option('password', 'fred', 'the password')
+            def __init__(inner_self, config):
+                inner_self.config = config
+
+        n = config_manager.Namespace()
+        n.add_option('_application',
+                     MyApp,
+                     'the app object class')
+
+        class MyConfigManager(config_manager.ConfigurationManager):
+            def output_summary(inner_self):
+                output_stream = StringIO()
+                r = super(MyConfigManager, inner_self).output_summary(
+                             output_stream=output_stream,
+                             output_template='{name}-{doc}-{default}',
+                             bool_output_template='{name}-{doc}',
+                             short_form_template='{short_form}',
+                             no_short_form_template='',
+                             block_password=False)
+                r = output_stream.getvalue()
+                print r
+                output_stream.close()
+                self.assertEqual(r, "fred 1.0\n"
+                                    "my app\n"
+                                    "help-print this\n"
+                                    "password-the password-wilma\n")
+
+        def my_exit():
+            pass
+        old_sys_exit = sys.exit
+        sys.exit = my_exit
+        try:
+            c = MyConfigManager(n,
+                                [getopt],
+                                manager_controls=False,
+                                use_auto_help=True,
+                                argv_source=['--password=wilma', '--help'])
+        finally:
+            sys.exit = old_sys_exit
+
+    def test_write_gets_called(self):
+        class MyApp(config_manager.RequiredConfig):
+            app_name = 'fred'
+            app_version = '1.0'
+            app_description = "my app"
+            required_config = config_manager.Namespace()
+            required_config.add_option('password', 'fred', 'the password')
+            def __init__(inner_self, config):
+                inner_self.config = config
+
+        n = config_manager.Namespace()
+        n.add_option('_application',
+                     MyApp,
+                     'the app object class')
+
+        class MyConfigManager(config_manager.ConfigurationManager):
+            def __init__(inner_self, *args, **kwargs):
+                inner_self.write_called = False
+                super(MyConfigManager, inner_self).__init__(*args, **kwargs)
+            def write_config(inner_self):
+                inner_self.write_called = True
+
+        def my_exit():
+            pass
+        old_sys_exit = sys.exit
+        sys.exit = my_exit
+        try:
+            c = MyConfigManager(n,
+                                [getopt],
+                                manager_controls=True,
+                                use_auto_help=True,
+                                argv_source=['--password=wilma',
+                                             '--_write=ini'])
+            self.assertEqual(c.write_called, True)
+        finally:
+            sys.exit = old_sys_exit
+
+    def test_get_options(self):
+        class MyApp(config_manager.RequiredConfig):
+            app_name = 'fred'
+            app_version = '1.0'
+            app_description = "my app"
+            required_config = config_manager.Namespace()
+            required_config.add_option('password', 'fred', 'the password')
+            required_config.sub = config_manager.Namespace()
+            required_config.sub.add_option('name',
+                                           'ethel',
+                                           'the name')
+            def __init__(inner_self, config):
+                inner_self.config = config
+
+        n = config_manager.Namespace()
+        n.add_option('_application',
+                     MyApp,
+                     'the app object class')
+
+        c = config_manager.ConfigurationManager(n,
+                                    manager_controls=False,
+                                    use_auto_help=False,
+                                    argv_source=[])
+        r = c.get_options()
+        e = (('password', 'password', 'fred'),
+             ('_application', '_application', MyApp),
+             ('sub.name', 'name', 'ethel'))
+        for expected, result in zip(e, r):
+            expected_key, expected_name, expected_default = expected
+            result_key, result_option = result
+            self.assertEqual(expected_key, result_key)
+            self.assertEqual(expected_name, result_option.name)
+            self.assertEqual(expected_default, result_option.default)
+
+    def test_log_config(self):
+        class MyApp(config_manager.RequiredConfig):
+            app_name = 'fred'
+            app_version = '1.0'
+            app_description = "my app"
+            required_config = config_manager.Namespace()
+            required_config.add_option('password', 'fred', 'the password')
+            required_config.sub = config_manager.Namespace()
+            required_config.sub.add_option('name',
+                                           'ethel',
+                                           'the name')
+            def __init__(inner_self, config):
+                inner_self.config = config
+
+        n = config_manager.Namespace()
+        n.add_option('_application',
+                     MyApp,
+                     'the app object class')
+
+        c = config_manager.ConfigurationManager(n,
+                                                [getopt],
+                                    manager_controls=False,
+                                    use_auto_help=False,
+                                    argv_source=['--sub.name=wilma'])
+        class FakeLogger(object):
+            def __init__(self):
+                self.log = []
+            def info(self, *args):
+                self.log.append(args[0] % args[1:])
+        fl = FakeLogger()
+        c.log_config(fl)
+        e = ["app_name: fred",
+             "app_version: 1.0",
+             "current configuration:",
+             "password: *********",
+             "sub.name: wilma"]
+        for expected, received in zip(e, fl.log):
+            self.assertEqual(expected, received)
+

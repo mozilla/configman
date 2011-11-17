@@ -81,7 +81,7 @@ class ConfigurationManager(object):
 
         self.use_auto_help = use_auto_help
         self.help_done = False
-        self.admin_tasks_done = False
+        admin_tasks_done = False
         self.manager_controls = manager_controls
         self.manager_controls_list = ['help', '_write', 'config_path',
                                       '_application']
@@ -141,15 +141,15 @@ class ConfigurationManager(object):
 
         if self.use_auto_help and self.get_option_by_name('help').value:
             self.output_summary()
-            self.help_done = True
-            self.admin_tasks_done = True
+            help_done = True
+            admin_tasks_done = True
 
         if manager_controls and self.get_option_by_name('_write').value:
             self.write_config()
             admin_tasks_done = True
 
-        if quit_after_admin and self.admin_tasks_done:
-            exit()
+        if quit_after_admin and admin_tasks_done:
+            sys.exit()
 
     #--------------------------------------------------------------------------
     #def read_config_files(self):
@@ -472,12 +472,8 @@ class ConfigurationManager(object):
 
     #--------------------------------------------------------------------------
     def log_config(self, logger):
-        app = self.get_option_by_name('_application')
-        try:
-            logger.info("app_name: %s", app.value.app_name)
-            logger.info("app_version: %s", app.value.app_version)
-        except AttributeError:
-            pass
+        logger.info("app_name: %s", self.app_name)
+        logger.info("app_version: %s", self.app_version)
         logger.info("current configuration:")
         config = [(qkey, val.value) for qkey, key, val in
                                       self.walk_config(self.option_definitions)
@@ -495,13 +491,3 @@ class ConfigurationManager(object):
                     logger.info('%s: %s', key, val)
 
 
-def new_configuration(configurationModule=None,
-                      applicationName=None,
-                     ):
-    definition_source = []
-    if configurationModule:
-        definition_source.append(configurationModule)
-    config_manager = ConfigurationManager(definition_source,
-                                          use_auto_help=True,
-                                          application_name=applicationName)
-    return config_manager.get_config()
