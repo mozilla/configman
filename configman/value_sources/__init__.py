@@ -13,7 +13,6 @@ from source_exceptions import (NoHandlerForType, ModuleHandlesNothingException,
 import for_getopt
 import for_json
 import for_configparse
-import for_configobj
 import for_conf
 import for_mapping
 
@@ -21,7 +20,6 @@ import for_mapping
 for_handlers = [for_mapping,
                 for_getopt,
                 for_json,
-                for_configobj,
                 for_configparse,
                 for_conf
                ]
