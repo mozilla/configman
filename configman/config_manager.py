@@ -46,7 +46,7 @@ class ConfigurationManager(object):
 
     #--------------------------------------------------------------------------
     def __init__(self,
-                 definition_source_list=None,
+                 definition_source=None,
                  values_source_list=None,
                  argv_source=None,
                  #use_config_files=True,
@@ -59,8 +59,14 @@ class ConfigurationManager(object):
                  app_description=None
                  ):
         # instead of allowing mutables as default keyword argument values...
-        if definition_source_list is None:
+        if definition_source is None:
             definition_source_list = []
+        elif (isinstance(definition_source, collections.Sequence) and
+              not isinstance(definition_source, basestring)):
+            definition_source_list = list(definition_source)
+        else:
+            definition_source_list = [definition_source]
+
         if values_source_list is None:
             values_source_list = []
         if argv_source is None:

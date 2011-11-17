@@ -29,7 +29,7 @@ def upper(x):
 # create an iterable collection of definition sources
 # internally, this list will be appended to, so a tuple won't do.
 # the definitions are in the json file listed below.
-the_definition_source = ['demo1j.json']
+definition_source = 'demo1j.json'
 
 # create an iterable collection of value sources
 # the order is important as these will supply values for the sources defined
@@ -42,7 +42,7 @@ the_definition_source = ['demo1j.json']
 # values.  Adding it to this tuple wolud mean that the default get applied
 # a second time and would override any values from the sources to the left in
 # the tuple.
-the_value_sources = ('demo1j.ini', os.environ, getopt)
+value_sources = ('demo1j.ini', os.environ, getopt)
 
 # set up the manager with the definitions and values
 # we set the sources for definition and value sources, and then define the
@@ -50,8 +50,8 @@ the_value_sources = ('demo1j.ini', os.environ, getopt)
 # default basename for any configuration files that we may want to have the
 # application write.  Both the former and the latter will be used to create
 # the output of the automatically created '--help' command line switch.
-c = cm.ConfigurationManager(the_definition_source,
-                            the_value_sources,
+c = cm.ConfigurationManager(definition_source,
+                            value_sources,
                             app_name='demo1j',
                             app_description=__doc__)
 

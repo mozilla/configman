@@ -28,9 +28,6 @@ def main(app_object=None):
                               default=app_object,
                               from_string_converter=conv.class_converter
                              )
-    # create an iterable collection of definition sources
-    # internally, this list will be appended to, so a tuple won't do
-    definition_list = [app_definition]
 
     # create an iterable collection of value sources
     # the order is important as these will supply values for the sources
@@ -46,7 +43,7 @@ def main(app_object=None):
     # it isn't necessary to provide the app_name because the
     # app_object passed in or loaded by the ConfigurationManager will alredy
     # have that information.
-    config_manager = cm.ConfigurationManager(definition_list,
+    config_manager = cm.ConfigurationManager(app_definition,
                                              value_sources,
                                              )
     config = config_manager.get_config()

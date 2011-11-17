@@ -48,20 +48,20 @@ def action_converter(action):
 
 # create the definitions for the parameters that are to come from
 # the command line or config file.
-n = cm.Namespace()
-n.add_option('text', 'Socorro Forever', 'the text input value',
-             short_form='t')
+definition_source = cm.Namespace()
+definition_source.add_option('text',
+                                 'Socorro Forever',
+                                 'the text input value',
+                                 short_form='t')
 # this application doesn't have a main function. This parameter
 # definition sets up what function will be executed on invocation of
 # of this script.
-n.add_option('action', 'echo',
-             'the action to take [%s]' % ', '.join(action_dispatch),
-             short_form='a',
-             from_string_converter=action_converter)
-
-# create an iterable collection of definition sources
-# internally, this list will be appended to, so a tuple won't do
-the_definition_source = [n]
+definition_source.add_option('action',
+                                 'echo',
+                                 'the action to take [%s]' %
+                                    ', '.join(action_dispatch),
+                                short_form='a',
+                                from_string_converter=action_converter)
 
 # create an iterable collection of value sources
 # the order is important as these will supply values for the sources defined
@@ -69,11 +69,11 @@ the_definition_source = [n]
 # os.environ values will be applied.  Then any values from an ini file
 # parsed by ConfigParse.  Finally any values supplied on the command line will
 # be applied.
-the_value_sources = ('demo2.ini', os.environ, getopt)
+value_sources = ('demo2.ini', os.environ, getopt)
 
 # set up the manager with the definitions and values
-c = cm.ConfigurationManager(the_definition_source,
-                            the_value_sources,
+c = cm.ConfigurationManager(definition_source,
+                            value_sources,
                             app_name='demo2',
                             app_description=__doc__)
 
