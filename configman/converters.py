@@ -35,8 +35,14 @@ def str_dict_keys(a_dict):
     converted to str.
     E.g.
 
-      >>> str_dict_keys({u'name': u'Peter', u'age': 99, 1:2})
-      {'name': u'Peter, 'age': 99, 1: 2}
+      >>> result = str_dict_keys({u'name': u'Peter', u'age': 99, 1: 2})
+      >>> # can't compare whole dicts in doctests
+      >>> result['name']
+      u'Peter'
+      >>> result['age']
+      99
+      >>> result[1]
+      2
 
     The reason for this is that in Python <= 2.6.4 doing
     ``MyClass(**{u'name': u'Peter'})`` would raise a TypeError
@@ -78,30 +84,6 @@ def io_converter(input_str):
             return sys.stderr
         return open(input_str, "w")
     return input_str
-
-
-#------------------------------------------------------------------------------
-#def datetime_converter(input_str):
-#    """ a conversion function for datetimes
-#    """
-#    try:
-#        if type(input_str) is str:
-#            year = int(input_str[:4])
-#            month = int(input_str[5:7])
-#            day = int(input_str[8:10])
-#            hour = 0
-#            minute = 0
-#            second = 0
-#            try:
-#                hour = int(input_str[11:13])
-#                minute = int(input_str[14:16])
-#                second = int(input_str[17:19])
-#            except ValueError:
-#                pass
-#            return datetime.datetime(year, month, day, hour, minute, second)
-#        return input_str
-#    except Exception:
-#        return datetime.datetime.now()
 
 
 #------------------------------------------------------------------------------
