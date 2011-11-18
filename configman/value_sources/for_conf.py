@@ -35,7 +35,8 @@ class NotAConfigFileError(ValueException):
 class ValueSource(object):
 
     def __init__(self, candidate, the_config_manager=None):
-        if isinstance(candidate, basestring):
+        if (isinstance(candidate, basestring) and
+            candidate.endswith(file_name_extension)):
             # we're trusting the string represents a filename
             opener = functools.partial(open, candidate)
         elif isinstance(candidate, function_type):
