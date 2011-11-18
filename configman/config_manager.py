@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 import re
 import sys
 import os
@@ -491,5 +489,3 @@ class ConfigurationManager(object):
                                 conv.to_string_converters[type(key)](val))
                 except KeyError:
                     logger.info('%s: %s', key, val)
-
-
