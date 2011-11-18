@@ -74,6 +74,8 @@ class ConfigurationManager(object):
         if options_banned_from_help is None:
             options_banned_from_help = ['_application']
 
+        self.args = [] # extra commandline arguments that are not switches
+                       # will be stored here.
 
         self.argv_source = argv_source
         self.option_definitions = Namespace()

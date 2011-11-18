@@ -47,7 +47,7 @@ class ValueSource(object):
         but we cannot give it.  We may not know all the parameters because
         not all classes may have been expanded yet.  The two parameters allow
         this ValueSource implementation to know what the parameters  have
-        alredy been defined.  The 'ignore_mismatches' parameter tells the
+        already been defined.  The 'ignore_mismatches' parameter tells the
         implementation if it can or cannot ignore extraneous commandline
         options.  The last time this function is called, it will be required
         to test for illegal commandline options and respond accordingly."""
@@ -59,9 +59,13 @@ class ValueSource(object):
                 fn = ValueSource.getopt_with_ignore
             else:
                 fn = getopt.gnu_getopt
-            getopt_options, self.args = fn(self.argv_source,
-                                           short_options_str,
-                                           long_options_list)
+            # here getopt looks through the command line arguments and
+            # consumes the defined switches.  The things that are not
+            # consumed are then offered as the 'args' variable of the
+            # parent configuration_manager
+            getopt_options, config_manager.args = fn(self.argv_source,
+                                                     short_options_str,
+                                                     long_options_list)
         except getopt.GetoptError, x:
             raise NotAnOptionError(str(x))
         command_line_values = dotdict.DotDict()

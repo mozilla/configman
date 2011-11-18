@@ -866,3 +866,34 @@ string =   from ini
         for expected, received in zip(e, fl.log):
             self.assertEqual(expected, received)
 
+    def test_extra_commandline_parameters(self):
+        class MyApp(config_manager.RequiredConfig):
+            app_name = 'fred'
+            app_version = '1.0'
+            app_description = "my app"
+            required_config = config_manager.Namespace()
+            required_config.add_option('password', 'fred', 'the password')
+            required_config.sub = config_manager.Namespace()
+            required_config.sub.add_option('name',
+                                           'ethel',
+                                           'the name')
+            def __init__(inner_self, config):
+                inner_self.config = config
+
+        n = config_manager.Namespace()
+        n.add_option('_application',
+                     MyApp,
+                     'the app object class')
+
+        c = config_manager.ConfigurationManager(n,
+                                                [getopt],
+                                    manager_controls=False,
+                                    use_auto_help=False,
+                                    argv_source=['--sub.name=wilma',
+                                                 'argument 1',
+                                                 'argument 2',
+                                                 'argument 3'])
+        expected = ['argument 1',
+                    'argument 2',
+                    'argument 3']
+        self.assertEqual(c.args, expected)
