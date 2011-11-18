@@ -585,6 +585,7 @@ string =   from ini
         """test_output_summary: the output from help"""
         n = config_manager.Namespace()
         n.add_option('aaa', False, 'the a', short_form='a')
+        n.add_option('bee', True)
         n.b = 17
         n.c = config_manager.Namespace()
         n.c.add_option('fred', doc='husband from Flintstones')
@@ -597,58 +598,72 @@ string =   from ini
                                     manager_controls=False,
                                     #use_config_files=False,
                                     use_auto_help=False,
-                                    argv_source=[])
+                                    argv_source=[],
+                                    #app_name='foo',
+                                    #app_version='1.0',
+                                    #app_description='This app is cool.'
+                                    )
         s = StringIO()
         c.output_summary(output_stream=s)
         r = s.getvalue()
-        s.close()
-        expect = [
-          '\t-a, --aaa',
-          '\t\tthe a',
-          '\t    --b',
-          '\t\tno documentation available (default: 17)',
-          '\t    --c.fred',
-          '\t\thusband from Flintstones (default: None)',
-          '\t    --d.fred',
-          '\t\tmale neighbor from I Love Lucy (default: None)',
-          '\t    --d.x.password',
-          '\t\tthe password (default: ********)',
-          '\t-s, --d.x.size',
-          '\t\thow big in tons (default: 100)',
-        ]
-        expect = '\n'.join(expect)
-        self.assertEqual(r.rstrip(), expect.rstrip())
+        self.assertTrue('Options:\n' in r)
 
-    def test_config_manager_output_summary(self):
-        """Test that ConfigurationManager().output_summary() works"""
+        options = r.split('Options:\n')[1]
+        s.close()
+
+        expect = [
+          ('-a, --aaa', 'the a (default: False)'),
+          ('--b', '(default: 17)'),
+          ('--bee', '(default: True)'),
+          ('--c.fred', 'husband from Flintstones'),
+          ('--d.fred', 'male neighbor from I Love Lucy'),
+          ('--d.x.password', 'the password (default: *********)'),
+          ('-s, --d.x.size', 'how big in tons (default: 100)'),
+        ]
+        point = -1  # used to assert the sort order
+        for i, (start, end) in enumerate(expect):
+            self.assertTrue(point < options.find(start + ' ') < options.find(' ' + end))
+            point = options.find(end)
+
+    def test_output_summary_header(self):
+        """a config with an app_name, app_version and app_description is
+        printed on the output summary.
+        """
         n = config_manager.Namespace()
         n.add_option('aaa', False, 'the a', short_form='a')
-        n.b = 17
-        n.c = config_manager.Namespace()
-        n.c.add_option('fred', doc='the doc',
-                              default="[ ('version', 'fred', 100), "
-                                     "('product', 'sally', 100)]",
-                             from_string_converter=eval)
-        n.c.add_option('wilma', doc='wife from Flintstones')
-        c = config_manager.ConfigurationManager([n],
+        c = config_manager.ConfigurationManager(n,
                                     manager_controls=False,
-                                    #use_config_files=False,
                                     use_auto_help=False,
-                                    argv_source=[])
-        s = StringIO()
-        c.output_summary(output_stream=s)
-        received = s.getvalue()
-        s.close()
-        expected = r"""	-a, --aaa
-		the a
-	    --b
-		no documentation available (default: 17)
-	    --c.fred
-		the doc (default: [('version', 'fred', 100), ('product', 'sally', 100)])
-	    --c.wilma
-		wife from Flintstones (default: None)
-        """
-        self.assertEqual(received.strip(), expected.strip())
+                                    argv_source=[],
+                                    #app_name='foo',
+                                    #app_version='1.0',
+                                    #app_description='This app is cool.'
+                                    )
+        def get_output(conf):
+            s = StringIO()
+            conf.output_summary(output_stream=s)
+            return s.getvalue()
+
+        output = get_output(c)
+        assert 'Options:' in output
+        self.assertTrue('Application:' not in output)
+
+        c.app_name = 'foobar'
+        output = get_output(c)
+        assert 'Options:' in output
+        self.assertTrue('Application: foobar' in output)
+
+        c.app_version = '1.0'
+        output = get_output(c)
+        assert 'Options:' in output
+        self.assertTrue('Application: foobar 1.0' in output)
+
+        c.app_description = "This ain't your mama's app"
+        output = get_output(c)
+        assert 'Options:' in output
+        self.assertTrue('Application: foobar 1.0\n' in output)
+        self.assertTrue("This ain't your mama's app\n\n" in output)
+
 
     def test_eval_as_converter(self):
         """does eval work as a to string converter on an Option object?"""
@@ -730,21 +745,21 @@ string =   from ini
                 output_stream = StringIO()
                 r = super(MyConfigManager, inner_self).output_summary(
                              output_stream=output_stream,
-                             output_template='{name}-{doc}-{default}',
-                             bool_output_template='{name}-{doc}',
-                             short_form_template='{short_form}',
-                             no_short_form_template='',
                              block_password=False)
                 r = output_stream.getvalue()
-                print r
                 output_stream.close()
-                self.assertEqual(r, "fred 1.0\n"
-                                    "my app\n"
-                                    "help-print this\n"
-                                    "password-the password-wilma\n")
+                self.assertTrue('Application: fred 1.0' in r)
+                self.assertTrue('my app\n\n' in r)
+                self.assertTrue('Options:\n' in r)
+                self.assertTrue('  --help' in r and 'print this' in r)
+                self.assertTrue('print this (default: True)' not in r)
+                self.assertTrue('  --password' in r)
+                self.assertTrue('the password (default: *********)' in r)
+                self.assertTrue('  --_application' not in r)
 
         def my_exit():
             pass
+
         old_sys_exit = sys.exit
         sys.exit = my_exit
         try:

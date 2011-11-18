@@ -378,66 +378,55 @@ class ConfigurationManager(object):
     #--------------------------------------------------------------------------
     def output_summary(self,
                        output_stream=sys.stdout,
-                       output_template="--{name}\n\t\t{doc} (default: "
-                                       "{default})",
-                       bool_output_template="--{name}\n\t\t{doc}",
-                       short_form_template="\t-{short_form}, ",
-                       no_short_form_template="\t    ",
                        block_password=True):
-        """outputs the list of acceptable commands.  This is useful as the
-        output of the 'help' option or usage.
-
-        Parameters:
-          outputStream: where to send the output
-          sortOption: 0 - sort by the single character option
-                      1 - sort by the long option
-          with_parameters_template: a string template for
-          outputing options that have parameters from the long form onward
-          outputTemplateForOptionsWithoutParameters: a string template for
-          outputing options that have no parameters from the long form onward
-          short_form_template: a string template for the first
-          part of a listing where there is a single letter form of the command
-          outputTemplatePrefixForNo: a string template for the first part of a
-          listing where there is no single letter form of the command
+        """outputs a usage tip and the list of acceptable commands.
+        This is useful as the output of the 'help' option or usage.
         """
+        if self.app_name or self.app_description:
+            print >> output_stream, 'Application:',
         if self.app_name:
             print >> output_stream, self.app_name, self.app_version
         if self.app_description:
             print >> output_stream, self.app_description
+        if self.app_name or self.app_description:
+            print >> output_stream, ''
+
         names_list = self.get_option_names()
         names_list.sort()
-        for x in names_list:
-            if x in self.options_banned_from_help:
+        if names_list:
+            print >> output_stream, 'Options:'
+
+        for name in names_list:
+            if name in self.options_banned_from_help:
                 continue
-            option = self.get_option_by_name(x)
+            option = self.get_option_by_name(name)
+
+            line = ' ' * 2  # always start with 2 spaces
             if option.short_form:
-                prefix = short_form_template
-            else:
-                prefix = no_short_form_template
-            if isinstance(option.value, bool):
-                template = bool_output_template
-            else:
-                template = output_template
-            output_parameters = option.__dict__.copy()
-            output_parameters['name'] = x
-            if output_parameters['doc'] == None:
-                output_parameters['doc'] = 'no documentation available'
-            if block_password and 'password' in option.name.lower():
-                output_parameters['default'] = '********'
-                output_parameters['value'] = '********'
-            template = '%s%s' % (prefix, template)
-            # in the following line, we want the default to show the values
-            # that have been read it from config files.  In other words,
-            # we want to show the user what the values will be if they
-            # make no further action
+                line += '-%s, ' % option.short_form
+            line += '--%s' % name
+            line = line.ljust(30)  # seems to the common practise
+
+            doc = option.doc if option.doc is not None else ''
             try:
-                value = output_parameters['value']
+                value = option.value
                 type_of_value = type(value)
                 converter_function = conv.to_string_converters[type_of_value]
-                output_parameters['default'] = converter_function(value)
+                default = converter_function(value)
             except KeyError:
-                output_parameters['default'] = output_parameters['value']
-            print >> output_stream, template.format(**output_parameters)
+                default = option.value
+            if default is not None:
+                if 'password' in name.lower():
+                    default = '*********'
+                if doc:
+                    doc += ' '
+                if name not in ('help',):
+                    # don't bother with certain dead obvious ones
+                    doc += '(default: %s)' % default
+
+            line += doc
+            print >> output_stream, line
+
 
     #--------------------------------------------------------------------------
     def write_config(self, config_file_type=None,
