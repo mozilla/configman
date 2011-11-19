@@ -297,3 +297,26 @@ class TestCase(unittest.TestCase):
         o1.set_value('Peter')
         o2 = Option('name')
         self.assertNotEqual(o1, o2)
+
+    def test_set_value_from_other_option(self):
+        o1 = Option('name')
+        o1.set_value('Peter')
+        o2 = Option('name')
+        o2.set_value(o1)
+        self.assertEqual(o2.value, None)
+
+        o1 = Option('name', default='Your name here')
+        o1.set_value('Peter')
+        o2 = Option('name')
+        o2.set_value(o1)
+        self.assertEqual(o2.value, 'Your name here')
+
+    def test_set_value_from_mapping(self):
+        o1 = Option('name')
+        val = {'default': u'Peter'}
+        o1.set_value(val)
+        self.assertEqual(o1.value, 'Peter')
+
+        val = {'justanother': 'dict!'}
+        o1.set_value(val)
+        self.assertEqual(o1.value, val)

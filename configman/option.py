@@ -47,7 +47,7 @@ class Option(object):
                     self.value == other.value
                     )
 
-    def __repr__(self):
+    def __repr__(self):  # pragma: no cover
         if self.default is None:
             return '<Option: %r>' % self.name
         else:
