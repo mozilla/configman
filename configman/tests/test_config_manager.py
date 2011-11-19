@@ -1,13 +1,11 @@
-import unittest
+import sys
 import os
-import tempfile
+import unittest
 from contextlib import contextmanager
 import ConfigParser
 import io
 from cStringIO import StringIO
-import json
 import getopt
-import sys
 
 import configman.config_manager as config_manager
 from configman.dotdict import DotDict
@@ -111,7 +109,7 @@ class TestCase(unittest.TestCase):
     def _some_namespaces(self):
         """set up some namespaces"""
         n = config_manager.Namespace(doc='top')
-        n.add_option('aaa', '2011-05-04T15:10:00','the a',
+        n.add_option('aaa', '2011-05-04T15:10:00', 'the a',
           short_form='a',
           from_string_converter=dtu.datetime_from_ISO_string
         )
@@ -622,7 +620,8 @@ string =   from ini
         ]
         point = -1  # used to assert the sort order
         for i, (start, end) in enumerate(expect):
-            self.assertTrue(point < options.find(start + ' ') < options.find(' ' + end))
+            self.assertTrue(point < options.find(start + ' ')
+                                  < options.find(' ' + end))
             point = options.find(end)
 
     def test_output_summary_header(self):
@@ -635,10 +634,8 @@ string =   from ini
                                     manager_controls=False,
                                     use_auto_help=False,
                                     argv_source=[],
-                                    #app_name='foo',
-                                    #app_version='1.0',
-                                    #app_description='This app is cool.'
                                     )
+
         def get_output(conf):
             s = StringIO()
             conf.output_summary(output_stream=s)
@@ -663,7 +660,6 @@ string =   from ini
         assert 'Options:' in output
         self.assertTrue('Application: foobar 1.0\n' in output)
         self.assertTrue("This ain't your mama's app\n\n" in output)
-
 
     def test_eval_as_converter(self):
         """does eval work as a to string converter on an Option object?"""
@@ -693,23 +689,12 @@ string =   from ini
 
         self.assertRaises(AssertionError, c.config_assert, ({},))
 
-
-    #def test_create_ConfigurationManager_with_use_config_files(self):
-        ## XXX incomplete! (peter, 15 Aug)
-        #c = config_manager.ConfigurationManager([],
-                                                #manager_controls=False,
-                                                ##use_config_files=True,
-                                                #use_auto_help=False,
-                                                #argv_source=[])
-        #self.assertTrue(c.ini_source is None)
-        #self.assertTrue(c.conf_source is None)
-        #self.assertTrue(c.json_source is None)
-
     def test_app_name_from_app_obj(self):
         class MyApp(config_manager.RequiredConfig):
             app_name = 'fred'
             app_version = '1.0'
             app_description = "my app"
+
             def __init__(inner_self, config):
                 inner_self.config = config
 
@@ -732,6 +717,7 @@ string =   from ini
             app_description = "my app"
             required_config = config_manager.Namespace()
             required_config.add_option('password', 'fred', 'the password')
+
             def __init__(inner_self, config):
                 inner_self.config = config
 
@@ -763,11 +749,11 @@ string =   from ini
         old_sys_exit = sys.exit
         sys.exit = my_exit
         try:
-            c = MyConfigManager(n,
-                                [getopt],
-                                manager_controls=False,
-                                use_auto_help=True,
-                                argv_source=['--password=wilma', '--help'])
+            MyConfigManager(n,
+                            [getopt],
+                            manager_controls=False,
+                            use_auto_help=True,
+                            argv_source=['--password=wilma', '--help'])
         finally:
             sys.exit = old_sys_exit
 
@@ -778,6 +764,7 @@ string =   from ini
             app_description = "my app"
             required_config = config_manager.Namespace()
             required_config.add_option('password', 'fred', 'the password')
+
             def __init__(inner_self, config):
                 inner_self.config = config
 
@@ -790,6 +777,7 @@ string =   from ini
             def __init__(inner_self, *args, **kwargs):
                 inner_self.write_called = False
                 super(MyConfigManager, inner_self).__init__(*args, **kwargs)
+
             def write_config(inner_self):
                 inner_self.write_called = True
 
@@ -819,6 +807,7 @@ string =   from ini
             required_config.sub.add_option('name',
                                            'ethel',
                                            'the name')
+
             def __init__(inner_self, config):
                 inner_self.config = config
 
@@ -853,6 +842,7 @@ string =   from ini
             required_config.sub.add_option('name',
                                            'ethel',
                                            'the name')
+
             def __init__(inner_self, config):
                 inner_self.config = config
 
@@ -866,11 +856,14 @@ string =   from ini
                                     manager_controls=False,
                                     use_auto_help=False,
                                     argv_source=['--sub.name=wilma'])
+
         class FakeLogger(object):
             def __init__(self):
                 self.log = []
+
             def info(self, *args):
                 self.log.append(args[0] % args[1:])
+
         fl = FakeLogger()
         c.log_config(fl)
         e = ["app_name: fred",
@@ -892,6 +885,7 @@ string =   from ini
             required_config.sub.add_option('name',
                                            'ethel',
                                            'the name')
+
             def __init__(inner_self, config):
                 inner_self.config = config
 

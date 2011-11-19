@@ -30,7 +30,8 @@ class Option(object):
         if value is None:
             value = default
         self.set_value(value)
-        if type(self.value) != type(self.default) and self.from_string_converter:
+        if (type(self.value) != type(self.default)
+            and self.from_string_converter):
             # need to convert the default too
             self.default = self.from_string_converter(self.default)
 

@@ -2,7 +2,6 @@ import unittest
 import re
 import datetime
 
-import configman.config_manager as config_manager
 import configman.converters as conv
 import configman.datetime_util as dtu
 from configman.option import Option

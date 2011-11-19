@@ -1,8 +1,6 @@
-import re
 import sys
 import os
 import collections
-import json
 import inspect
 import os.path
 import functools
@@ -72,8 +70,8 @@ class ConfigurationManager(object):
         if options_banned_from_help is None:
             options_banned_from_help = ['_application']
 
-        self.args = [] # extra commandline arguments that are not switches
-                       # will be stored here.
+        self.args = []  # extra commandline arguments that are not switches
+                        # will be stored here.
 
         self.argv_source = argv_source
         self.option_definitions = Namespace()
@@ -141,7 +139,6 @@ class ConfigurationManager(object):
 
         if self.use_auto_help and self.get_option_by_name('help').value:
             self.output_summary()
-            help_done = True
             admin_tasks_done = True
 
         if manager_controls and self.get_option_by_name('_write').value:
@@ -150,31 +147,6 @@ class ConfigurationManager(object):
 
         if quit_after_admin and admin_tasks_done:
             sys.exit()
-
-    #--------------------------------------------------------------------------
-    #def read_config_files(self):
-        ## try ini file
-        #try:
-            #app = self.get_option_by_name('_application')
-            #application_name = app.value.app_name
-        #except (AttributeError, KeyError):
-            #self.ini_source = None
-            #self.conf_source = None
-            #self.json_source = None
-            #return
-        #path = self.get_option_by_name('config_path').value
-        #file_name = os.path.join(path, '%s.ini' % application_name)
-        #self.ini_source = IniValueSource(file_name)
-        ## try conf file
-        #file_name = os.path.join(path, '%s.conf' % application_name)
-        #self.conf_source = ConfValueSource(file_name)
-        ## try json file
-        #file_name = os.path.join(path, '%s.json' % application_name)
-        #try:
-            #with open(file_name) as j_file:
-                #self.json_source = json.load(j_file)
-        #except IOError:
-            #self.json_source = {}
 
     #--------------------------------------------------------------------------
     def walk_expanding_class_options(self, source=None):
@@ -330,8 +302,6 @@ class ConfigurationManager(object):
         self.walk_config_copy_values(self.option_definitions, config)
         return config
 
-    #get definition from classes in defaults
-
     #--------------------------------------------------------------------------
     def get_option_by_name(self, name):
         source = self.option_definitions
@@ -343,8 +313,8 @@ class ConfigurationManager(object):
                 else:
                     source = candidate
         except KeyError:
-            pass # we need to raise the exception below in either case
-                 # of a key error or execution falling through the loop
+            pass  # we need to raise the exception below in either case
+                  # of a key error or execution falling through the loop
         raise exc.NotAnOptionError('%s is not a known option name' % name)
 
     #--------------------------------------------------------------------------
@@ -427,7 +397,6 @@ class ConfigurationManager(object):
             line += doc
             print >> output_stream, line
 
-
     #--------------------------------------------------------------------------
     def write_config(self, config_file_type=None,
                      block_password=True,
@@ -448,7 +417,6 @@ class ConfigurationManager(object):
             value_sources.write(config_file_type,
                                 option_iterator,
                                 config_fp)
-
 
     #--------------------------------------------------------------------------
     def log_config(self, logger):

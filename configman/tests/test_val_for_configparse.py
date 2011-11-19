@@ -1,5 +1,4 @@
 import unittest
-import ConfigParser
 import os
 import tempfile
 from cStringIO import StringIO
@@ -16,11 +15,12 @@ def stringIO_context_wrapper(a_stringIO_instance):
         yield a_stringIO_instance
     return stringIS_context_manager
 
+
 class TestCase(unittest.TestCase):
     def _some_namespaces(self):
         """set up some namespaces"""
         n = config_manager.Namespace(doc='top')
-        n.add_option('aaa', '2011-05-04T15:10:00','the a',
+        n.add_option('aaa', '2011-05-04T15:10:00', 'the a',
           short_form='a',
           from_string_converter=dtu.datetime_from_ISO_string
         )
@@ -50,10 +50,10 @@ foo=bar  ; other comment
 
         try:
             o = ValueSource(tmp_filename)
-            v = o.get_values(None, None)
             r = {'othersection.foo': 'bar',
                  'name': 'Peter',
                  'awesome': ''}
+            assert o.get_values(None, None) == r
             # in the case of this implementation of a ValueSource,
             # the two parameters to get_values are dummies.  That may
             # not be true for all ValueSource implementations
@@ -80,7 +80,6 @@ foo=bar  ; other comment
         finally:
             if os.path.isfile(tmp_filename):
                 os.remove(tmp_filename)
-
 
     def test_for_configparse_basics_2(self):
         tmp_filename = os.path.join(tempfile.gettempdir(), 'test.ini')

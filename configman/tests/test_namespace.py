@@ -67,10 +67,11 @@ class TestCase(unittest.TestCase):
         """fix that verifies this bug
         https://github.com/twobraids/configman/issues/7
         """
-        j = (u'{"bday": {"default": "1979-12-13", "name": "bday",'
-             u' "from_string_converter": "configman.datetime_util.date_from_ISO'
-             u'_string", "doc": null, "value": "1979-12-13", '
-             u'"short_form": null}}')
+        j = (
+          u'{"bday": {"default": "1979-12-13", "name": "bday",'
+          u' "from_string_converter": "configman.datetime_util.date_from_ISO'
+          u'_string", "doc": null, "value": "1979-12-13", '
+          u'"short_form": null}}')
         config = config_manager.ConfigurationManager(
           [j],
           #use_config_files=False,
@@ -88,7 +89,6 @@ class TestCase(unittest.TestCase):
           config.option_definitions.bday.default,
           option.default
         )
-
 
     def test_walk_expanding_class_options(self):
         class A(config_manager.RequiredConfig):

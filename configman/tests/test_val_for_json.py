@@ -15,8 +15,8 @@ class TestCase(unittest.TestCase):
 
     def test_for_json_basics(self):
         tmp_filename = os.path.join(tempfile.gettempdir(), 'test.json')
-        j = { 'fred': 'wilma',
-              'number': 23,
+        j = {'fred': 'wilma',
+             'number': 23,
             }
         with open(tmp_filename, 'w') as f:
             json.dump(j, f)
@@ -35,6 +35,7 @@ class TestCase(unittest.TestCase):
           short_form='a',
           from_string_converter=dtu.datetime_from_ISO_string
         )
+
         def value_iter():
             yield 'aaa', 'aaa', n.aaa
 
@@ -69,7 +70,7 @@ class TestCase(unittest.TestCase):
         n.add_option('_write', 'json')
         #t = tempfile.NamedTemporaryFile('w', suffix='.json', delete=False)
         name = '/tmp/test.json'
-        c1 = config_manager.ConfigurationManager([n],[],
+        c1 = config_manager.ConfigurationManager([n], [],
                             manager_controls=False,
                             use_auto_help=False,
                             app_name='/tmp/test',
@@ -82,7 +83,7 @@ class TestCase(unittest.TestCase):
         try:
             with open(name) as jfp:
                 j = json.load(jfp)
-            c2 = config_manager.ConfigurationManager((j,),(d1, d2),
+            c2 = config_manager.ConfigurationManager((j,), (d1, d2),
                                         manager_controls=False,
                                         use_auto_help=False,
                                         argv_source=[])
@@ -91,46 +92,3 @@ class TestCase(unittest.TestCase):
             self.assertEqual(config.bbb, -99)
         finally:
             os.unlink(name)
-
-    #def test_write_json_2(self):
-        #n = config_manager.Namespace(doc='top')
-        #n.c = config_manager.Namespace(doc='c space')
-        #n.c.add_option('fred', u'stupid', 'husband from Flintstones')
-
-        #c = config_manager.ConfigurationManager([n],
-                                    #manager_controls=False,
-                                    ##use_config_files=False,
-                                    #use_auto_help=False,
-                                    #argv_source=[])
-
-        #s = StringIO()
-        #c.write_json(output_stream=s)
-        #received = s.getvalue()
-        #s.close()
-        #jrec = json.loads(received)
-
-        #expect_to_find = {
-          #'fred': {
-            #'short_form': None,
-            #'default': u'stupid',
-            #'doc': u'husband from Flintstones',
-            #'value': u'stupid',
-            #'from_string_converter': 'unicode',
-            #'name': u'fred'
-            #}
-        #}
-        #self.assertEqual(jrec['c'], expect_to_find)
-
-        ## let's make sure that we can do a complete round trip
-        #c2 = config_manager.ConfigurationManager([jrec],
-                                    #manager_controls=False,
-                                    ##use_config_files=False,
-                                    #use_auto_help=False,
-                                    #argv_source=[])
-        #s = StringIO()
-        #c2.write_json(output_stream=s)
-        #received2 = s.getvalue()
-        #s.close()
-        #jrec2 = json.loads(received2)
-        #self.assertEqual(jrec2['c'], expect_to_find)
-
