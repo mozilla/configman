@@ -449,15 +449,6 @@ class ConfigurationManager(object):
                                 option_iterator,
                                 config_fp)
 
-    #--------------------------------------------------------------------------
-    @staticmethod
-    def option_value_str(an_option):
-        import warnings
-        warnings.warn(DeprecationWarning,
-                      "This staticmethod is deprecated in favor of "
-                      "option_value_str() in converters.py")
-        return conv.option_value_str(an_option)
-
 
     #--------------------------------------------------------------------------
     def log_config(self, logger):
