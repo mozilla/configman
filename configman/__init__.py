@@ -36,7 +36,7 @@
 #
 # ***** END LICENSE BLOCK *****
 
-__version__ = '0.0.1'
+__version__ = '1.0'
 
 # Having these here makes it possible to easily import once configman is
 # installed.
@@ -53,4 +53,3 @@ from .namespace import Namespace
 from config_file_future_proxy import ConfigFileFutureProxy
 from os import environ as environment
 import getopt as command_line
-
