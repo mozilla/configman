@@ -268,9 +268,9 @@ class ConfigurationManager(object):
     #--------------------------------------------------------------------------
     @staticmethod
     def block_password(qkey, key, value, block_password=True):
-        if block_password and 'password' in option.name.lower():
+        if block_password and 'password' in key.lower():
             value = '*********'
-        return (qkey, key, value)
+        return qkey, key, value
 
     #--------------------------------------------------------------------------
     def walk_config(self, source=None, prefix='', blocked_keys=[],

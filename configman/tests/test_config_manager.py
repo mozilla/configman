@@ -906,3 +906,16 @@ string =   from ini
                     'argument 2',
                     'argument 3']
         self.assertEqual(c.args, expected)
+
+    def test_ConfigurationManager_block_password(self):
+        function = config_manager.ConfigurationManager.block_password
+        self.assertEqual(function('foo', 'bar', 'peter', block_password=False),
+                         ('foo', 'bar', 'peter'))
+        self.assertEqual(function('foo', 'bar', 'peter', block_password=True),
+                         ('foo', 'bar', 'peter'))
+        self.assertEqual(function('foo', 'password', 'peter',
+                                  block_password=True),
+                         ('foo', 'password', '*********'))
+        self.assertEqual(function('foo', 'my_password', 'peter',
+                                  block_password=True),
+                         ('foo', 'my_password', '*********'))
