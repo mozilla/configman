@@ -67,7 +67,7 @@ class TestCase(unittest.TestCase):
           short_form='a',
           from_string_converter=int
         )
-        n.add_option('_write', 'json')
+        n.add_option('write', 'json')
         #t = tempfile.NamedTemporaryFile('w', suffix='.json', delete=False)
         name = '/tmp/test.json'
         c1 = config_manager.ConfigurationManager([n], [],

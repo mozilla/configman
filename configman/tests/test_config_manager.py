@@ -791,7 +791,7 @@ string =   from ini
                                 manager_controls=True,
                                 use_auto_help=True,
                                 argv_source=['--password=wilma',
-                                             '--_write=ini'])
+                                             '--write=ini'])
             self.assertEqual(c.write_called, True)
         finally:
             sys.exit = old_sys_exit

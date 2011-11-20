@@ -81,7 +81,7 @@ class ConfigurationManager(object):
         self.help_done = False
         admin_tasks_done = False
         self.manager_controls = manager_controls
-        self.manager_controls_list = ['help', '_write', 'config_path',
+        self.manager_controls_list = ['help', 'write', 'config_path',
                                       '_application']
         self.options_banned_from_help = options_banned_from_help
 
@@ -141,7 +141,7 @@ class ConfigurationManager(object):
             self.output_summary()
             admin_tasks_done = True
 
-        if manager_controls and self.get_option_by_name('_write').value:
+        if manager_controls and self.get_option_by_name('write').value:
             self.write_config()
             self.admin_tasks_done = True
 
@@ -183,7 +183,7 @@ class ConfigurationManager(object):
     #--------------------------------------------------------------------------
     def setup_manager_controls(self):
         manager_options = Namespace()
-        manager_options._write = Option(name='_write',
+        manager_options.write = Option(name='write',
                                         doc='write config file to stdout '
                                             '(conf, ini, json)',
                                         default=None,
@@ -402,7 +402,7 @@ class ConfigurationManager(object):
                      block_password=True,
                      opener=open):
         if not config_file_type:
-            config_file_type = self.get_option_by_name('_write').value
+            config_file_type = self.get_option_by_name('write').value
         option_iterator = functools.partial(self.walk_config,
                                     blocked_keys=self.manager_controls_list)
         try:
