@@ -29,10 +29,10 @@ class ValueSource(object):
         self.top_level_section_name = top_level_section_name
         if source is ConfigParser:
             try:
-                app = config_manager.get_option_by_name('_application')
+                app = config_manager.get_option_by_name('admin.application')
                 source = "%s.%s" % (app.value.app_name, file_name_extension)
             except AttributeError:
-                # we likely don't have the _application object set up yet.
+                # we likely don't have the admin.application object set up yet.
                 # we need to delay the instantiation of the ConfigParser
                 # until later.
                 if source is None:
@@ -71,7 +71,7 @@ class ValueSource(object):
         dummies."""
         if self.delayed_parser_instantiation:
             try:
-                app = config_manager.get_option_by_name('_application')
+                app = config_manager.get_option_by_name('admin.application')
                 source = "%s%s" % (app.value.app_name, file_name_extension)
                 self.configparser = self._create_parser(source)
                 self.delayed_parser_instantiation = False

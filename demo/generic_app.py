@@ -22,12 +22,13 @@ def main(app_object=None):
     # parameters.  For a module to be acceptable, it must have a main
     # function that accepts a DotDict derivative as its input parameter.
     app_definition = cm.Namespace()
-    app_definition.add_option('_application',
-                              doc='the fully qualified module or '
-                                  'class of the application',
-                              default=app_object,
-                              from_string_converter=conv.class_converter
-                             )
+    app_definition.admin = admin = cm.Namespace()
+    admin.add_option('application',
+                     doc='the fully qualified module or class of the '
+                         'application',
+                     default=app_object,
+                     from_string_converter=conv.class_converter
+                    )
 
     # create an iterable collection of value sources
     # the order is important as these will supply values for the sources
@@ -48,7 +49,7 @@ def main(app_object=None):
                                              )
     config = config_manager.get_config()
 
-    app_object = config._application
+    app_object = config.admin.application
 
     if isinstance(app_object, type):
         # invocation of the app if the app_object was a class

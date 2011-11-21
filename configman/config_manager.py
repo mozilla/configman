@@ -68,7 +68,7 @@ class ConfigurationManager(object):
         if argv_source is None:
             argv_source = sys.argv[1:]
         if options_banned_from_help is None:
-            options_banned_from_help = ['_application']
+            options_banned_from_help = ['admin.application']
 
         self.args = []  # extra commandline arguments that are not switches
                         # will be stored here.
@@ -81,8 +81,8 @@ class ConfigurationManager(object):
         self.help_done = False
         admin_tasks_done = False
         self.manager_controls = manager_controls
-        self.manager_controls_list = ['help', 'write', 'config_path',
-                                      '_application']
+        self.manager_controls_list = ['help', 'admin.write', 'admin.config_path',
+                                      'admin.application']
         self.options_banned_from_help = options_banned_from_help
 
         if self.use_auto_help:
@@ -112,17 +112,17 @@ class ConfigurationManager(object):
         self.walk_expanding_class_options()
 
         # the app_name, app_version and app_description are to come from
-        # if '_application' option if it is present.  If it is not present,
+        # if 'admin.application' option if it is present.  If it is not present,
         # get the app_name,et al, from parameters passed into the constructor.
         # if those are empty, set app_name, et al, to empty strings
         try:
-            app_option = self.get_option_by_name('_application')
+            app_option = self.get_option_by_name('admin.application')
             self.app_name = getattr(app_option.value, 'app_name', '')
             self.app_version = getattr(app_option.value, 'app_version', '')
             self.app_description = getattr(app_option.value,
                                            'app_description', '')
         except exc.NotAnOptionError:
-            # there is no '_application' option, get the 'app_name'
+            # there is no 'admin.application' option, get the 'app_name'
             # from the parameters passed in, if they exist.
             self.app_name = app_name if app_name else ''
             self.app_version = app_version if app_version else ''
@@ -141,7 +141,7 @@ class ConfigurationManager(object):
             self.output_summary()
             admin_tasks_done = True
 
-        if manager_controls and self.get_option_by_name('write').value:
+        if manager_controls and self.get_option_by_name('admin.write').value:
             self.write_config()
             self.admin_tasks_done = True
 
@@ -149,26 +149,33 @@ class ConfigurationManager(object):
             sys.exit()
 
     #--------------------------------------------------------------------------
-    def walk_expanding_class_options(self, source=None):
-        if source is None:
-            source = self.option_definitions
+    def walk_expanding_class_options(self, source_namespace=None,
+                                     parent_namespace=None):
+        if source_namespace is None:
+            source_namespace = self.option_definitions
         expanded_keys = []
         expansions_were_done = True
         while expansions_were_done:
             expansions_were_done = False
             # can't use iteritems in loop, we're changing the dict
-            for key, val in source.items():
+            for key, val in source_namespace.items():
                 if isinstance(val, Namespace):
-                    self.walk_expanding_class_options(val)
+                    self.walk_expanding_class_options(source_namespace=val,
+                                                      parent_namespace=
+                                                          source_namespace)
                 elif (key not in expanded_keys and
                         (inspect.isclass(val.value) or
                          inspect.ismodule(val.value))):
                     expanded_keys.append(key)
                     expansions_were_done = True
+                    if key == 'application':
+                        target_namespace = parent_namespace
+                    else:
+                        target_namespace = source_namespace
                     try:
                         for o_key, o_val in \
                                 val.value.get_required_config().iteritems():
-                            source.__setattr__(o_key, o_val)
+                            target_namespace.__setattr__(o_key, o_val)
                     except AttributeError:
                         pass  # there are no required_options for this class
                 else:
@@ -182,20 +189,21 @@ class ConfigurationManager(object):
 
     #--------------------------------------------------------------------------
     def setup_manager_controls(self):
-        manager_options = Namespace()
-        manager_options.write = Option(name='write',
-                                        doc='write config file to stdout '
-                                            '(conf, ini, json)',
-                                        default=None,
-                                        )
-        #manager_options._quit = Option(name='_quit',
+        base_namespace = Namespace()
+        base_namespace.admin = admin = Namespace()
+        admin.write = Option(name='write',
+                             doc='write config file to stdout '
+                                 '(conf, ini, json)',
+                             default=None,
+                             )
+        #admin._quit = Option(name='_quit',
                                        #doc='quit after doing admin commands',
                                        #default=False)
-        manager_options.config_path = Option(name='config_path',
-                                                 doc='path for config file '
-                                                     '(not the filename)',
-                                                 default='./')
-        self.definition_source_list.append(manager_options)
+        admin.config_path = Option(name='config_path',
+                                   doc='path for config file '
+                                       '(not the filename)',
+                                   default='./')
+        self.definition_source_list.append(base_namespace)
 
     #--------------------------------------------------------------------------
     def overlay_settings(self, ignore_mismatches=True):
@@ -281,13 +289,15 @@ class ConfigurationManager(object):
         options_list.sort(key=ConfigurationManager.option_sort)
         for key, val in options_list:
             qualified_key = '%s%s' % (prefix, key)
-            if key in blocked_keys:
+            if qualified_key in blocked_keys:
                 continue
             value_type = type(val)
             if value_type == Option:
                 yield self.block_password(qualified_key, key, val,
                                           block_password)
             elif value_type == Namespace:
+                if qualified_key == 'admin':
+                    continue
                 yield qualified_key, key, val
                 new_prefix = '%s%s.' % (prefix, key)
                 for xqkey, xkey, xval in self.walk_config(val,
@@ -402,7 +412,7 @@ class ConfigurationManager(object):
                      block_password=True,
                      opener=open):
         if not config_file_type:
-            config_file_type = self.get_option_by_name('write').value
+            config_file_type = self.get_option_by_name('admin.write').value
         option_iterator = functools.partial(self.walk_config,
                                     blocked_keys=self.manager_controls_list)
         try:

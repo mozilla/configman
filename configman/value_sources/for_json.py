@@ -25,7 +25,7 @@ class ValueSource(object):
         self.values = None
         if source is json:
             try:
-                app = the_config_manager.get_option_by_name('_application')
+                app = the_config_manager.get_option_by_name('admin.application')
                 source = "%s.%s" % (app.value.app_name, file_name_extension)
             except (AttributeError, KeyError):
                 raise NotEnoughInformationException("Can't setup an json "

@@ -2,7 +2,7 @@
 
 "This sample application demonstrates dynamic class loading with configman."
 # there are two ways to invoke this app:
-#    .../generic_app.py --_application=dyn_app.Dyn_app
+#    .../generic_app.py --admin.application=dyn_app.Dyn_app
 #    .../dyn_app.py
 
 # this app simulates passing a group of records from one datasource to

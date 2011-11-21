@@ -2,7 +2,7 @@
 
 """This sample application demonstrates the app class way to use configman."""
 # there are two ways to invoke this app:
-#    .../generic_app.py --_application=demo3.Demo3App
+#    .../generic_app.py --admin.application=demo3.Demo3App
 #    .../demo3.py
 # this demo differs from demo2.py in the manner in which it works with
 # configman. Rather than being a linear procedure, this app defines a app

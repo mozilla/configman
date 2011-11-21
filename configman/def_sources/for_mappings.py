@@ -19,15 +19,16 @@ def setup_definitions(source, destination):
             if 'name' in val and 'default' in val:
                 # this is an Option in the form of a dict, not a Namespace
                 params = converters.str_dict_keys(val)
-                destination[key] = d = option.Option(**params)  # FIXME: why is 'd' defined here?
+                destination[key] = option.Option(**params)
             else:
                 # this is a Namespace
-                try:
-                    destination[key] = d = namespace.Namespace(doc=val._doc)
-                except AttributeError:
-                    destination[key] = d = namespace.Namespace()
+                if key not in destination:
+                    try:
+                        destination[key] = namespace.Namespace(doc=val._doc)
+                    except AttributeError:
+                        destination[key] = namespace.Namespace()
                 # recurse!
-                setup_definitions(val, d)
+                setup_definitions(val, destination[key])
         elif val_type in [int, float, str, unicode]:
             destination[key] = option.Option(name=key,
                                       doc=key,

@@ -699,9 +699,10 @@ string =   from ini
                 inner_self.config = config
 
         n = config_manager.Namespace()
-        n.add_option('_application',
-                     MyApp,
-                     'the app object class')
+        n.admin = config_manager.Namespace()
+        n.admin.add_option('application',
+                           MyApp,
+                           'the app object class')
         c = config_manager.ConfigurationManager([n],
                                     manager_controls=False,
                                     use_auto_help=False,
@@ -722,10 +723,10 @@ string =   from ini
                 inner_self.config = config
 
         n = config_manager.Namespace()
-        n.add_option('_application',
-                     MyApp,
-                     'the app object class')
-
+        n.admin = config_manager.Namespace()
+        n.admin.add_option('application',
+                           MyApp,
+                           'the app object class')
         class MyConfigManager(config_manager.ConfigurationManager):
             def output_summary(inner_self):
                 output_stream = StringIO()
@@ -741,7 +742,7 @@ string =   from ini
                 self.assertTrue('print this (default: True)' not in r)
                 self.assertTrue('  --password' in r)
                 self.assertTrue('the password (default: *********)' in r)
-                self.assertTrue('  --_application' not in r)
+                self.assertTrue('  --admin.application' not in r)
 
         def my_exit():
             pass
@@ -769,9 +770,10 @@ string =   from ini
                 inner_self.config = config
 
         n = config_manager.Namespace()
-        n.add_option('_application',
-                     MyApp,
-                     'the app object class')
+        n.admin = config_manager.Namespace()
+        n.admin.add_option('application',
+                           MyApp,
+                           'the app object class')
 
         class MyConfigManager(config_manager.ConfigurationManager):
             def __init__(inner_self, *args, **kwargs):
@@ -791,7 +793,7 @@ string =   from ini
                                 manager_controls=True,
                                 use_auto_help=True,
                                 argv_source=['--password=wilma',
-                                             '--write=ini'])
+                                             '--admin.write=ini'])
             self.assertEqual(c.write_called, True)
         finally:
             sys.exit = old_sys_exit
@@ -812,17 +814,19 @@ string =   from ini
                 inner_self.config = config
 
         n = config_manager.Namespace()
-        n.add_option('_application',
-                     MyApp,
-                     'the app object class')
+        n.admin = config_manager.Namespace()
+        n.admin.add_option('application',
+                           MyApp,
+                           'the app object class')
 
         c = config_manager.ConfigurationManager(n,
                                     manager_controls=False,
                                     use_auto_help=False,
                                     argv_source=[])
         r = c.get_options()
-        e = (('password', 'password', 'fred'),
-             ('_application', '_application', MyApp),
+        e = (
+             ('admin.application', 'application', MyApp),
+             ('password', 'password', 'fred'),
              ('sub.name', 'name', 'ethel'))
         for expected, result in zip(e, r):
             expected_key, expected_name, expected_default = expected
@@ -847,9 +851,10 @@ string =   from ini
                 inner_self.config = config
 
         n = config_manager.Namespace()
-        n.add_option('_application',
-                     MyApp,
-                     'the app object class')
+        n.admin = config_manager.Namespace()
+        n.admin.add_option('application',
+                           MyApp,
+                           'the app object class')
 
         c = config_manager.ConfigurationManager(n,
                                                 [getopt],
@@ -890,7 +895,7 @@ string =   from ini
                 inner_self.config = config
 
         n = config_manager.Namespace()
-        n.add_option('_application',
+        n.add_option('admin.application',
                      MyApp,
                      'the app object class')
 

@@ -80,8 +80,9 @@ class HBase(cm.RequiredConfig):
         log('connecting to Fake HBase with %s' % self.class_as_string)
         self.connection = (100, 90, -1)
 
-    def cannned_query(self):
+    def canned_query(self):
         for i in range(*self.connection):
+            log('%s fetching row: %s' % (self.class_as_string, i))
             yield i, i*10, chr(i+32)
 
     def write(self, row):
