@@ -143,7 +143,7 @@ class ConfigurationManager(object):
 
         if manager_controls and self.get_option_by_name('admin.write').value:
             self.write_config()
-            self.admin_tasks_done = True
+            admin_tasks_done = True
 
         if quit_after_admin and admin_tasks_done:
             sys.exit()
