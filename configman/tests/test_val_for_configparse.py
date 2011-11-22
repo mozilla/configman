@@ -11,7 +11,7 @@ from ..value_sources.for_configparse import ValueSource
 
 def stringIO_context_wrapper(a_stringIO_instance):
     @contextlib.contextmanager
-    def stringIS_context_manager(dummy1, dummy2):
+    def stringIS_context_manager():
         yield a_stringIO_instance
     return stringIS_context_manager
 
@@ -66,7 +66,7 @@ foo=bar  ; other comment
             # OptionsByIniFile get_values() should depend on the configuration
             # manager it is given as first argument or not.
             #c = config_manager.ConfigurationManager([],
-                                        #manager_controls=False,
+                                        #use_admin_controls=True,
                                         ##use_config_files=False,
                                         #auto_help=False,
                                         #argv_source=[])
@@ -96,7 +96,7 @@ foo=bar  ; other comment
         try:
             o = ValueSource(tmp_filename)
             c = config_manager.ConfigurationManager([],
-                                        manager_controls=False,
+                                        use_admin_controls=True,
                                         #use_config_files=False,
                                         use_auto_help=False,
                                         argv_source=[])
@@ -117,7 +117,7 @@ foo=bar  ; other comment
         n = self._some_namespaces()
         c = config_manager.ConfigurationManager(
           [n],
-          manager_controls=False,
+          use_admin_controls=True,
           #use_config_files=False,
           use_auto_help=False,
           argv_source=[]
@@ -168,7 +168,7 @@ password=secret
 size=100
 """
         out = StringIO()
-        c.write_config('ini', opener=stringIO_context_wrapper(out))
+        c.write_conf('ini', opener=stringIO_context_wrapper(out))
         received = out.getvalue()
         out.close()
         self.assertEqual(expected.strip(), received.strip())

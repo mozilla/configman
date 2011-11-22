@@ -167,8 +167,9 @@ class ValueSource(object):
         for key, val in source.items():
             type_of_val = type(val)
             if type_of_val == namespace.Namespace:
-                prefix = '%s.' % key
-                name = self.find_name_with_short_form(short_name, val, prefix)
+                new_prefix = '%s.' % key
+                name = self.find_name_with_short_form(short_name, val,
+                                                      new_prefix)
                 if name:
                     return name
             else:

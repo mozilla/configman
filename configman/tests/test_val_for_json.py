@@ -70,21 +70,23 @@ class TestCase(unittest.TestCase):
         n.add_option('write', 'json')
         #t = tempfile.NamedTemporaryFile('w', suffix='.json', delete=False)
         name = '/tmp/test.json'
+        import functools
+        opener = functools.partial(open, name, 'w')
         c1 = config_manager.ConfigurationManager([n], [],
-                            manager_controls=False,
+                            use_admin_controls=True,
                             use_auto_help=False,
                             app_name='/tmp/test',
                             app_version='0',
                             app_description='',
                             argv_source=[])
-        c1.write_config(config_file_type='json')
+        c1.write_conf('json', opener)
         d1 = {'bbb': 88}
         d2 = {'bbb': '-99'}
         try:
             with open(name) as jfp:
                 j = json.load(jfp)
             c2 = config_manager.ConfigurationManager((j,), (d1, d2),
-                                        manager_controls=False,
+                                        use_admin_controls=True,
                                         use_auto_help=False,
                                         argv_source=[])
             config = c2.get_config()

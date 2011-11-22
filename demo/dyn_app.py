@@ -48,6 +48,7 @@ class DynApp(config_man.RequiredConfig):
     def main(self):
         # the config object now has reference to a source and destination
         # classes. We need to instantiate the classes
+        print self.config.source.storage
         source = self.config.source.storage(self.config)
         destination = self.config.destination.storage(self.config)
         # this is the actual functional part of the script.  Read rows from

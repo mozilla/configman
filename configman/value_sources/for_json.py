@@ -36,13 +36,13 @@ class ValueSource(object):
             try:
                 with open(source) as fp:
                     self.values = json.load(fp)
-            except Exception, x:
-                # FIXME: this magically merges two otherwise interesting
-                # exceptions:
-                #  IOError and ValueError.
-                # If you get a LoadingJsonFileFailsException exception you
-                # won't know for certain what caused in. File missing or file
-                # badly formatted.
+            except IOError, x:
+                # The file doesn't exist.  That's ok, we'll give warning
+                # but this isn't a fatal error
+                import warnings
+                warnings.warn("%s doesn't exist" % source)
+                self.values = {}
+            except ValueError:
                 raise LoadingJsonFileFailsException("Cannot load json: %s" %
                                                     str(x))
         else:
@@ -70,4 +70,5 @@ class ValueSource(object):
                     d[okey] = conv.to_string_converters[type(oval)](oval)
                 except KeyError:
                     d[okey] = str(oval)
+            d['default'] = d['value']
         json.dump(json_dict, output_stream)

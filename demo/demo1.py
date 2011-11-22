@@ -7,9 +7,7 @@
 # parameters that will control the command line and config file forms.  Then
 # we run the application.
 
-import os
 import sys
-import getopt
 import configman as cm
 
 
@@ -34,32 +32,25 @@ definition_source = cm.Namespace()
 # files, this defines a top level entry of 'text' and assigns the value
 # 'Socorro Forever' to it.
 definition_source.add_option('text',
-                             'Socorro Forever',
-                             'the text input value',
+                             default='Socorro Forever',
+                             doc='the text input value',
                              short_form='t')
 # this second option definition defines the command line switches '--action'
 # and '-a'
 definition_source.add_option('action',
-                             'echo',
-                             'the action to take [echo, backwards, upper]',
+                             default='echo',
+                             doc='the action to take [echo, backwards, upper]',
                              short_form='a')
 
-# create an iterable collection of value sources
-# the order is important as these will supply values for the sources defined
-# in the_definition_source. The values will be overlain in turn.  First the
-# os.environ values will be applied.  Then any values from an ini file
-# parsed by ConfigParse.  Finally any values supplied on the command line will
-# be applied.
-value_sources = ('demo1.ini', os.environ, getopt)
-
-# set up the manager with the definitions and values
-# we set the sources for definition and value sources, and then define the
-# 'app_name' and 'app_description'.  The former will be used to define the
-# default basename for any configuration files that we may want to have the
-# application write.  Both the former and the latter will be used to create
-# the output of the automatically created '--help' command line switch.
+# set up the manager with the option definitions along with the 'app_name' and
+# 'app_description'.  They will both be used later to create  the output of the
+# automatically created '--help' command line switch.
+# By default, when assigning values to the options defined above, the
+# ConfigurationManager will take, in turn: the default from the definition,
+# any values loaded from a config file specified by the --admin.conf command
+# line switch, values from the os environment and finally overrides from the
+# commandline.
 c = cm.ConfigurationManager(definition_source,
-                            value_sources,
                             app_name='demo1',
                             app_description=__doc__)
 

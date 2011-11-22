@@ -10,8 +10,6 @@
 # application is specified in configuration.  The last line of the file invokes
 # the action.
 
-import os
-import getopt
 import configman as cm
 import configman.converters as conv
 
@@ -63,13 +61,21 @@ definition_source.add_option('action',
                                 short_form='a',
                                 from_string_converter=action_converter)
 
-# create an iterable collection of value sources
-# the order is important as these will supply values for the sources defined
-# in the_definition_source. The values will be overlain in turn.  First the
-# os.environ values will be applied.  Then any values from an ini file
-# parsed by ConfigParse.  Finally any values supplied on the command line will
-# be applied.
-value_sources = ('demo2.ini', os.environ, getopt)
+# this time, we're not going to accept the default list of value sources for
+# the definitions created above.  'value_sources' is a sequence of objects that
+# can be interpretted by the ConfigurationManager as a source of values for the
+# options.  Each source will be queried in turn for values.  Values gleaned
+# from sources on the left may be overridden by values from sources to the
+# right.  In this example, we're hard coding the the demo2.ini file as a
+# source of values.  The user will not be given the opporuntity to specify a
+# config file of their own.  After reading the hard coded config file, the
+# ConfigurationManager will apply values it got from the environment and then,
+# finally, apply values that it gets from the command line.
+value_sources = ('demo2.ini', cm.environment, cm.command_line)
+# the value_sources sequence can contian any object that is a derivation of the
+# type collections.Mapping, a module, or instances of any of the registered
+# handlers. cm.environment is just an alias for os.environ.  cm.command_line is
+# an alias for the 'getopt' module, a registerd handler.
 
 # set up the manager with the definitions and values
 c = cm.ConfigurationManager(definition_source,

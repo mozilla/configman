@@ -7,6 +7,8 @@ from source_exceptions import (NoHandlerForType, ModuleHandlesNothingException,
                                UnknownFileExtensionException,
                                ValueException)
 
+from ..config_file_future_proxy import ConfigFileFutureProxy
+
 # replace with dynamic discovery and loading
 #import for_argparse
 #import for_xml
@@ -78,6 +80,8 @@ for a_handler in for_handlers:
 def wrap(value_source_list, a_config_manager):
     wrapped_sources = []
     for a_source in value_source_list:
+        if a_source is ConfigFileFutureProxy:
+            a_source = a_config_manager.get_option_by_name('admin.conf').value
         handlers = type_handler_dispatch.get_handlers(a_source)
         wrapped_source = None
         error_history = []
@@ -109,3 +113,11 @@ def write(file_name_extension,
         raise UnknownFileExtensionException("%s isn't a registered file"
                                                " name extension" %
                                                file_name_extension)
+
+def get_admin_options_from_command_line(config_manager):
+    command_line_value_source = for_getopt.ValueSource(for_getopt.getopt,
+                                                       config_manager)
+    values = command_line_value_source.get_values(config_manager,
+                                                  ignore_mismatches=True)
+    return dict([(key, val) for key, val in values.iteritems()
+                                          if key.startswith('admin.')])

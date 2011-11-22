@@ -7,10 +7,14 @@ import io
 from cStringIO import StringIO
 import getopt
 
+import configman.config_file_future_proxy as config_proxy
+
 import configman.config_manager as config_manager
 from configman.dotdict import DotDict
 import configman.datetime_util as dtu
 from configman.config_exceptions import NotAnOptionError
+from configman.value_sources.source_exceptions import \
+                                                  AllHandlersFailedException
 
 
 class TestCase(unittest.TestCase):
@@ -19,7 +23,7 @@ class TestCase(unittest.TestCase):
         # because the default option argument defaults to using sys.argv we
         # have to mock that
         c = config_manager.ConfigurationManager(
-          manager_controls=False,
+          use_admin_controls=False,
           #use_config_files=False,
           use_auto_help=False,
           argv_source=[]
@@ -32,7 +36,7 @@ class TestCase(unittest.TestCase):
         n.add_option('b', 17)
         c = config_manager.ConfigurationManager(
           [n],
-          manager_controls=False,
+          use_admin_controls=False,
           #use_config_files=False,
           use_auto_help=False,
           argv_source=[]
@@ -53,7 +57,7 @@ class TestCase(unittest.TestCase):
         c.add_option('z', 99, 'the 99')
         c = config_manager.ConfigurationManager(
           [n],
-          manager_controls=False,
+          use_admin_controls=False,
           #use_config_files=False,
           use_auto_help=False,
           argv_source=[]
@@ -83,7 +87,7 @@ class TestCase(unittest.TestCase):
         n.d.x.add_option('password', 'secrets', 'the password')
         c = config_manager.ConfigurationManager(
           [n],
-          manager_controls=False,
+          use_admin_controls=True,
           #use_config_files=False,
           use_auto_help=False,
           argv_source=[]
@@ -137,7 +141,7 @@ class TestCase(unittest.TestCase):
         c.z.default = 99
         c.z.doc = 'the 99'
         c = config_manager.ConfigurationManager([n],
-                                    manager_controls=False,
+                                    use_admin_controls=False,
                                     #use_config_files=False,
                                     use_auto_help=False,
                                     argv_source=[])
@@ -166,7 +170,7 @@ class TestCase(unittest.TestCase):
         c.z.default = 99
         c.z.doc = 'the 99'
         c = config_manager.ConfigurationManager([n],
-                                    manager_controls=False,
+                                    use_admin_controls=False,
                                     #use_config_files=False,
                                     use_auto_help=False,
                                     argv_source=[])
@@ -195,7 +199,7 @@ class TestCase(unittest.TestCase):
         c.z.default = 99
         c.z.doc = 'the 99'
         c = config_manager.ConfigurationManager([n],
-                                    manager_controls=False,
+                                    use_admin_controls=True,
                                     #use_config_files=False,
                                     use_auto_help=False,
                                     argv_source=[])
@@ -219,7 +223,7 @@ class TestCase(unittest.TestCase):
         n.c.add_option('extra', doc='the x', default=3.14159)
         g = {'a': 2, 'c.extra': 2.89}
         c = config_manager.ConfigurationManager([n], [g],
-                                    manager_controls=False,
+                                    use_admin_controls=True,
                                     #use_config_files=False,
                                     use_auto_help=False,
                                     argv_source=[])
@@ -244,7 +248,7 @@ class TestCase(unittest.TestCase):
         n.c.add_option('extra', doc='the x', default=3.14159)
         g = {'a': 2, 'c': {'extra': 2.89}}
         c = config_manager.ConfigurationManager([n], [g],
-                                    manager_controls=False,
+                                    use_admin_controls=True,
                                     #use_config_files=False,
                                     use_auto_help=False,
                                     argv_source=[])
@@ -267,7 +271,7 @@ class TestCase(unittest.TestCase):
         n.b = 17
         n.add_option('c', doc='the c', default=False)
         c = config_manager.ConfigurationManager([n], [getopt],
-                                    manager_controls=False,
+                                    use_admin_controls=True,
                                     #use_config_files=False,
                                     use_auto_help=False,
                                     argv_source=['--a', '2', '--c'])
@@ -289,7 +293,7 @@ class TestCase(unittest.TestCase):
         n.c = config_manager.Namespace()
         n.c.add_option('extra', short_form='e', doc='the x', default=3.14159)
         c = config_manager.ConfigurationManager([n], [getopt],
-                                    manager_controls=False,
+                                    use_admin_controls=True,
                                     #use_config_files=False,
                                     use_auto_help=False,
                                     argv_source=['--a', '2', '--c.extra',
@@ -313,7 +317,7 @@ class TestCase(unittest.TestCase):
         n.c = config_manager.Namespace()
         n.c.add_option('extra', 3.14159, 'the x', short_form='e')
         c = config_manager.ConfigurationManager([n], [getopt],
-                                    manager_controls=False,
+                                    use_admin_controls=True,
                                     #use_config_files=False,
                                     use_auto_help=False,
                                     argv_source=['--a', '2', '-e', '11.0'])
@@ -348,7 +352,7 @@ class TestCase(unittest.TestCase):
                   ]
         #g = config_manager.ConfValueSource('dummy-filename', dummy_open)
         c = config_manager.ConfigurationManager([n], [dummy_open],
-                                    manager_controls=False,
+                                    use_admin_controls=True,
                                     #use_config_files=False,
                                     use_auto_help=False)
         self.assertEqual(c.option_definitions.a, n.a)
@@ -391,7 +395,7 @@ string =   wilma
         config = ConfigParser.RawConfigParser()
         config.readfp(io.BytesIO(ini_data))
         c = config_manager.ConfigurationManager([n], [config],
-                                    manager_controls=False,
+                                    use_admin_controls=True,
                                     use_auto_help=False)
         self.assertEqual(c.option_definitions.other.t.name, 't')
         self.assertEqual(c.option_definitions.other.t.value, 'tea')
@@ -451,7 +455,7 @@ string =   from ini
         os.environ = e
         try:
             c = config_manager.ConfigurationManager([n], [e, config, getopt],
-                                        manager_controls=False,
+                                        use_admin_controls=True,
                                         use_auto_help=False,
                                         argv_source=['--other.t', 'TTT',
                                                      '--c.extra', '11.0'])
@@ -509,7 +513,7 @@ string =   from ini
           #argv_source=['--c.extra', '11.0']
         #)
         c = config_manager.ConfigurationManager([n], [e, config, getopt],
-                                    manager_controls=False,
+                                    use_admin_controls=True,
                                     argv_source=['--c.extra', '11.0'],
                                     #use_config_files=False,
                                     use_auto_help=False)
@@ -543,7 +547,7 @@ string =   from ini
         n.d.x = config_manager.Namespace()
         n.d.x.add_option('size')
         c = config_manager.ConfigurationManager([n],
-                                    manager_controls=False,
+                                    use_admin_controls=False,
                                     #use_config_files=False,
                                     use_auto_help=False,
                                     argv_source=[])
@@ -566,7 +570,7 @@ string =   from ini
         n.d.x = config_manager.Namespace()
         n.d.x.add_option('size')
         c = config_manager.ConfigurationManager([n],
-                                    manager_controls=False,
+                                    use_admin_controls=True,
                                     #use_config_files=False,
                                     use_auto_help=False,
                                     argv_source=[])
@@ -593,7 +597,7 @@ string =   from ini
         n.d.x.add_option('size', 100, 'how big in tons', short_form='s')
         n.d.x.add_option('password', 'secrets', 'the password')
         c = config_manager.ConfigurationManager([n],
-                                    manager_controls=False,
+                                    use_admin_controls=True,
                                     #use_config_files=False,
                                     use_auto_help=False,
                                     argv_source=[],
@@ -631,7 +635,7 @@ string =   from ini
         n = config_manager.Namespace()
         n.add_option('aaa', False, 'the a', short_form='a')
         c = config_manager.ConfigurationManager(n,
-                                    manager_controls=False,
+                                    use_admin_controls=True,
                                     use_auto_help=False,
                                     argv_source=[],
                                     )
@@ -704,7 +708,7 @@ string =   from ini
                            MyApp,
                            'the app object class')
         c = config_manager.ConfigurationManager([n],
-                                    manager_controls=False,
+                                    use_admin_controls=True,
                                     use_auto_help=False,
                                     argv_source=[])
         self.assertEqual(c.app_name, MyApp.app_name)
@@ -752,7 +756,7 @@ string =   from ini
         try:
             MyConfigManager(n,
                             [getopt],
-                            manager_controls=False,
+                            use_admin_controls=True,
                             use_auto_help=True,
                             argv_source=['--password=wilma', '--help'])
         finally:
@@ -780,8 +784,8 @@ string =   from ini
                 inner_self.write_called = False
                 super(MyConfigManager, inner_self).__init__(*args, **kwargs)
 
-            def write_config(inner_self):
-                inner_self.write_called = True
+            def dump_conf(inner_self):
+                inner_self.dump_conf_called = True
 
         def my_exit():
             pass
@@ -790,11 +794,11 @@ string =   from ini
         try:
             c = MyConfigManager(n,
                                 [getopt],
-                                manager_controls=True,
+                                use_admin_controls=True,
                                 use_auto_help=True,
                                 argv_source=['--password=wilma',
-                                             '--admin.write=ini'])
-            self.assertEqual(c.write_called, True)
+                                             '--admin.dump_conf=x.ini'])
+            self.assertEqual(c.dump_conf_called, True)
         finally:
             sys.exit = old_sys_exit
 
@@ -820,12 +824,15 @@ string =   from ini
                            'the app object class')
 
         c = config_manager.ConfigurationManager(n,
-                                    manager_controls=False,
+                                    use_admin_controls=True,
                                     use_auto_help=False,
                                     argv_source=[])
         r = c.get_options()
         e = (
+             ('admin.print_conf', 'print_conf', None),
              ('admin.application', 'application', MyApp),
+             ('admin.dump_conf', 'dump_conf', ''),
+             ('admin.conf', 'conf', './config.ini'),
              ('password', 'password', 'fred'),
              ('sub.name', 'name', 'ethel'))
         for expected, result in zip(e, r):
@@ -858,7 +865,7 @@ string =   from ini
 
         c = config_manager.ConfigurationManager(n,
                                                 [getopt],
-                                    manager_controls=False,
+                                    use_admin_controls=True,
                                     use_auto_help=False,
                                     argv_source=['--sub.name=wilma'])
 
@@ -895,13 +902,14 @@ string =   from ini
                 inner_self.config = config
 
         n = config_manager.Namespace()
-        n.add_option('admin.application',
-                     MyApp,
-                     'the app object class')
+        n.admin = config_manager.Namespace()
+        n.admin.add_option('application',
+                           MyApp,
+                           'the app object class')
 
         c = config_manager.ConfigurationManager(n,
                                                 [getopt],
-                                    manager_controls=False,
+                                    use_admin_controls=True,
                                     use_auto_help=False,
                                     argv_source=['--sub.name=wilma',
                                                  'argument 1',
@@ -911,6 +919,156 @@ string =   from ini
                     'argument 2',
                     'argument 3']
         self.assertEqual(c.args, expected)
+
+    def test_print_conf_called(self):
+        class MyApp(config_manager.RequiredConfig):
+            app_name = 'fred'
+            app_version = '1.0'
+            app_description = "my app"
+            required_config = config_manager.Namespace()
+            required_config.add_option('password', 'fred', 'the password')
+            required_config.sub = config_manager.Namespace()
+            required_config.sub.add_option('name',
+                                           'ethel',
+                                           'the name')
+
+            def __init__(inner_self, config):
+                inner_self.config = config
+
+        n = config_manager.Namespace()
+        n.admin = config_manager.Namespace()
+        n.admin.add_option('application',
+                           MyApp,
+                           'the app object class')
+
+        class MyConfigManager(config_manager.ConfigurationManager):
+            def __init__(inner_self, *args, **kwargs):
+                inner_self.write_called = False
+                super(MyConfigManager, inner_self).__init__(*args, **kwargs)
+
+            def print_conf(inner_self):
+                inner_self.print_conf_called = True
+
+        c = MyConfigManager(n,
+                            [getopt],
+                            use_admin_controls=True,
+                            use_auto_help=False,
+                            quit_after_admin=False,
+                            argv_source=['--admin.print_conf=ini',
+                                         'argument 1',
+                                         'argument 2',
+                                         'argument 3'])
+        self.assertEqual(c.print_conf_called, True)
+
+
+    def test_non_compliant_app_object(self):
+        # the MyApp class doesn't define required config
+        class MyApp():
+            app_name = 'fred'
+            app_version = '1.0'
+            app_description = "my app"
+
+            def __init__(inner_self, config):
+                inner_self.config = config
+
+        n = config_manager.Namespace()
+        n.admin = config_manager.Namespace()
+        n.admin.add_option('application',
+                           MyApp,
+                           'the app object class')
+
+        c = config_manager.ConfigurationManager(n,
+                                    [getopt],
+                                    use_admin_controls=True,
+                                    use_auto_help=False,
+                                    argv_source=['argument 1',
+                                                 'argument 2',
+                                                 'argument 3'])
+        conf = c.get_config()
+        self.assertEqual(conf.keys(), ['admin']) # there should be nothing but
+                                                 # the admin key
+
+    def test_print_conf(self):
+        n = config_manager.Namespace()
+        class MyConfigManager(config_manager.ConfigurationManager):
+            def __init__(inner_self, *args, **kwargs):
+                inner_self.write_called = False
+                super(MyConfigManager, inner_self).__init__(*args, **kwargs)
+
+            def print_conf(self):
+                temp_stdout = sys.stdout
+                sys.stdout = 17
+                try:
+                    super(MyConfigManager, self).print_conf()
+                finally:
+                    sys.stdout = temp_stdout
+
+            def write_conf(inner_self, file_type, opener):
+                self.assertEqual(file_type, 'ini')
+                with opener() as f:
+                    self.assertEqual(f, 17)
+
+        c = MyConfigManager(n,
+                            [getopt],
+                            use_admin_controls=True,
+                            use_auto_help=False,
+                            quit_after_admin=False,
+                            argv_source=['--admin.print_conf=ini',
+                                         'argument 1',
+                                         'argument 2',
+                                         'argument 3'],
+                            config_pathname='fred')
+
+
+    def test_dump_conf(self):
+        n = config_manager.Namespace()
+        class MyConfigManager(config_manager.ConfigurationManager):
+            def __init__(inner_self, *args, **kwargs):
+                inner_self.write_called = False
+                super(MyConfigManager, inner_self).__init__(*args, **kwargs)
+
+            def write_conf(inner_self, file_type, opener):
+                self.assertEqual(file_type, 'ini')
+                self.assertEqual(opener.args, ('fred.ini', 'w'))
+
+        c = MyConfigManager(n,
+                            [getopt],
+                            use_admin_controls=True,
+                            use_auto_help=False,
+                            quit_after_admin=False,
+                            argv_source=['--admin.dump_conf=fred.ini',
+                                         'argument 1',
+                                         'argument 2',
+                                         'argument 3'],
+                            config_pathname='fred')
+
+
+    def test_config_pathname_set(self):
+        n = config_manager.Namespace()
+        class MyConfigManager(config_manager.ConfigurationManager):
+            def __init__(inner_self, *args, **kwargs):
+                inner_self.write_called = False
+                super(MyConfigManager, inner_self).__init__(*args, **kwargs)
+
+            def get_config_pathname(self):
+                temp_fn = os.path.isdir
+                os.path.isdir = lambda x : False
+                try:
+                    r = super(MyConfigManager, self).get_config_pathname()
+                finally:
+                    os.path.isdir = temp_fn
+                return r
+
+        self.assertRaises(AllHandlersFailedException,
+                          MyConfigManager,
+                          use_admin_controls=True,
+                          use_auto_help=False,
+                          quit_after_admin=False,
+                          argv_source=['argument 1',
+                                       'argument 2',
+                                       'argument 3'],
+                          config_pathname='fred')
+
 
     def test_ConfigurationManager_block_password(self):
         function = config_manager.ConfigurationManager.block_password

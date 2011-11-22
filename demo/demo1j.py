@@ -8,9 +8,7 @@
 # parameters that will control the command line and config file forms.  Then
 # we run the application.
 
-import os
 import sys
-import getopt
 import configman as cm
 
 
@@ -31,27 +29,15 @@ def upper(x):
 # the definitions are in the json file listed below.
 definition_source = 'demo1j.json'
 
-# create an iterable collection of value sources
-# the order is important as these will supply values for the sources defined
-# in the_definition_source. The values will be overlain in turn.  Each of the
-# configuration parameters will have the default values defined in the json
-# file.  In the overlay process, first the os.environ values will be applied.
-# Then any values from an ini file parsed by ConfigParse.  Finally any values
-# supplied on the command line will be applied.  Notice that the json file
-# doesn't participate as value source, its values already form the base
-# values.  Adding it to this tuple wolud mean that the default get applied
-# a second time and would override any values from the sources to the left in
-# the tuple.
-value_sources = ('demo1j.ini', os.environ, getopt)
-
-# set up the manager with the definitions and values
-# we set the sources for definition and value sources, and then define the
-# 'app_name' and 'app_description'.  The former will be used to define the
-# default basename for any configuration files that we may want to have the
-# application write.  Both the former and the latter will be used to create
-# the output of the automatically created '--help' command line switch.
+# set up the manager with the option definitions along with the 'app_name' and
+# 'app_description'.  They will both be used later to create  the output of the
+# automatically created '--help' command line switch.
+# By default, when assigning values to the options loaded from the json file,
+# the ConfigurationManager will take, in turn: the default from the definition,
+# any values loaded from a config file specified by the --admin.conf command
+# line switch, values from the os environment and finally overrides from the
+# commandline.
 c = cm.ConfigurationManager(definition_source,
-                            value_sources,
                             app_name='demo1j',
                             app_description=__doc__)
 

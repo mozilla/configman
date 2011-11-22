@@ -3,8 +3,10 @@ import os
 import collections
 import inspect
 import os.path
+import contextlib
 import functools
 
+import configman as cm
 import converters as conv
 import config_exceptions as exc
 import value_sources
@@ -15,6 +17,7 @@ import def_sources
 from option import Option
 from dotdict import DotDict
 from namespace import Namespace
+from config_file_future_proxy import ConfigFileFutureProxy
 
 
 #==============================================================================
@@ -47,13 +50,52 @@ class ConfigurationManager(object):
                  argv_source=None,
                  #use_config_files=True,
                  use_auto_help=True,
-                 manager_controls=True,
+                 use_admin_controls=True,
                  quit_after_admin=True,
                  options_banned_from_help=None,
-                 app_name=None,
-                 app_version=None,
-                 app_description=None
+                 app_name='',
+                 app_version='',
+                 app_description='',
+                 config_pathname='.',
                  ):
+        """create and initialize a configman object.
+
+        parameters:
+          definition_source - a namespace or list of namespaces from which
+                              configman is to fetch the definitions of the
+                              configuration parameters.
+          values_source_list - (optional) a hierarchical list of sources for
+                               values for the configuration parameters.
+                               As values are copied from these sources,
+                               conficting values are resolved with sources
+                               on the right getting preference over sources on
+                               the left.
+          argv_source - if the values_source_list contains a commandline
+                        source, this value is an alternative source for
+                        actual command line arguments.  Useful for testing or
+                        preprocessing command line arguments.
+          use_auto_help - set to True if configman is to automatically set up
+                          help output for command line invocations.
+          use_admin_controls - configman can add command line flags that it
+                               interprets independently of the app defined
+                               arguments.  True enables this capability, while,
+                               False supresses it.
+          quit_after_admin - if True and admin controls are enabled and used,
+                             call sys.exit to end the app.  This is useful to
+                             stop the app from running if all that was done
+                             was to write a config file or stop after help.
+          options_banned_from_help - a list of strings that will censor the
+                                     output of help to prevent specified
+                                    options from being listed in the help
+                                    output.  This is useful for hiding debug
+                                    or secret command line arguments.
+          app_name - assigns a name to the app.  This is used in help output
+                     and as a default basename for config files.
+          app_version - assigns a version for the app used help output.
+          app_description - assigns a description for the app to be used in
+                            the help output.
+          config_pathname - a hard coded path to the directory of or the full
+                            path and name of the configuration file."""
         # instead of allowing mutables as default keyword argument values...
         if definition_source is None:
             definition_source_list = []
@@ -69,6 +111,11 @@ class ConfigurationManager(object):
             argv_source = sys.argv[1:]
         if options_banned_from_help is None:
             options_banned_from_help = ['admin.application']
+        self.config_pathname = config_pathname
+
+        self.app_name = app_name
+        self.app_version = app_version
+        self.app_description = app_description
 
         self.args = []  # extra commandline arguments that are not switches
                         # will be stored here.
@@ -77,31 +124,44 @@ class ConfigurationManager(object):
         self.option_definitions = Namespace()
         self.definition_source_list = definition_source_list
 
-        self.use_auto_help = use_auto_help
-        self.help_done = False
+        if not values_source_list:
+            if use_admin_controls:
+                values_source_list = (cm.ConfigFileFutureProxy,
+                                      cm.environment,
+                                      cm.command_line)
+            else:
+                values_source_list = (cm.environment,
+                                      cm.command_line)
+
         admin_tasks_done = False
-        self.manager_controls = manager_controls
-        self.manager_controls_list = ['help', 'admin.write', 'admin.config_path',
-                                      'admin.application']
+        self.admin_controls_list = ['help',
+                                    'admin.conf',
+                                    'admin.dump_conf',
+                                    'admin.print_conf',
+                                    'admin.application']
         self.options_banned_from_help = options_banned_from_help
 
-        if self.use_auto_help:
+        if use_auto_help:
             self.setup_auto_help()
-        if manager_controls:
-            self.setup_manager_controls()
+        if use_admin_controls:
+            admin_options = self.setup_admin_options(values_source_list)
+            self.definition_source_list.append(admin_options)
 
+        # iterate through the option definitions to create the nested dict
+        # hierarchy of all the options called 'option_definitions'
         for a_definition_source in self.definition_source_list:
             def_sources.setup_definitions(a_definition_source,
                                           self.option_definitions)
 
-        if values_source_list:
-            self.custom_values_source = True
-        else:
-            import getopt
-            self.custom_values_source = False
-            self.values_source_list = [os.environ,
-                                       getopt,
-                                      ]
+        if use_admin_controls:
+            # some admin options need to be loaded from the command line
+            # prior to processing the rest of the command line options.
+            admin_options = value_sources.get_admin_options_from_command_line(
+                                                                          self)
+            # integrate the admin_options with 'option_definitions'
+            self.overlay_config_recurse(source=admin_options,
+                                        ignore_mismatches=True)
+
         self.values_source_list = value_sources.wrap(values_source_list,
                                                      self)
 
@@ -112,7 +172,7 @@ class ConfigurationManager(object):
         self.walk_expanding_class_options()
 
         # the app_name, app_version and app_description are to come from
-        # if 'admin.application' option if it is present.  If it is not present,
+        # if 'admin.application' option if it is present. If it is not present,
         # get the app_name,et al, from parameters passed into the constructor.
         # if those are empty, set app_name, et al, to empty strings
         try:
@@ -122,11 +182,9 @@ class ConfigurationManager(object):
             self.app_description = getattr(app_option.value,
                                            'app_description', '')
         except exc.NotAnOptionError:
-            # there is no 'admin.application' option, get the 'app_name'
-            # from the parameters passed in, if they exist.
-            self.app_name = app_name if app_name else ''
-            self.app_version = app_version if app_version else ''
-            self.app_description = app_description if app_description else ''
+            # there is no 'admin.application' option, continue to use the
+            # 'app_name' from the parameters passed in, if they exist.
+            pass
 
         # second pass to include config file values - ignore bad options
         self.overlay_settings(ignore_mismatches=True)
@@ -137,12 +195,18 @@ class ConfigurationManager(object):
         # third pass to get values - complain about bad options
         self.overlay_settings(ignore_mismatches=False)
 
-        if self.use_auto_help and self.get_option_by_name('help').value:
+        if use_auto_help and self.get_option_by_name('help').value:
             self.output_summary()
             admin_tasks_done = True
 
-        if manager_controls and self.get_option_by_name('admin.write').value:
-            self.write_config()
+        if (use_admin_controls
+            and self.get_option_by_name('admin.print_conf').value):
+            self.print_conf()
+            admin_tasks_done = True
+
+        if (use_admin_controls
+            and self.get_option_by_name('admin.dump_conf').value):
+            self.dump_conf()
             admin_tasks_done = True
 
         if quit_after_admin and admin_tasks_done:
@@ -161,8 +225,7 @@ class ConfigurationManager(object):
             for key, val in source_namespace.items():
                 if isinstance(val, Namespace):
                     self.walk_expanding_class_options(source_namespace=val,
-                                                      parent_namespace=
-                                                          source_namespace)
+                                            parent_namespace=source_namespace)
                 elif (key not in expanded_keys and
                         (inspect.isclass(val.value) or
                          inspect.ismodule(val.value))):
@@ -188,46 +251,59 @@ class ConfigurationManager(object):
         self.definition_source_list.append({'help': help_option})
 
     #--------------------------------------------------------------------------
-    def setup_manager_controls(self):
+    def get_config_pathname(self):
+        if os.path.isdir(self.config_pathname):
+            # we've got a path with no file name at the end
+            # use the appname as the file name and default to an 'ini'
+            # config file type
+            if self.app_name:
+                return os.path.join(self.config_pathname,
+                                    '%s.ini' % self.app_name)
+            else:
+                # there is no app_name yet
+                # we'll punt and use 'config'
+                return os.path.join(self.config_pathname, 'config.ini')
+        return self.config_pathname
+
+    #--------------------------------------------------------------------------
+    def setup_admin_options(self, values_source_list):
         base_namespace = Namespace()
         base_namespace.admin = admin = Namespace()
-        admin.write = Option(name='write',
-                             doc='write config file to stdout '
-                                 '(conf, ini, json)',
-                             default=None,
+        admin.add_option(name='print_conf',
+                         default=None,
+                         doc='write current config to stdout '
+                             '(conf, ini, json)',
+                         )
+        admin.add_option(name='dump_conf',
+                         default='',
+                         doc='a pathname to which to write the current config',
+                         )
+        # only offer the config file admin options if they've been requested in
+        # the values source list
+        if ConfigFileFutureProxy in values_source_list:
+            default_config_pathname = self.get_config_pathname()
+            admin.add_option(name='conf',
+                             default=default_config_pathname,
+                             doc='the pathname of the config file '
+                                 '(path/filename)',
                              )
-        #admin._quit = Option(name='_quit',
-                                       #doc='quit after doing admin commands',
-                                       #default=False)
-        admin.config_path = Option(name='config_path',
-                                   doc='path for config file '
-                                       '(not the filename)',
-                                   default='./')
-        self.definition_source_list.append(base_namespace)
+        return base_namespace
 
     #--------------------------------------------------------------------------
     def overlay_settings(self, ignore_mismatches=True):
         for a_settings_source in self.values_source_list:
-            #if isinstance(a_settings_source, collections.Mapping):
-                #self.overlay_config_recurse(a_settings_source,
-                                            #ignore_mismatches=True)
-            #elif a_settings_source:
-                #options = a_settings_source.get_values(self,
-                                        #ignore_mismatches=ignore_mismatches)
-                #self.overlay_config_recurse(options,
-                                        #ignore_mismatches=ignore_mismatches)
             try:
-                ignore_mismatches = ignore_mismatches or \
-                                    a_settings_source.always_ignore_mismatches
+                this_source_ignore_mismatches = (ignore_mismatches or
+                                    a_settings_source.always_ignore_mismatches)
             except AttributeError:
                 # the settings source doesn't have the concept of always
                 # ignoring mismatches, so the original value of
                 # ignore_mismatches stands
-                pass
+                this_source_ignore_mismatches = ignore_mismatches
             options = a_settings_source.get_values(self,
-                                    ignore_mismatches=ignore_mismatches)
+                            ignore_mismatches=this_source_ignore_mismatches)
             self.overlay_config_recurse(options,
-                                    ignore_mismatches=ignore_mismatches)
+                            ignore_mismatches=this_source_ignore_mismatches)
 
     #--------------------------------------------------------------------------
     def overlay_config_recurse(self, source, destination=None, prefix='',
@@ -408,22 +484,26 @@ class ConfigurationManager(object):
             print >> output_stream, line
 
     #--------------------------------------------------------------------------
-    def write_config(self, config_file_type=None,
-                     block_password=True,
-                     opener=open):
-        if not config_file_type:
-            config_file_type = self.get_option_by_name('admin.write').value
-        option_iterator = functools.partial(self.walk_config,
-                                    blocked_keys=self.manager_controls_list)
-        try:
-            config_path = self.get_option_by_name('config_path').value
-        except exc.NotAnOptionError:
-            config_path = ''
-        config_pathname = os.path.join(config_path,
-                                       '.'.join((self.app_name,
-                                                 config_file_type)))
+    def print_conf(self):
+        config_file_type = self.get_option_by_name('admin.print_conf').value
 
-        with opener(config_pathname, 'w') as config_fp:
+        @contextlib.contextmanager
+        def stdout_opener():
+            yield sys.stdout
+        self.write_conf(config_file_type, stdout_opener)
+
+    #--------------------------------------------------------------------------
+    def dump_conf(self):
+        config_pathname = self.get_option_by_name('admin.dump_conf').value
+        opener = functools.partial(open, config_pathname, 'w')
+        config_file_type = os.path.splitext(config_pathname)[1][1:]
+        self.write_conf(config_file_type, opener)
+
+    #--------------------------------------------------------------------------
+    def write_conf(self, config_file_type, opener=open):
+        option_iterator = functools.partial(self.walk_config,
+                                       blocked_keys=self.admin_controls_list)
+        with opener() as config_fp:
             value_sources.write(config_file_type,
                                 option_iterator,
                                 config_fp)
@@ -435,7 +515,7 @@ class ConfigurationManager(object):
         logger.info("current configuration:")
         config = [(qkey, val.value) for qkey, key, val in
                                       self.walk_config(self.option_definitions)
-                                    if qkey not in self.manager_controls_list
+                                    if qkey not in self.admin_controls_list
                                        and not isinstance(val, Namespace)]
         config.sort()
         for key, val in config:

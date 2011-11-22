@@ -71,6 +71,6 @@ class Option(object):
         elif isinstance(val, Option):
             self.value = val.default
         elif isinstance(val, collections.Mapping) and 'default' in val:
-            self.value = val["default"]
+            self.set_value(val["default"])
         else:
             self.value = val

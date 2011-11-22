@@ -15,7 +15,7 @@ class TestCase(unittest.TestCase):
 
     def test_for_getopt_get_values(self):
         c = config_manager.ConfigurationManager(
-          manager_controls=False,
+          use_admin_controls=True,
           #use_config_files=False,
           use_auto_help=False,
           argv_source=[]
@@ -57,7 +57,7 @@ class TestCase(unittest.TestCase):
         n.b = 17
         n.add_option('c', False, doc='the c')
         c = config_manager.ConfigurationManager([n], [['--a', '2', '--c']],
-                                    manager_controls=False,
+                                    use_admin_controls=True,
                                     use_auto_help=False,
                                     argv_source=[])
         self.assertEqual(c.option_definitions.a, n.a)
@@ -80,7 +80,7 @@ class TestCase(unittest.TestCase):
         c = config_manager.ConfigurationManager([n],
                                                 [['--a', '2', '--c.extra',
                                                   '11.0']],
-                                                manager_controls=False,
+                                                use_admin_controls=True,
                                                 use_auto_help=False)
         self.assertEqual(c.option_definitions.a, n.a)
         self.assertEqual(type(c.option_definitions.b), config_manager.Option)
@@ -101,7 +101,7 @@ class TestCase(unittest.TestCase):
         n.c = config_manager.Namespace()
         n.c.add_option('extra', 3.14159, 'the x', short_form='e')
         c = config_manager.ConfigurationManager([n], [getopt],
-                                    manager_controls=False,
+                                    use_admin_controls=True,
                                     argv_source=['--a', '2', '-e', '11.0'],
                                     use_auto_help=False)
         self.assertEqual(c.option_definitions.a, n.a)

@@ -76,7 +76,7 @@ class TestCase(unittest.TestCase):
           [j],
           #use_config_files=False,
           use_auto_help=False,
-          manager_controls=False,
+          use_admin_controls=True,
           argv_source=[]
         )
 
@@ -105,7 +105,7 @@ class TestCase(unittest.TestCase):
         n.dest.add_option('c', A, doc='the A class')
         assert n.dest.c.doc == 'the A class'
         c = config_manager.ConfigurationManager([n],
-                                    manager_controls=False,
+                                    use_admin_controls=True,
                                     #use_config_files=False,
                                     use_auto_help=False,
                                     argv_source=[])
