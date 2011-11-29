@@ -14,7 +14,7 @@ Basics
 ------
 
 Suppose we write an app similar to the ``echo`` command line program in Unix
-and Linux.  Our app , though reverses the lettering of each word::
+and Linux.  Our app, though reverses the lettering of each word::
 
  def backwards(x):
      return x[::-1]
@@ -123,10 +123,10 @@ When run, you get what you expect::
 
 In the ``tutorial01.py`` example, we fetched the command line arguments using
 the reference to argv from the sys module.  We couldn't do that in the second
-tutorial because sys.argv included the command line switch *--devowel*.  We
+tutorial because sys.argv included the command line switch ``--devowel``.  We
 don't want that as part of the output.  ``configman`` offers a version of the
 command line arguments with the switches removed.  That's the
-*config_manager.args* reference inside the generator expression.
+``config_manager.args`` reference inside the ``join``.
 
 
 Intermediate
@@ -139,7 +139,7 @@ the help simply by running it like this::
  $ ./tutorial02.py --help
 
 That's set up automatically for you. As you can see, it mentions,
-amongst other things, our *--devowel* option there. Let's change
+amongst other things, our ``--devowel`` option there. Let's change
 the definition of the option slightly to be more helpful::
 
 
@@ -152,13 +152,13 @@ the definition of the option slightly to be more helpful::
        short_form='d'
      )
 
-Now, when running *--help* it will explain our option like this::
+Now, when running ``--help`` it will explain our option like this::
 
   -d, --devowel    Removes all vowels (including Y)
 
 Let's add another option so that we can get our text from a file instead
-of the command line.  The objective is to get a file name from a *--file*
-or *-f* switch.  We'll set the default to be the empty string.  If the
+of the command line.  The objective is to get a file name from a ``--file``
+or ``-f`` switch.  We'll set the default to be the empty string.  If the
 user doesn't use the switch, the value for this will be the empty string::
 
      ...
@@ -240,7 +240,7 @@ to work *ecumenically* with config files.
    the namespace, ``admin``.
 
 To get started, let's have our program itself write a configuration file
-for us.  The easiest way is to use the *--admin.dump_conf* option that is
+for us.  The easiest way is to use the ``--admin.dump_conf`` option that is
 automatically available. It offers different ways to output.
 
 * ``ini``
@@ -269,11 +269,11 @@ you had used 'json' instead, ``configman`` would have written out a json file::
  # converter: str
  file=
 
-Any of the command line switches that you specify along with the *dump_conf*
-switch will appear as the new defaults in the config file that is written.::
+Any of the command line switches that you specify along with the
+``--dump_conf`` switch will appear as the new defaults in the config file
+that is written::
 
- $ python backwards.py --admin.dump_conf=./backwards.ini \
-  --file=/tmp/foo.txt
+ $ python backwards.py --admin.dump_conf=./backwards.ini --file=/tmp/foo.txt
  $ cat backwards.ini
  [top_level]
  # name: devowel
@@ -315,7 +315,7 @@ To use this value source, we must specify it in the constructor::
  config_manager = ConfigurationManager(definition,
                                        values_source_list=value_sources)
 
-Now, the program will read from the *./backwards.ini* config file whenever
+Now, the program will read from the ``./backwards.ini`` config file whenever
 the application is run.
 
 Suppose we change the last line of the file ``backwards.ini`` to
