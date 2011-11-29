@@ -58,7 +58,7 @@ run time, the switch is present, we'll use the ``devowel`` function.  If the
 switch is not present, we won't use the function.
 
 To add this option we create an option container.  These containers are called
-''namespaces'' and have a method that allows us to define our command line
+*namespaces* and have a method that allows us to define our command line
 options.
 
 Here's a function that sets up a namespace with a single option::
@@ -123,10 +123,10 @@ When run, you get what you expect::
 
 In the ``tutorial01.py`` example, we fetched the command line arguments using
 the reference to argv from the sys module.  We couldn't do that in the second
-tutorial because sys.argv included the command line switch '--devowel'.  We
+tutorial because sys.argv included the command line switch *--devowel*.  We
 don't want that as part of the output.  ``configman`` offers a version of the
 command line arguments with the switches removed.  That's the
-''config_manager.args'' reference inside the generator expression.
+*config_manager.args* reference inside the generator expression.
 
 
 Intermediate
@@ -139,7 +139,7 @@ the help simply by running it like this::
  $ ./tutorial02.py --help
 
 That's set up automatically for you. As you can see, it mentions,
-amongst other things, our ``--devowel`` option there. Let's change
+amongst other things, our *--devowel* option there. Let's change
 the definition of the option slightly to be more helpful::
 
 
@@ -152,13 +152,13 @@ the definition of the option slightly to be more helpful::
        short_form='d'
      )
 
-Now, when running ``--help`` it will explain our option like this::
+Now, when running *--help* it will explain our option like this::
 
   -d, --devowel    Removes all vowels (including Y)
 
 Let's add another option so that we can get our text from a file instead
-of the command line.  The objective is to get a file name from a ''--file''
-or ''-f'' switch.  We'll set the default to be the empty string.  If the
+of the command line.  The objective is to get a file name from a *--file*
+or *-f* switch.  We'll set the default to be the empty string.  If the
 user doesn't use the switch, the value for this will be the empty string::
 
      ...
@@ -218,8 +218,7 @@ And it's executed like this::
  Peter works for Mozilla.^d
  $ ./tutorial03.py  --file foo.txt
  reteP
-
- $ python backwards.py --file foo.txt -d
+ $ ./tutorial03.py --file foo.txt -d
  rtP
 
 
@@ -241,7 +240,7 @@ to work *ecumenically* with config files.
    the namespace, ``admin``.
 
 To get started, let's have our program itself write a configuration file
-for us.  The easiest way is to use the ``--admin.dump_conf`` option that is
+for us.  The easiest way is to use the *--admin.dump_conf* option that is
 automatically available. It offers different ways to output.
 
 * ``ini``
@@ -347,7 +346,7 @@ More advanced options
 ---------------------
 
 We just covered how to turn a simple application to one where the
-configuration is done entirely by a ``ini`` file. Note; we could have
+configuration is done entirely by a ``ini`` file. Note: we could have
 chosen ``json`` or ``conf`` instead of ``ini`` and the program would
 be completely unchanged. Only your taste of config file format
 changed.
