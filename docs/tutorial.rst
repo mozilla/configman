@@ -217,9 +217,9 @@ And it's executed like this::
  $ cat > foo.txt
  Peter works for Mozilla.^d
  $ ./tutorial03.py  --file foo.txt
- reteP
+ .allizoM rof skrow reteP
  $ ./tutorial03.py --file foo.txt -d
- rtP
+ .llzM rf skrw rtP
 
 
 Persistent config files
@@ -228,7 +228,7 @@ Persistent config files
 Our examples so far have been very much about the command line. The whole
 point of using ``configman`` is so you can use various config file formats
 to provide configuration information to your programs.  The real power of
-``configman`` isn't to wrap executable command line scripts but it its ability
+``configman`` isn't to wrap executable command line scripts but its ability
 to work *ecumenically* with config files.
 
 .. sidebar:: admin options
@@ -288,7 +288,7 @@ that is written::
 
 Next, let's make our app always read from this file to get its defaults.  To do
 that, we're going to modify what is known as the hierarchy of value sources.
-``configman``, when determinng what values to give to your option definitions,
+``configman``, when determining what values to give to your option definitions,
 uses a list of sources.  By default, it first checks the operating system
 environment.  If the names of your options match anything from the environment,
 ``configman`` will pull those values in, overriding any defaults that you
@@ -330,14 +330,14 @@ And then create that file like this::
 Now, our little program is completely self-sufficient::
 
  $ ./tutorial04.py
- Orrocos
+ orrocoS
 
 Even though we're using a config file, that doesn't mean that we've
 eliminated the use of the command line.  You can override any configuration
 parameter from command line::
 
  $ ./tutorial04.py --devowel
- rrcs
+ rrcS
  $ ./tutorial04.py We both work at Mozilla --file=
  allizoM ta krow htob eW
 
