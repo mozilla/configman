@@ -51,12 +51,14 @@ class Option(object):
                  from_string_converter=None,
                  value=None,
                  short_form=None,
+                 is_template=False,
                  *args,
                  **kwargs):
         self.name = name
         self.short_form = short_form
         self.default = default
         self.doc = doc
+        self.is_template = is_template
         if from_string_converter is None:
             if default is not None:
                 # take a qualified guess from the default value

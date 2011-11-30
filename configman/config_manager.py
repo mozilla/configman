@@ -233,6 +233,8 @@ class ConfigurationManager(object):
         # third pass to get values - complain about bad options
         self.overlay_settings(ignore_mismatches=False)
 
+        self.fill_in_templates()
+
         if use_auto_help and self.get_option_by_name('help').value:
             self.output_summary()
             admin_tasks_done = True
@@ -377,6 +379,17 @@ class ConfigurationManager(object):
             elif value_type == Namespace:
                 destination[key] = d = DotDict()
                 self.walk_config_copy_values(val, d)
+
+    #--------------------------------------------------------------------------
+    def fill_in_template(self, source=None):
+        if source is None:
+            source = self.option_definitions
+        val_dict = dict(k, v.value in source.items())
+        for key, val in source.items():
+            if isinstance(val, Namespace):
+                self.fill_in_template(val)
+            else val.is_template:
+                val.set_value(val.value % val_dict)
 
     #--------------------------------------------------------------------------
     @staticmethod
