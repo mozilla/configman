@@ -41,11 +41,11 @@ import collections
 import converters as conv
 from config_exceptions import CannotConvertError
 
-
+#==============================================================================
 class Option(object):
-
     #--------------------------------------------------------------------------
-    def __init__(self, name,
+    def __init__(self,
+                 name,
                  default=None,
                  doc=None,
                  from_string_converter=None,
@@ -58,7 +58,6 @@ class Option(object):
         self.short_form = short_form
         self.default = default
         self.doc = doc
-        self.is_template = is_template
         if from_string_converter is None:
             if default is not None:
                 # take a qualified guess from the default value
@@ -66,13 +65,10 @@ class Option(object):
         if isinstance(from_string_converter, basestring):
             from_string_converter = conv.class_converter(from_string_converter)
         self.from_string_converter = from_string_converter
-
         if value is None:
             value = default
-        if is_template:
-            self.value = default
-            return # we want to avoid calling the coverter on template
-                   # options until the very end
+        self.initialize_value(value)
+
         self.set_value(value)
         if (type(self.value) != type(self.default)
             and self.from_string_converter):
@@ -105,12 +101,6 @@ class Option(object):
 
     #--------------------------------------------------------------------------
     def set_value(self, val):
-        if self.is_template:
-            return
-        self.do_set_value(val)
-
-    #--------------------------------------------------------------------------
-    def do_set_value(self, val):
         if isinstance(val, basestring):
             try:
                 self.value = self.from_string_converter(val)
@@ -124,3 +114,14 @@ class Option(object):
             self.set_value(val["default"])
         else:
             self.value = val
+
+#==============================================================================
+class Aggregation(object):
+    #--------------------------------------------------------------------------
+    def __init__(self,
+                 name,
+                 aggregation_fn):
+
+
+    #--------------------------------------------------------------------------
+    def set_value(self, val):
