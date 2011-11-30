@@ -60,12 +60,14 @@ class Namespace(dotdict.DotDict):
                    default=None,
                    doc=None,
                    from_string_converter=None,
-                   short_form=None):
+                   short_form=None,
+                   is_template=False):
         an_option = Option(name,
                            doc=doc,
                            default=default,
                            from_string_converter=from_string_converter,
-                           short_form=short_form)
+                           short_form=short_form,
+                           is_template=is_template)
         self[name] = an_option
 
     #--------------------------------------------------------------------------

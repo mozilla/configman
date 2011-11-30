@@ -381,15 +381,19 @@ class ConfigurationManager(object):
                 self.walk_config_copy_values(val, d)
 
     #--------------------------------------------------------------------------
-    def fill_in_template(self, source=None):
+    def fill_in_templates(self, source=None):
         if source is None:
             source = self.option_definitions
-        val_dict = dict(k, v.value in source.items())
+        val_dict = dict()
+        for k, v in source.iteritems():
+            if isinstance(v, Namespace):
+                continue
+            val_dict[k] = v.value
         for key, val in source.items():
             if isinstance(val, Namespace):
-                self.fill_in_template(val)
-            else val.is_template:
-                val.set_value(val.value % val_dict)
+                self.fill_in_templates(val)
+            elif val.is_template:
+                val.do_set_value(val.value % val_dict)
 
     #--------------------------------------------------------------------------
     @staticmethod

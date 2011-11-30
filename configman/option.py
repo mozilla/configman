@@ -69,6 +69,10 @@ class Option(object):
 
         if value is None:
             value = default
+        if is_template:
+            self.value = default
+            return # we want to avoid calling the coverter on template
+                   # options until the very end
         self.set_value(value)
         if (type(self.value) != type(self.default)
             and self.from_string_converter):
@@ -101,6 +105,12 @@ class Option(object):
 
     #--------------------------------------------------------------------------
     def set_value(self, val):
+        if self.is_template:
+            return
+        self.do_set_value(val)
+
+    #--------------------------------------------------------------------------
+    def do_set_value(self, val):
         if isinstance(val, basestring):
             try:
                 self.value = self.from_string_converter(val)
