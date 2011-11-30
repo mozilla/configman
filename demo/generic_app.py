@@ -93,7 +93,7 @@ def main(app_object=None):
                                              app_version=app_version,
                                              app_description=app_description,
                                             )
-    config = config_manager.get_config()
+    config = config_manager.config
 
     app_object = config.admin.application
 
