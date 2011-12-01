@@ -59,7 +59,7 @@ def setup_definitions(source, destination):
                 # this is an Option in the form of a dict, not a Namespace
                 params = converters.str_dict_keys(val)
                 destination[key] = option.Option(**params)
-            elif 'aggregate_fn' in val:  # this is an Aggregation
+            elif 'aggregation_fn' in val:  # this is an Aggregation
                 params = converters.str_dict_keys(val)
                 destination[key] = option.Aggregation(**params)
             else:

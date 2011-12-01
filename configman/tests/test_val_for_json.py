@@ -48,6 +48,8 @@ import configman.datetime_util as dtu
 from configman.value_sources.for_json import ValueSource
 #from ..value_sources.for_json import ValueSource
 
+def bbb_minus_one(config, local_config, args):
+    return config.bbb - 1
 
 class TestCase(unittest.TestCase):
 
@@ -106,6 +108,7 @@ class TestCase(unittest.TestCase):
           from_string_converter=int
         )
         n.add_option('write', 'json')
+        n.add_aggregation('bbb_minus_one', bbb_minus_one)
         #t = tempfile.NamedTemporaryFile('w', suffix='.json', delete=False)
         name = '/tmp/test.json'
         import functools
@@ -127,8 +130,10 @@ class TestCase(unittest.TestCase):
                                         use_admin_controls=True,
                                         use_auto_help=False,
                                         argv_source=[])
-            config = c2.get_config()
+            config = c2.config
             self.assertEqual(config.aaa, expected_date)
             self.assertEqual(config.bbb, -99)
+            self.assertEqual(config.bbb_minus_one, -100)
+
         finally:
             os.unlink(name)

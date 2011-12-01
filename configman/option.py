@@ -119,7 +119,10 @@ class Aggregation(object):
                  name,
                  aggregation_fn):
         self.name = name
-        self.aggregation_fn = aggregation_fn
+        if isinstance(aggregation_fn, basestring):
+            self.aggregation_fn = conv.class_converter(aggregation_fn)
+        else:
+            self.aggregation_fn = aggregation_fn
         self.value = None
 
     #--------------------------------------------------------------------------
