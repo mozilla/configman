@@ -48,8 +48,10 @@ import configman.datetime_util as dtu
 from configman.value_sources.for_json import ValueSource
 #from ..value_sources.for_json import ValueSource
 
+
 def bbb_minus_one(config, local_config, args):
     return config.bbb - 1
+
 
 class TestCase(unittest.TestCase):
 

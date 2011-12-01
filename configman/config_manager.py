@@ -255,7 +255,6 @@ class ConfigurationManager(object):
         if changes:
             self.config = self.get_config()
 
-
     #--------------------------------------------------------------------------
     def walk_expanding_class_options(self, source_namespace=None,
                                      parent_namespace=None):

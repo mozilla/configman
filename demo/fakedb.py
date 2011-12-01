@@ -1,6 +1,7 @@
 # This is just a hack to simulate the minimal api of psycopg2 for the purposes
 # of a demo.  There is nothing of any real interest here, please move along.
 
+
 class FakeDatabaseObjects(object):
     # This class provides an interface to a fake relational database
     # loosely modeled after the psycopg2 library.  It actually does nothing

@@ -41,6 +41,7 @@ import collections
 import converters as conv
 from config_exceptions import CannotConvertError
 
+
 #==============================================================================
 class Option(object):
     #--------------------------------------------------------------------------
@@ -111,6 +112,7 @@ class Option(object):
             self.set_value(val["default"])
         else:
             self.value = val
+
 
 #==============================================================================
 class Aggregation(object):

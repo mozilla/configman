@@ -5,6 +5,7 @@ from configman import Namespace, ConfigurationManager
 
 from fakedb import FakeDatabaseObjects
 
+
 # this is the interesting function in this example.  It is used as a
 # from aggregation function for an Aggregation object that live within a
 # configman's option definition.  It takes a database connection string (DSN)
@@ -17,6 +18,7 @@ def transaction_context_factory(config_unused, local_namespace, args_unused):
            "dbname=%(dbname)s "
            "user=%(user)s "
            "password=%(password)s") % local_namespace
+
     @contextlib.contextmanager
     def transaction_context():
         conn = FakeDatabaseObjects.connect(dsn)
@@ -30,6 +32,7 @@ def transaction_context_factory(config_unused, local_namespace, args_unused):
                 conn.rollback()
             conn.close()
     return transaction_context
+
 
 # this function defines the connection parameters required to connect to
 # a database.

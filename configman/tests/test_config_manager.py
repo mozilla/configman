@@ -769,6 +769,7 @@ string =   from ini
         n.admin.add_option('application',
                            MyApp,
                            'the app object class')
+
         class MyConfigManager(config_manager.ConfigurationManager):
             def output_summary(inner_self):
                 output_stream = StringIO()
@@ -998,7 +999,6 @@ string =   from ini
                                          'argument 3'])
         self.assertEqual(c.print_conf_called, True)
 
-
     def test_non_compliant_app_object(self):
         # the MyApp class doesn't define required config
         class MyApp():
@@ -1023,11 +1023,12 @@ string =   from ini
                                                  'argument 2',
                                                  'argument 3'])
         conf = c.get_config()
-        self.assertEqual(conf.keys(), ['admin']) # there should be nothing but
-                                                 # the admin key
+        self.assertEqual(conf.keys(), ['admin'])  # there should be nothing but
+                                                  # the admin key
 
     def test_print_conf(self):
         n = config_manager.Namespace()
+
         class MyConfigManager(config_manager.ConfigurationManager):
             def __init__(inner_self, *args, **kwargs):
                 inner_self.write_called = False
@@ -1057,9 +1058,9 @@ string =   from ini
                                          'argument 3'],
                             config_pathname='fred')
 
-
     def test_dump_conf(self):
         n = config_manager.Namespace()
+
         class MyConfigManager(config_manager.ConfigurationManager):
             def __init__(inner_self, *args, **kwargs):
                 inner_self.write_called = False
@@ -1080,9 +1081,9 @@ string =   from ini
                                          'argument 3'],
                             config_pathname='fred')
 
-
     def test_config_pathname_set(self):
         n = config_manager.Namespace()
+
         class MyConfigManager(config_manager.ConfigurationManager):
             def __init__(inner_self, *args, **kwargs):
                 inner_self.write_called = False
@@ -1090,7 +1091,7 @@ string =   from ini
 
             def get_config_pathname(self):
                 temp_fn = os.path.isdir
-                os.path.isdir = lambda x : False
+                os.path.isdir = lambda x: False
                 try:
                     r = super(MyConfigManager, self).get_config_pathname()
                 finally:
@@ -1106,7 +1107,6 @@ string =   from ini
                                        'argument 2',
                                        'argument 3'],
                           config_pathname='fred')
-
 
     def test_ConfigurationManager_block_password(self):
         function = config_manager.ConfigurationManager.block_password
@@ -1166,5 +1166,3 @@ string =   from ini
         self.assertEqual(config.sub1.statement,
                          'wilma married fred using password @$*$&26Ht '
                          'but divorced because of arg2.')
-
-

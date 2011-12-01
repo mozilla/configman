@@ -157,7 +157,7 @@ class ValueSource(object):
                 else:
                     long_options_list.append('%s%s=' % (prefix, val.name))
             elif isinstance(val, option.Aggregation):
-                pass # skip Aggregations they have nothing to do with getopt
+                pass  # skip Aggregations they have nothing to do with getopt
             else:  # Namespace case
                 new_prefix = '%s%s.' % (prefix, key)
                 self.getopt_create_opts_recursive(val,
