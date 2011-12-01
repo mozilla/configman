@@ -6,6 +6,7 @@ class FakeDatabaseObjects(object):
     # loosely modeled after the psycopg2 library.  It actually does nothing
     # at all execept offer an API and track if it is in a transaction or not.
     in_transaction = 0
+
     @staticmethod
     def connect(dsn):
         print 'connnected to database with "%s"' % dsn

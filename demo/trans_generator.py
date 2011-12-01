@@ -62,8 +62,8 @@ def define_config():
       short_form='p'
     )
     # This final aggregation object is the most interesting one.  Its final
-    # value depends on the final values of the options within the same
-    # Namespace.  After configman is done doing all its overlays, there is
+    # value depends on the final values of options within the same Namespace.
+    # After configman is done doing all its value overlays, there is
     # one final pass through the option definitions with the sole purpose of
     # expanding the Aggregations.  To do so, the Aggregations' aggregation_fn
     # is called passing the whole config set to the function.  That function
@@ -84,9 +84,10 @@ if __name__ == '__main__':
     config = config_manager.get_config()
 
     # In this example we do two transactions.
-    # This first one succeeds because we called the 'commit' function.
-    # The actions are logged to stdout, you can see that connection opens,
-    # some actions happen, the transaction commits and the connection
+    # This first one succeeds so we call the 'commit' function to indicate
+    # that fact.  The actions in the database are logged to stdout, you can
+    # see the order of events: connection opens, we fetch a cursor, we execute
+    # some sql, we commit the transaction and the connection
     # is automatically closed
     try:
         with config.db_transaction() as dbconn:
@@ -96,10 +97,10 @@ if __name__ == '__main__':
     except Exception, x:
         print str(x)
 
-    # This second transaction fails with an exception raised.  Because no
-    # commit was called during the context of the 'with' statement, the
-    # transaction will be automatically rolled back.  This behavior is shown
-    # in the stdout logging when the app is run.
+    # This second transaction fails with a (contrived) exception being raised.
+    # Because no commit was called during the context of the 'with' statement,
+    # the transaction will be automatically rolled back. This behavior is shown
+    # in the stdout logging when the app is run:
     try:
         with config.db_transaction() as dbconn:
             cursor = dbconn.cursor()
