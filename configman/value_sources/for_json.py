@@ -42,6 +42,7 @@ import sys
 
 from .. import converters as conv
 from ..namespace import Namespace
+from ..option import Option, Aggregation
 
 from source_exceptions import (ValueException, NotEnoughInformationException,
                                NoHandlerForType)
@@ -103,10 +104,15 @@ class ValueSource(object):
             d = json_dict
             for x in qkey.split('.'):
                 d = d[x]
-            for okey, oval in val.__dict__.iteritems():
-                try:
-                    d[okey] = conv.to_string_converters[type(oval)](oval)
-                except KeyError:
-                    d[okey] = str(oval)
-            d['default'] = d['value']
+            if isinstance(val, Option):
+                for okey, oval in val.__dict__.iteritems():
+                    try:
+                        d[okey] = conv.to_string_converters[type(oval)](oval)
+                    except KeyError:
+                        d[okey] = str(oval)
+                d['default'] = d['value']
+            elif isinstance(val, Aggregation):
+                d['name'] = val.name
+                fn = val.aggregation_fn
+                d['aggregation_fn'] = conv.to_string_converters[type(fn)](fn)
         json.dump(json_dict, output_stream)

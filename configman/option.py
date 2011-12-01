@@ -51,7 +51,6 @@ class Option(object):
                  from_string_converter=None,
                  value=None,
                  short_form=None,
-                 is_template=False,
                  *args,
                  **kwargs):
         self.name = name
@@ -67,8 +66,6 @@ class Option(object):
         self.from_string_converter = from_string_converter
         if value is None:
             value = default
-        self.initialize_value(value)
-
         self.set_value(value)
         if (type(self.value) != type(self.default)
             and self.from_string_converter):
@@ -121,7 +118,10 @@ class Aggregation(object):
     def __init__(self,
                  name,
                  aggregation_fn):
-
+        self.name = name
+        self.aggregation_fn = aggregation_fn
+        self.value = None
 
     #--------------------------------------------------------------------------
-    def set_value(self, val):
+    def aggregate(self, all_options, local_namespace, args):
+        self.value = self.aggregation_fn(all_options, local_namespace, args)

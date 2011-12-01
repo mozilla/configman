@@ -37,7 +37,7 @@
 # ***** END LICENSE BLOCK *****
 
 import dotdict
-from option import Option
+from option import Option, Aggregation
 
 
 class Namespace(dotdict.DotDict):
@@ -60,15 +60,18 @@ class Namespace(dotdict.DotDict):
                    default=None,
                    doc=None,
                    from_string_converter=None,
-                   short_form=None,
-                   is_template=False):
+                   short_form=None):
         an_option = Option(name,
                            doc=doc,
                            default=default,
                            from_string_converter=from_string_converter,
-                           short_form=short_form,
-                           is_template=is_template)
+                           short_form=short_form)
         self[name] = an_option
+
+    #--------------------------------------------------------------------------
+    def add_aggregation(self, name, aggregation_fn):
+        an_aggregation = Aggregation(name, aggregation_fn)
+        self[name] = an_aggregation
 
     #--------------------------------------------------------------------------
     def namespace(self, name, doc=''):

@@ -3,69 +3,40 @@ import contextlib
 
 from configman import Namespace, ConfigurationManager
 
-class FakeDatabaseObjects(object):
-    # This class provides an interface to a fake relational database
-    # loosely modeled after the psycopg2 library.  It actually does nothing
-    # at all execept offer an API and track if it is in a transaction or not.
-    # It can be ignored as it is just support for the more interesting
-    # example code that follows
-    in_transaction = 0
-    @staticmethod
-    def connect(dsn):
-        print 'connnected to database with "%s"' % dsn
-        FakeDatabaseObjects.in_transaction = 1
-        return FakeDatabaseObjects
-
-    @staticmethod
-    def cursor():
-        print 'new cursor created'
-        return FakeDatabaseObjects
-
-    @staticmethod
-    def execute(sql):
-        print 'executing: "%s"' % sql
-
-    @staticmethod
-    def close():
-        print 'closing connection'
-
-    @staticmethod
-    def commit():
-        FakeDatabaseObjects.in_transaction = 0
-        print 'commiting transaction'
-
-    @staticmethod
-    def rollback():
-        FakeDatabaseObjects.in_transaction = 0
-        print 'rolling back transaction'
-
-    @staticmethod
-    def get_transaction_status():
-        return FakeDatabaseObjects.in_transaction
-
-    STATUS_IN_TRANSACTION = 1
+from fakedb import FakeDatabaseObjects
 
 # this is the interesting function in this example.  It is used as a
-# from string converter.  It takes a database connection string (DSN)
+# from aggregation function for an Aggregation object that live within a
+# configman's option definition.  It takes a database connection string (DSN)
 # and emits a fuction that returns a database connection object wrapped
 # in a contextmanager.  This allows a configuration value to serve as a
 # factory for database transaction objects suitable for use in a 'with'
 # statement.
-def transaction_context_factory(dsn):
+def transaction_context_factory(config_unused, local_namespace, args_unused):
+    dsn = ("host=%(host)s "
+           "dbname=%(dbname)s "
+           "user=%(user)s "
+           "password=%(password)s") % local_namespace
     @contextlib.contextmanager
     def transaction_context():
         conn = FakeDatabaseObjects.connect(dsn)
-        yield conn
-        status = conn.get_transaction_status()
-        if status == FakeDatabaseObjects.STATUS_IN_TRANSACTION:
-            conn.rollback()
-        conn.close()
+        try:
+            yield conn
+        except Exception, x:
+            raise x
+        finally:
+            status = conn.get_transaction_status()
+            if status == FakeDatabaseObjects.STATUS_IN_TRANSACTION:
+                conn.rollback()
+            conn.close()
     return transaction_context
 
 # this function defines the connection parameters required to connect to
 # a database.
 def define_config():
     definition = Namespace()
+    # here we're setting up the minimal parameters required for connecting
+    # to a database.
     definition.add_option(
       name='host',
       default='localhost',
@@ -90,23 +61,19 @@ def define_config():
       doc='the name of the database',
       short_form='p'
     )
-    dsn_template = ("host=%(host)s "
-                    "dbname=%(dbname)s "
-                    "user=%(user)s "
-                    "password=%(password)s")
-    # This final option is the most interesting one.  Note that it is marked
-    # as a template option.  That means that its value depends on the final
-    # values of the other options within the same Namespace.  After configman
-    # is done making all its overlays, there is one final pass through the
-    # option definitions with the sole purpose of expanding these templated
-    # values.  Just like other options, once it has its final value, the
-    # from_string_converter is applied.  In this case, the coverter is the
-    # database transaction factory function from above.
-    definition.add_option(
-      name='transaction_context',
-      default=dsn_template,
-      from_string_converter=transaction_context_factory,
-      is_template=True
+    # This final aggregation object is the most interesting one.  Its final
+    # value depends on the final values of the options within the same
+    # Namespace.  After configman is done doing all its overlays, there is
+    # one final pass through the option definitions with the sole purpose of
+    # expanding the Aggregations.  To do so, the Aggregations' aggregation_fn
+    # is called passing the whole config set to the function.  That function
+    # can then use any values within the config values to come up with its
+    # own value.  In this case, the function returns a factory function that
+    # return functions that return database connections wrapped in
+    # contextmanagers.
+    definition.add_aggregation(
+      name='db_transaction',
+      aggregation_fn=transaction_context_factory
     )
     return definition
 
@@ -122,15 +89,19 @@ if __name__ == '__main__':
     # some actions happen, the transaction commits and the connection
     # is automatically closed
     try:
-        with config.transaction_context() as dbconn:
+        with config.db_transaction() as dbconn:
             cursor = dbconn.cursor()
             cursor.execute('select * from pg_tables')
             dbconn.commit()
     except Exception, x:
         print str(x)
 
+    # This second transaction fails with an exception raised.  Because no
+    # commit was called during the context of the 'with' statement, the
+    # transaction will be automatically rolled back.  This behavior is shown
+    # in the stdout logging when the app is run.
     try:
-        with config.transaction_context() as dbconn:
+        with config.db_transaction() as dbconn:
             cursor = dbconn.cursor()
             cursor.execute('select * from pg_tables')
             raise Exception("we failed for some reason")

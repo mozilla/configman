@@ -52,7 +52,7 @@ import def_sources
 
 #==============================================================================
 # for convenience define some external symbols here
-from option import Option
+from option import Option, Aggregation
 from dotdict import DotDict
 from namespace import Namespace
 from config_file_future_proxy import ConfigFileFutureProxy
@@ -233,8 +233,6 @@ class ConfigurationManager(object):
         # third pass to get values - complain about bad options
         self.overlay_settings(ignore_mismatches=False)
 
-        self.fill_in_templates()
-
         if use_auto_help and self.get_option_by_name('help').value:
             self.output_summary()
             admin_tasks_done = True
@@ -251,6 +249,12 @@ class ConfigurationManager(object):
 
         if quit_after_admin and admin_tasks_done:
             sys.exit()
+
+        self.config = self.get_config()
+        changes = self.do_aggregations()
+        if changes:
+            self.config = self.get_config()
+
 
     #--------------------------------------------------------------------------
     def walk_expanding_class_options(self, source_namespace=None,
@@ -374,26 +378,28 @@ class ConfigurationManager(object):
     def walk_config_copy_values(self, source, destination):
         for key, val in source.items():
             value_type = type(val)
-            if value_type == Option:
+            if isinstance(val, Option) or isinstance(val, Aggregation):
                 destination[key] = val.value
             elif value_type == Namespace:
                 destination[key] = d = DotDict()
                 self.walk_config_copy_values(val, d)
 
     #--------------------------------------------------------------------------
-    def fill_in_templates(self, source=None):
+    def do_aggregations(self, source=None, local_namespace=None):
         if source is None:
             source = self.option_definitions
+            local_namespace = self.config
+        changes_made = False
         val_dict = dict()
-        for k, v in source.iteritems():
-            if isinstance(v, Namespace):
-                continue
-            val_dict[k] = v.value
         for key, val in source.items():
             if isinstance(val, Namespace):
-                self.fill_in_templates(val)
-            elif val.is_template:
-                val.do_set_value(val.value % val_dict)
+                changes_made = changes_made or \
+                                self.do_aggregations(val, local_namespace[key])
+            elif isinstance(val, Aggregation):
+                val.aggregate(self.config, local_namespace, self.args)
+                changes_made = True
+            # skip Options, we're only dealing with Aggregations
+        return changes_made
 
     #--------------------------------------------------------------------------
     @staticmethod
@@ -422,11 +428,12 @@ class ConfigurationManager(object):
             qualified_key = '%s%s' % (prefix, key)
             if qualified_key in blocked_keys:
                 continue
-            value_type = type(val)
-            if value_type == Option:
+            if isinstance(val, Option):
                 yield self.block_password(qualified_key, key, val,
                                           block_password)
-            elif value_type == Namespace:
+            if isinstance(val, Aggregation):
+                yield qualified_key, key, val
+            elif isinstance(val, Namespace):
                 if qualified_key == 'admin':
                     continue
                 yield qualified_key, key, val
@@ -468,8 +475,9 @@ class ConfigurationManager(object):
             if isinstance(val, Namespace):
                 new_prefix = '%s%s.' % (prefix, key)
                 self.get_option_names(val, names, new_prefix)
-            else:
+            elif isinstance(val, Option):
                 names.append("%s%s" % (prefix, key))
+            # skip aggregations, we want only Options
         return names
 
     #--------------------------------------------------------------------------
