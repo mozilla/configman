@@ -79,7 +79,7 @@ class TestCase(unittest.TestCase):
           use_auto_help=False,
           argv_source=[]
         )
-        d = c.get_config()
+        d = c.config
         e = DotDict()
         e.a = 1
         e.b = 17
@@ -100,7 +100,7 @@ class TestCase(unittest.TestCase):
           use_auto_help=False,
           argv_source=[]
         )
-        d = c.get_config()
+        d = c.config
         e = DotDict()
         e.a = 1
         e.b = 17
@@ -185,7 +185,7 @@ class TestCase(unittest.TestCase):
                                     argv_source=[])
         o = {"a": 2, "c.z": 22, "c.x": 'noob', "c.y": "2.89"}
         c.overlay_config_recurse(o)
-        d = c.get_config()
+        d = c.generate_config()
         e = DotDict()
         e.a = 2
         e.b = 17
@@ -214,7 +214,7 @@ class TestCase(unittest.TestCase):
                                     argv_source=[])
         o = {"a": 2, "c.z": 22, "c.x": 'noob', "c.y": "2.89", "n": "not here"}
         c.overlay_config_recurse(o, ignore_mismatches=True)
-        d = c.get_config()
+        d = c.generate_config()
         e = DotDict()
         e.a = 2
         e.b = 17
@@ -1022,7 +1022,7 @@ string =   from ini
                                     argv_source=['argument 1',
                                                  'argument 2',
                                                  'argument 3'])
-        conf = c.get_config()
+        conf = c.config
         self.assertEqual(conf.keys(), ['admin'])  # there should be nothing but
                                                   # the admin key
 

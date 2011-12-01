@@ -158,6 +158,10 @@ class ConfigurationManager(object):
         self.args = []  # extra commandline arguments that are not switches
                         # will be stored here.
 
+        self._config = None  # eventual container for DOM-like config object
+        self._config_dirty = True  # flag to indicate that the _config needs
+                                   # regeneration
+
         self.argv_source = argv_source
         self.option_definitions = Namespace()
         self.definition_source_list = definition_source_list
@@ -250,10 +254,22 @@ class ConfigurationManager(object):
         if quit_after_admin and admin_tasks_done:
             sys.exit()
 
-        self.config = self.get_config()
-        config_invalidated = self.do_aggregations()
-        if config_invalidated:  # must regenerate config
-            self.config = self.get_config()
+        self.aggregate()
+
+    #--------------------------------------------------------------------------
+    @property
+    def config(self):
+        if self._config is None or self._config_dirty:
+            self._config = self.generate_config()
+            self._config_dirty = False
+        return self._config
+
+    #--------------------------------------------------------------------------
+    def generate_config(self):
+        """This routine generates a copy of the DotDict based config"""
+        config = DotDict()
+        self.walk_config_copy_values(self.option_definitions, config)
+        return config
 
     #--------------------------------------------------------------------------
     def walk_expanding_class_options(self, source_namespace=None,
@@ -384,20 +400,17 @@ class ConfigurationManager(object):
                 self.walk_config_copy_values(val, d)
 
     #--------------------------------------------------------------------------
-    def do_aggregations(self, source=None, local_namespace=None):
+    def aggregate(self, source=None, local_namespace=None):
         if source is None:
             source = self.option_definitions
             local_namespace = self.config
-        changes_made = False
         for key, val in source.items():
             if isinstance(val, Namespace):
-                changes_made = changes_made or \
-                                self.do_aggregations(val, local_namespace[key])
+                self.aggregate(val, local_namespace[key])
             elif isinstance(val, Aggregation):
                 val.aggregate(self.config, local_namespace, self.args)
-                changes_made = True
+                self._config_dirty = True
             # skip Options, we're only dealing with Aggregations
-        return changes_made
 
     #--------------------------------------------------------------------------
     @staticmethod
@@ -441,12 +454,6 @@ class ConfigurationManager(object):
                                                           blocked_keys,
                                                           block_password):
                     yield xqkey, xkey, xval
-
-    #--------------------------------------------------------------------------
-    def get_config(self):
-        config = DotDict()
-        self.walk_config_copy_values(self.option_definitions, config)
-        return config
 
     #--------------------------------------------------------------------------
     def get_option_by_name(self, name):

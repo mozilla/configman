@@ -69,8 +69,8 @@ class Namespace(dotdict.DotDict):
         self[name] = an_option
 
     #--------------------------------------------------------------------------
-    def add_aggregation(self, name, aggregation_fn):
-        an_aggregation = Aggregation(name, aggregation_fn)
+    def add_aggregation(self, name, function):
+        an_aggregation = Aggregation(name, function)
         self[name] = an_aggregation
 
     #--------------------------------------------------------------------------
