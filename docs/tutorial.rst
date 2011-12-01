@@ -78,7 +78,7 @@ us correctly::
 
  ...
  config_manager = ConfigurationManager(definition)
- config = config_manager.get_config()
+ config = config_manager.config
 
 That's all! That last line returned an instance of what we call a DotDict.
 It is essentially a standard Python dict that's had its ``__getattr__`` cross
@@ -108,7 +108,7 @@ of ``devowel`` in the full example below::
  if __name__ == '__main__':
      definition = define_config()
      config_manager = ConfigurationManager(definition)
-     config = config_manager.get_config()
+     config = config_manager.config
      output_string = ' '.join(config_manager.args)
      if config.devowel:
          output_string = devowel(output_string)
@@ -202,7 +202,7 @@ Excellent! The whole thing together looks like this now::
  if __name__ == '__main__':
      definition = define_config()
      config_manager = ConfigurationManager(definition)
-     config = config_manager.get_config()
+     config = config_manager.config
      if config.file:
          with open(config.file) as f:
              output_string = f.read().strip()

@@ -79,7 +79,7 @@ c = cm.ConfigurationManager(definition_source,
                             app_description=__doc__)
 
 # fetch the DOM-like instance that gives access to the configuration info
-config = c.get_config()
+config = c.config
 
 # use the config
 if config.action == 'echo':

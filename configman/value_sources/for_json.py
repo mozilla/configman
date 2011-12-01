@@ -114,6 +114,6 @@ class ValueSource(object):
                 d['default'] = d['value']
             elif isinstance(val, Aggregation):
                 d['name'] = val.name
-                fn = val.aggregation_fn
-                d['aggregation_fn'] = conv.to_string_converters[type(fn)](fn)
+                fn = val.function
+                d['function'] = conv.to_string_converters[type(fn)](fn)
         json.dump(json_dict, output_stream)

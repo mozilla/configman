@@ -119,14 +119,14 @@ class Aggregation(object):
     #--------------------------------------------------------------------------
     def __init__(self,
                  name,
-                 aggregation_fn):
+                 function):
         self.name = name
-        if isinstance(aggregation_fn, basestring):
-            self.aggregation_fn = conv.class_converter(aggregation_fn)
+        if isinstance(function, basestring):
+            self.function = conv.class_converter(function)
         else:
-            self.aggregation_fn = aggregation_fn
+            self.function = function
         self.value = None
 
     #--------------------------------------------------------------------------
     def aggregate(self, all_options, local_namespace, args):
-        self.value = self.aggregation_fn(all_options, local_namespace, args)
+        self.value = self.function(all_options, local_namespace, args)

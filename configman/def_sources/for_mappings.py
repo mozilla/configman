@@ -60,7 +60,7 @@ def setup_definitions(source, destination):
                 # this is an Option in the form of a dict, not a Namespace
                 params = converters.str_dict_keys(val)
                 destination[key] = option.Option(**params)
-            elif 'aggregation_fn' in val:  # this is an Aggregation
+            elif 'function' in val:  # this is an Aggregation
                 params = converters.str_dict_keys(val)
                 destination[key] = option.Aggregation(**params)
             else:
@@ -72,7 +72,7 @@ def setup_definitions(source, destination):
                         destination[key] = namespace.Namespace()
                 # recurse!
                 setup_definitions(val, destination[key])
-        elif type(val) in [int, float, str, unicode]:
+        elif isinstance(val, (int, long, float, str, unicode)):
             destination[key] = option.Option(name=key,
                                       doc=key,
                                       default=val)

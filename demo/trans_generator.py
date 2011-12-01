@@ -76,7 +76,7 @@ def define_config():
     # contextmanagers.
     definition.add_aggregation(
       name='db_transaction',
-      aggregation_fn=transaction_context_factory
+      function=transaction_context_factory
     )
     return definition
 
@@ -93,10 +93,10 @@ if __name__ == '__main__':
     # some sql, we commit the transaction and the connection
     # is automatically closed
     try:
-        with config.db_transaction() as dbconn:
-            cursor = dbconn.cursor()
+        with config.db_transaction() as transaction:
+            cursor = transaction.cursor()
             cursor.execute('select * from pg_tables')
-            dbconn.commit()
+            transaction.commit()
     except Exception, x:
         print str(x)
 
@@ -105,8 +105,8 @@ if __name__ == '__main__':
     # the transaction will be automatically rolled back. This behavior is shown
     # in the stdout logging when the app is run:
     try:
-        with config.db_transaction() as dbconn:
-            cursor = dbconn.cursor()
+        with config.db_transaction() as transaction:
+            cursor = transaction.cursor()
             cursor.execute('select * from pg_tables')
             raise Exception("we failed for some reason")
     except Exception, x:

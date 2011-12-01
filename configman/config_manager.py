@@ -251,8 +251,8 @@ class ConfigurationManager(object):
             sys.exit()
 
         self.config = self.get_config()
-        changes = self.do_aggregations()
-        if changes:
+        config_invalidated = self.do_aggregations()
+        if config_invalidated:  # must regenerate config
             self.config = self.get_config()
 
     #--------------------------------------------------------------------------
@@ -389,7 +389,6 @@ class ConfigurationManager(object):
             source = self.option_definitions
             local_namespace = self.config
         changes_made = False
-        val_dict = dict()
         for key, val in source.items():
             if isinstance(val, Namespace):
                 changes_made = changes_made or \
