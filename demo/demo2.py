@@ -121,7 +121,7 @@ c = cm.ConfigurationManager(definition_source,
                             app_description=__doc__)
 
 # fetch the DotDict version of the values
-config = c.get_config()
+config = c.config
 
 # use the config
 config.action(config.text)

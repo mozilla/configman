@@ -152,6 +152,7 @@ def write(file_name_extension,
                                                " name extension" %
                                                file_name_extension)
 
+
 def get_admin_options_from_command_line(config_manager):
     command_line_value_source = for_getopt.ValueSource(for_getopt.getopt,
                                                        config_manager)

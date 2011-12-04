@@ -42,10 +42,11 @@ import converters as conv
 from config_exceptions import CannotConvertError
 
 
+#==============================================================================
 class Option(object):
-
     #--------------------------------------------------------------------------
-    def __init__(self, name,
+    def __init__(self,
+                 name,
                  default=None,
                  doc=None,
                  from_string_converter=None,
@@ -64,7 +65,6 @@ class Option(object):
         if isinstance(from_string_converter, basestring):
             from_string_converter = conv.class_converter(from_string_converter)
         self.from_string_converter = from_string_converter
-
         if value is None:
             value = default
         self.set_value(value)
@@ -112,3 +112,21 @@ class Option(object):
             self.set_value(val["default"])
         else:
             self.value = val
+
+
+#==============================================================================
+class Aggregation(object):
+    #--------------------------------------------------------------------------
+    def __init__(self,
+                 name,
+                 function):
+        self.name = name
+        if isinstance(function, basestring):
+            self.function = conv.class_converter(function)
+        else:
+            self.function = function
+        self.value = None
+
+    #--------------------------------------------------------------------------
+    def aggregate(self, all_options, local_namespace, args):
+        self.value = self.function(all_options, local_namespace, args)
