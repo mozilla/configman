@@ -24,8 +24,6 @@ def transaction_context_factory(config_unused, local_namespace, args_unused):
         conn = FakeDatabaseObjects.connect(dsn)
         try:
             yield conn
-        except Exception, x:
-            raise x
         finally:
             status = conn.get_transaction_status()
             if status == FakeDatabaseObjects.STATUS_IN_TRANSACTION:
