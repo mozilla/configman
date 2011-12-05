@@ -159,8 +159,6 @@ class ConfigurationManager(object):
                         # will be stored here.
 
         self._config = None  # eventual container for DOM-like config object
-        self._config_dirty = True  # flag to indicate that the _config needs
-                                   # regeneration
 
         self.argv_source = argv_source
         self.option_definitions = Namespace()
@@ -259,9 +257,8 @@ class ConfigurationManager(object):
     #--------------------------------------------------------------------------
     @property
     def config(self):
-        if self._config is None or self._config_dirty:
+        if self._config is None:
             self._config = self.generate_config()
-            self._config_dirty = False
         return self._config
 
     #--------------------------------------------------------------------------
@@ -409,7 +406,7 @@ class ConfigurationManager(object):
                 self.aggregate(val, local_namespace[key])
             elif isinstance(val, Aggregation):
                 val.aggregate(self.config, local_namespace, self.args)
-                self._config_dirty = True
+                self._config = None
             # skip Options, we're only dealing with Aggregations
 
     #--------------------------------------------------------------------------
