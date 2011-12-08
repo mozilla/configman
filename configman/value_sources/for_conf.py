@@ -47,6 +47,7 @@ to open it.
 import functools
 import sys
 
+from .. import namespace
 from .. import option as opt
 from .. import converters as conv
 
@@ -115,7 +116,10 @@ class ValueSource(object):
     @staticmethod
     def write(option_iter, output_stream=sys.stdout, comments=True):
         for qkey, key, val in option_iter():
-            if isinstance(val, opt.Option):
+            if isinstance(val, namespace.Namespace):
+                print >> output_stream, '#%s' % ('-' * 79)
+                print >> output_stream, '# %s - %s\n' % (key, val._doc)
+            elif isinstance(val, opt.Option):
                 if comments:
                     print >> output_stream, '# name:', qkey
                     print >> output_stream, '# doc:', val.doc
@@ -123,6 +127,7 @@ class ValueSource(object):
                         conv.py_obj_to_str(val.from_string_converter)
                 val_str = conv.option_value_str(val)
                 print >> output_stream, '%s=%s\n' % (qkey, val_str)
-            else:
-                print >> output_stream, '#%s' % ('-' * 79)
-                print >> output_stream, '# %s - %s\n' % (key, val._doc)
+            elif isinstance(val, opt.Aggregation):
+                # there is nothing to do for Aggregations at this time
+                # it appears here anyway as a marker for future enhancements
+                pass
