@@ -42,6 +42,7 @@ import ConfigParser
 from source_exceptions import (CantHandleTypeException, ValueException,
                                NotEnoughInformationException)
 from .. import namespace
+from .. import option
 from .. import converters as conv
 
 
@@ -135,10 +136,14 @@ class ValueSource(object):
             if isinstance(val, namespace.Namespace):
                 print >> output_stream, '[%s]' % key
                 print >> output_stream, '# %s\n' % val._doc
-            else:
+            elif isinstance(val, option.Option):
                 print >> output_stream, '# name:', qkey
                 print >> output_stream, '# doc:', val.doc
                 print >> output_stream, '# converter:', \
                    conv.py_obj_to_str(val.from_string_converter)
                 val_str = conv.option_value_str(val)
                 print >> output_stream, '%s=%s\n' % (key, val_str)
+            elif isinstance(val, opt.Aggregation):
+                # there is nothing to do for Aggregations at this time
+                # it appears here anyway as a marker for future enhancements
+                pass
