@@ -79,7 +79,7 @@ class TestCase(unittest.TestCase):
           use_auto_help=False,
           argv_source=[]
         )
-        d = c.get_config()
+        d = c.config
         e = DotDict()
         e.a = 1
         e.b = 17
@@ -100,7 +100,7 @@ class TestCase(unittest.TestCase):
           use_auto_help=False,
           argv_source=[]
         )
-        d = c.get_config()
+        d = c.config
         e = DotDict()
         e.a = 1
         e.b = 17
@@ -185,7 +185,7 @@ class TestCase(unittest.TestCase):
                                     argv_source=[])
         o = {"a": 2, "c.z": 22, "c.x": 'noob', "c.y": "2.89"}
         c.overlay_config_recurse(o)
-        d = c.get_config()
+        d = c.generate_config()
         e = DotDict()
         e.a = 2
         e.b = 17
@@ -214,7 +214,7 @@ class TestCase(unittest.TestCase):
                                     argv_source=[])
         o = {"a": 2, "c.z": 22, "c.x": 'noob', "c.y": "2.89", "n": "not here"}
         c.overlay_config_recurse(o, ignore_mismatches=True)
-        d = c.get_config()
+        d = c.generate_config()
         e = DotDict()
         e.a = 2
         e.b = 17
@@ -769,6 +769,7 @@ string =   from ini
         n.admin.add_option('application',
                            MyApp,
                            'the app object class')
+
         class MyConfigManager(config_manager.ConfigurationManager):
             def output_summary(inner_self):
                 output_stream = StringIO()
@@ -998,7 +999,6 @@ string =   from ini
                                          'argument 3'])
         self.assertEqual(c.print_conf_called, True)
 
-
     def test_non_compliant_app_object(self):
         # the MyApp class doesn't define required config
         class MyApp():
@@ -1022,12 +1022,13 @@ string =   from ini
                                     argv_source=['argument 1',
                                                  'argument 2',
                                                  'argument 3'])
-        conf = c.get_config()
-        self.assertEqual(conf.keys(), ['admin']) # there should be nothing but
-                                                 # the admin key
+        conf = c.config
+        self.assertEqual(conf.keys(), ['admin'])  # there should be nothing but
+                                                  # the admin key
 
     def test_print_conf(self):
         n = config_manager.Namespace()
+
         class MyConfigManager(config_manager.ConfigurationManager):
             def __init__(inner_self, *args, **kwargs):
                 inner_self.write_called = False
@@ -1057,9 +1058,9 @@ string =   from ini
                                          'argument 3'],
                             config_pathname='fred')
 
-
     def test_dump_conf(self):
         n = config_manager.Namespace()
+
         class MyConfigManager(config_manager.ConfigurationManager):
             def __init__(inner_self, *args, **kwargs):
                 inner_self.write_called = False
@@ -1080,9 +1081,9 @@ string =   from ini
                                          'argument 3'],
                             config_pathname='fred')
 
-
     def test_config_pathname_set(self):
         n = config_manager.Namespace()
+
         class MyConfigManager(config_manager.ConfigurationManager):
             def __init__(inner_self, *args, **kwargs):
                 inner_self.write_called = False
@@ -1090,7 +1091,7 @@ string =   from ini
 
             def get_config_pathname(self):
                 temp_fn = os.path.isdir
-                os.path.isdir = lambda x : False
+                os.path.isdir = lambda x: False
                 try:
                     r = super(MyConfigManager, self).get_config_pathname()
                 finally:
@@ -1107,7 +1108,6 @@ string =   from ini
                                        'argument 3'],
                           config_pathname='fred')
 
-
     def test_ConfigurationManager_block_password(self):
         function = config_manager.ConfigurationManager.block_password
         self.assertEqual(function('foo', 'bar', 'peter', block_password=False),
@@ -1120,3 +1120,49 @@ string =   from ini
         self.assertEqual(function('foo', 'my_password', 'peter',
                                   block_password=True),
                          ('foo', 'my_password', '*********'))
+
+    def test_do_aggregations(self):
+        def aggregation_test(all_config, local_namespace, args):
+            self.assertTrue('password' in all_config)
+            self.assertTrue('sub1' in all_config)
+            self.assertTrue('name' in all_config.sub1)
+            self.assertTrue('name' in local_namespace)
+            self.assertTrue('spouse' in local_namespace)
+            self.assertEqual(len(args), 2)
+            return ('%s married %s using password %s but '
+                    'divorced because of %s.' % (local_namespace.name,
+                                                local_namespace.spouse,
+                                                all_config.password,
+                                                args[1]))
+
+        class MyApp(config_manager.RequiredConfig):
+            app_name = 'fred'
+            app_version = '1.0'
+            app_description = "my app"
+            required_config = config_manager.Namespace()
+            required_config.add_option('password', '@$*$&26Ht', 'the password')
+            required_config.namespace('sub1')
+            required_config.sub1.add_option('name', 'ethel', 'the name')
+            required_config.sub1.add_option('spouse', 'fred', 'the spouse')
+            required_config.sub1.add_aggregation('statement', aggregation_test)
+
+            def __init__(inner_self, config):
+                inner_self.config = config
+
+        n = config_manager.Namespace()
+        n.admin = config_manager.Namespace()
+        n.admin.add_option('application',
+                           MyApp,
+                           'the app object class')
+
+        c = config_manager.ConfigurationManager(n,
+                                                [getopt],
+                                    use_admin_controls=True,
+                                    use_auto_help=False,
+                                    argv_source=['--sub1.name=wilma',
+                                                 'arg1',
+                                                 'arg2'])
+        config = c.config
+        self.assertEqual(config.sub1.statement,
+                         'wilma married fred using password @$*$&26Ht '
+                         'but divorced because of arg2.')

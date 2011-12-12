@@ -42,6 +42,7 @@ import sys
 
 from .. import converters as conv
 from ..namespace import Namespace
+from ..option import Option, Aggregation
 
 from source_exceptions import (ValueException, NotEnoughInformationException,
                                NoHandlerForType)
@@ -63,12 +64,13 @@ class ValueSource(object):
         self.values = None
         if source is json:
             try:
-                app = the_config_manager.get_option_by_name('admin.application')
+                app = the_config_manager.get_option_by_name(
+                                                      'admin.application')
                 source = "%s.%s" % (app.value.app_name, file_name_extension)
             except (AttributeError, KeyError):
                 raise NotEnoughInformationException("Can't setup an json "
-                                                       "file without knowing "
-                                                       "the file name")
+                                                    "file without knowing "
+                                                    "the file name")
         if (isinstance(source, basestring) and
            source.endswith(file_name_extension)):
             try:
@@ -103,10 +105,15 @@ class ValueSource(object):
             d = json_dict
             for x in qkey.split('.'):
                 d = d[x]
-            for okey, oval in val.__dict__.iteritems():
-                try:
-                    d[okey] = conv.to_string_converters[type(oval)](oval)
-                except KeyError:
-                    d[okey] = str(oval)
-            d['default'] = d['value']
+            if isinstance(val, Option):
+                for okey, oval in val.__dict__.iteritems():
+                    try:
+                        d[okey] = conv.to_string_converters[type(oval)](oval)
+                    except KeyError:
+                        d[okey] = str(oval)
+                d['default'] = d['value']
+            elif isinstance(val, Aggregation):
+                d['name'] = val.name
+                fn = val.function
+                d['function'] = conv.to_string_converters[type(fn)](fn)
         json.dump(json_dict, output_stream)

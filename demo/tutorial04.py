@@ -33,7 +33,7 @@ if __name__ == '__main__':
     value_sources = ('./backwards.ini', os.environ, getopt)
     config_manager = ConfigurationManager(definition,
                                           values_source_list=value_sources)
-    config = config_manager.get_config()
+    config = config_manager.config
     if config.file:
         with open(config.file) as f:
             output_string = f.read().strip()
