@@ -117,7 +117,7 @@ class ValueSource(object):
                 if not name:
                     raise NotAnOptionError('%s is not a valid short'
                                               ' form option' % opt_name[1:])
-            option_ = config_manager.get_option_by_name(name)
+            option_ = config_manager._get_option(name)
             if option_.from_string_converter == conv.boolean_converter:
                 command_line_values[name] = not option_.default
             else:
