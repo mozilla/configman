@@ -383,8 +383,12 @@ class ConfigurationManager(object):
             if isinstance(sub_destination, Namespace):
                 self.overlay_config_recurse(val, sub_destination,
                                             prefix=('%s.%s' % (prefix, key)))
-            else:
+            elif isinstance(sub_destination, Option):
                 sub_destination.set_value(val)
+            elif isinstance(sub_destination, Aggregation):
+                # there is nothing to do for Aggregations at this time
+                # it appears here anyway as a marker for future enhancements
+                pass
 
     #--------------------------------------------------------------------------
     def walk_config_copy_values(self, source, destination):
