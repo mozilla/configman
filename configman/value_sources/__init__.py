@@ -119,7 +119,7 @@ def wrap(value_source_list, a_config_manager):
     wrapped_sources = []
     for a_source in value_source_list:
         if a_source is ConfigFileFutureProxy:
-            a_source = a_config_manager.get_option_by_name('admin.conf').value
+            a_source = a_config_manager._get_option('admin.conf').value
         handlers = type_handler_dispatch.get_handlers(a_source)
         wrapped_source = None
         error_history = []

@@ -176,7 +176,7 @@ class TestCase(unittest.TestCase):
           ('source.c', 'c', functools.partial(option_test, expected=e.s.c)),
         ]
 
-        c_contents = [(qkey, key, val) for qkey, key, val in c.walk_config()]
+        c_contents = [(qkey, key, val) for qkey, key, val in c._walk_config()]
         c_contents.sort()
         e.sort()
         for c_tuple, e_tuple in zip(c_contents, e):
