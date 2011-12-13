@@ -143,7 +143,7 @@ class TestCase(unittest.TestCase):
             ]
         e.sort()
         r = [(q, k, v.name if isinstance(v, config_manager.Option) else v._doc)
-              for q, k, v in c.walk_config()]
+              for q, k, v in c._walk_config()]
         r.sort()
         for expected, received in zip(e, r):
             self.assertEqual(received, expected)
@@ -184,8 +184,8 @@ class TestCase(unittest.TestCase):
                                     use_auto_help=False,
                                     argv_source=[])
         o = {"a": 2, "c.z": 22, "c.x": 'noob', "c.y": "2.89"}
-        c.overlay_config_recurse(o)
-        d = c.generate_config()
+        c._overlay_value_sources_recurse(o)
+        d = c._generate_config()
         e = DotDict()
         e.a = 2
         e.b = 17
@@ -213,8 +213,8 @@ class TestCase(unittest.TestCase):
                                     use_auto_help=False,
                                     argv_source=[])
         o = {"a": 2, "c.z": 22, "c.x": 'noob', "c.y": "2.89", "n": "not here"}
-        c.overlay_config_recurse(o, ignore_mismatches=True)
-        d = c.generate_config()
+        c._overlay_value_sources_recurse(o, ignore_mismatches=True)
+        d = c._generate_config()
         e = DotDict()
         e.a = 2
         e.b = 17
@@ -249,7 +249,7 @@ class TestCase(unittest.TestCase):
           "c.n": "not here"
         }
         self.assertRaises(NotAnOptionError,
-                          c.overlay_config_recurse, output,
+                          c._overlay_value_sources_recurse, output,
                           ignore_mismatches=False)
 
     def test_overlay_config_4(self):
@@ -595,7 +595,7 @@ string =   from ini
         e.sort()
         self.assertEqual(names, e)
 
-    def test_get_option_by_name(self):
+    def test_get_option(self):
         n = config_manager.Namespace()
         n.add_option('a', 1, 'the a')
         n.b = 17
@@ -612,14 +612,14 @@ string =   from ini
                                     #use_config_files=False,
                                     use_auto_help=False,
                                     argv_source=[])
-        self.assertEqual(c.get_option_by_name('a'), n.a)
-        self.assertEqual(c.get_option_by_name('b').name, 'b')
-        self.assertEqual(c.get_option_by_name('c.fred'), n.c.fred)
-        self.assertEqual(c.get_option_by_name('c.wilma'), n.c.wilma)
-        self.assertEqual(c.get_option_by_name('d.fred'), n.d.fred)
-        self.assertEqual(c.get_option_by_name('d.wilma'), n.d.wilma)
-        self.assertEqual(c.get_option_by_name('d.wilma'), n.d.wilma)
-        self.assertEqual(c.get_option_by_name('d.x.size'), n.d.x.size)
+        self.assertEqual(c._get_option('a'), n.a)
+        self.assertEqual(c._get_option('b').name, 'b')
+        self.assertEqual(c._get_option('c.fred'), n.c.fred)
+        self.assertEqual(c._get_option('c.wilma'), n.c.wilma)
+        self.assertEqual(c._get_option('d.fred'), n.d.fred)
+        self.assertEqual(c._get_option('d.wilma'), n.d.wilma)
+        self.assertEqual(c._get_option('d.wilma'), n.d.wilma)
+        self.assertEqual(c._get_option('d.x.size'), n.d.x.size)
 
     def test_output_summary(self):
         """test_output_summary: the output from help"""
@@ -866,7 +866,7 @@ string =   from ini
                                     use_admin_controls=True,
                                     use_auto_help=False,
                                     argv_source=[])
-        r = c.get_options()
+        r = c._get_options()
         e = (
              ('admin.print_conf', 'print_conf', None),
              ('admin.application', 'application', MyApp),
@@ -1093,7 +1093,7 @@ string =   from ini
                 temp_fn = os.path.isdir
                 os.path.isdir = lambda x: False
                 try:
-                    r = super(MyConfigManager, self).get_config_pathname()
+                    r = super(MyConfigManager, self)._get_config_pathname()
                 finally:
                     os.path.isdir = temp_fn
                 return r
@@ -1109,7 +1109,7 @@ string =   from ini
                           config_pathname='fred')
 
     def test_ConfigurationManager_block_password(self):
-        function = config_manager.ConfigurationManager.block_password
+        function = config_manager.ConfigurationManager._block_password
         self.assertEqual(function('foo', 'bar', 'peter', block_password=False),
                          ('foo', 'bar', 'peter'))
         self.assertEqual(function('foo', 'bar', 'peter', block_password=True),

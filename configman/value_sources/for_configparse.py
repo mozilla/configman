@@ -68,7 +68,7 @@ class ValueSource(object):
         self.top_level_section_name = top_level_section_name
         if source is ConfigParser:
             try:
-                app = config_manager.get_option_by_name('admin.application')
+                app = config_manager._get_option('admin.application')
                 source = "%s.%s" % (app.value.app_name, file_name_extension)
             except AttributeError:
                 # we likely don't have the admin.application object set up yet.
@@ -110,7 +110,7 @@ class ValueSource(object):
         dummies."""
         if self.delayed_parser_instantiation:
             try:
-                app = config_manager.get_option_by_name('admin.application')
+                app = config_manager._get_option('admin.application')
                 source = "%s%s" % (app.value.app_name, file_name_extension)
                 self.configparser = self._create_parser(source)
                 self.delayed_parser_instantiation = False
@@ -143,7 +143,7 @@ class ValueSource(object):
                    conv.py_obj_to_str(val.from_string_converter)
                 val_str = conv.option_value_str(val)
                 print >> output_stream, '%s=%s\n' % (key, val_str)
-            elif isinstance(val, opt.Aggregation):
+            elif isinstance(val, option.Aggregation):
                 # there is nothing to do for Aggregations at this time
                 # it appears here anyway as a marker for future enhancements
                 pass
