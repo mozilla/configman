@@ -1166,3 +1166,58 @@ string =   from ini
         self.assertEqual(config.sub1.statement,
                          'wilma married fred using password @$*$&26Ht '
                          'but divorced because of arg2.')
+
+    def test_context(self):
+        class AggregatedValue(object):
+            def __init__(self, value):
+                self.value = value
+            def close(self):
+                self.value = None
+
+        def aggregation_test(all_config, local_namespace, args):
+            self.assertTrue('password' in all_config)
+            self.assertTrue('sub1' in all_config)
+            self.assertTrue('name' in all_config.sub1)
+            self.assertTrue('name' in local_namespace)
+            self.assertTrue('spouse' in local_namespace)
+            self.assertEqual(len(args), 2)
+            return AggregatedValue('%s married %s using password %s but '
+                                   'divorced because of %s.' %
+                                   (local_namespace.name,
+                                    local_namespace.spouse,
+                                    all_config.password,
+                                    args[1]))
+
+        class MyApp(config_manager.RequiredConfig):
+            app_name = 'fred'
+            app_version = '1.0'
+            app_description = "my app"
+            required_config = config_manager.Namespace()
+            required_config.add_option('password', '@$*$&26Ht', 'the password')
+            required_config.namespace('sub1')
+            required_config.sub1.add_option('name', 'ethel', 'the name')
+            required_config.sub1.add_option('spouse', 'fred', 'the spouse')
+            required_config.sub1.add_aggregation('statement', aggregation_test)
+
+            def __init__(inner_self, config):
+                inner_self.config = config
+
+        n = config_manager.Namespace()
+        n.admin = config_manager.Namespace()
+        n.admin.add_option('application',
+                           MyApp,
+                           'the app object class')
+
+        c = config_manager.ConfigurationManager(n,
+                                                [getopt],
+                                    use_admin_controls=True,
+                                    use_auto_help=False,
+                                    argv_source=['--sub1.name=wilma',
+                                                 'arg1',
+                                                 'arg2'])
+        with c.context() as config:
+            statement = config.sub1.statement
+            self.assertEqual(statement.value,
+                             'wilma married fred using password @$*$&26Ht '
+                             'but divorced because of arg2.')
+        self.assertTrue(statement.value is None)
