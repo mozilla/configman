@@ -170,6 +170,9 @@ def class_converter(input_str):
         package = __import__(input_str)
     except ImportError:
         # it must be a class from a module
+        if len(parts) == 1:
+            # since it has only one part, it must be a class from __main__
+            parts = ('__main__', input_str)
         package = __import__('.'.join(parts[:-1]), globals(), locals(), [])
     obj = package
     for name in parts[1:]:

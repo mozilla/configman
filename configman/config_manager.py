@@ -252,14 +252,27 @@ class ConfigurationManager(object):
         if quit_after_admin and admin_tasks_done:
             sys.exit()
 
-        self._aggregate()
+    #--------------------------------------------------------------------------
+    @contextlib.contextmanager
+    def context(self):
+        """return a config as a context that calls close on every item when
+        it goes out of scope"""
+        try:
+            config = self.get_config()
+            yield config
+        except Exception:
+            raise
+        finally:
+            self._walk_and_close(config)
 
     #--------------------------------------------------------------------------
-    @property
-    def config(self):
-        if self._config is None:
-            self._config = self._generate_config()
-        return self._config
+    def get_config(self):
+        config = self._generate_config()
+        if self._aggregate(self.option_definitions, config, config):
+            # state changed, must regenerate
+            return self._generate_config()
+        else:
+            return config
 
     #--------------------------------------------------------------------------
     def output_summary(self,
@@ -428,6 +441,15 @@ class ConfigurationManager(object):
         return names
 
     #--------------------------------------------------------------------------
+    @staticmethod
+    def _walk_and_close(a_dict):
+        for val in a_dict.itervalues():
+            if isinstance(val, collections.Mapping):
+                ConfigurationManager._walk_and_close(val)
+            if hasattr(val, 'close') and not inspect.isclass(val):
+                val.close()
+
+    #--------------------------------------------------------------------------
     def _generate_config(self):
         """This routine generates a copy of the DotDict based config"""
         config = DotDict()
@@ -567,17 +589,19 @@ class ConfigurationManager(object):
                 self._walk_config_copy_values(val, d)
 
     #--------------------------------------------------------------------------
-    def _aggregate(self, source=None, local_namespace=None):
-        if source is None:
-            source = self.option_definitions
-            local_namespace = self.config
+    def _aggregate(self, source, base_namespace, local_namespace):
+        aggregates_found = False
         for key, val in source.items():
             if isinstance(val, Namespace):
-                self._aggregate(val, local_namespace[key])
+                aggregates_found = (aggregates_found or
+                                    self._aggregate(val,
+                                                    base_namespace,
+                                                    local_namespace[key]))
             elif isinstance(val, Aggregation):
-                val.aggregate(self.config, local_namespace, self.args)
-                self._config = None
+                val.aggregate(base_namespace, local_namespace, self.args)
+                aggregates_found = True
             # skip Options, we're only dealing with Aggregations
+        return aggregates_found
 
     #--------------------------------------------------------------------------
     @staticmethod

@@ -48,7 +48,7 @@ class Namespace(dotdict.DotDict):
 
     #--------------------------------------------------------------------------
     def __setattr__(self, name, value):
-        if isinstance(value, (Option, Namespace)):
+        if isinstance(value, (Option, Namespace, Aggregation)):
             # then they know what they're doing already
             o = value
         else:

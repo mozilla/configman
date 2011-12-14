@@ -30,7 +30,7 @@ def define_config():
 if __name__ == '__main__':
     definition = define_config()
     config_manager = ConfigurationManager(definition)
-    config = config_manager.config
+    config = config_manager.get_config()
     if config.file:
         with open(config.file) as f:
             output_string = f.read().strip()
