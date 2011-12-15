@@ -443,7 +443,7 @@ class ConfigurationManager(object):
     #--------------------------------------------------------------------------
     @staticmethod
     def _walk_and_close(a_dict):
-        for key, val in a_dict.iteritems():
+        for val in a_dict.itervalues():
             if isinstance(val, collections.Mapping):
                 ConfigurationManager._walk_and_close(val)
             if hasattr(val, 'close') and not inspect.isclass(val):
