@@ -258,7 +258,7 @@ class ConfigurationManager(object):
         """return a config as a context that calls close on every item when
         it goes out of scope"""
         try:
-            config = self.config
+            config = self.get_config()
             yield config
         except Exception:
             raise
@@ -266,8 +266,7 @@ class ConfigurationManager(object):
             self._walk_and_close(config)
 
     #--------------------------------------------------------------------------
-    @property
-    def config(self):
+    def get_config(self):
         config = self._generate_config()
         if self._aggregate(self.option_definitions, config, config):
             # state changed, must regenerate

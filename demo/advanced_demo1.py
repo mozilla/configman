@@ -82,7 +82,7 @@ def define_config():
 if __name__ == '__main__':
     definition = define_config()
     config_manager = ConfigurationManager(definition)
-    config = config_manager.config
+    config = config_manager.get_config()
 
     # In this example we do two transactions.
     # This first one succeeds so we call the 'commit' function to indicate

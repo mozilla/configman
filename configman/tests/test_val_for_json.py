@@ -132,7 +132,7 @@ class TestCase(unittest.TestCase):
                                         use_admin_controls=True,
                                         use_auto_help=False,
                                         argv_source=[])
-            config = c2.config
+            config = c2.get_config()
             self.assertEqual(config.aaa, expected_date)
             self.assertEqual(config.bbb, -99)
             self.assertEqual(config.bbb_minus_one, -100)

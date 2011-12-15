@@ -79,7 +79,7 @@ class TestCase(unittest.TestCase):
           use_auto_help=False,
           argv_source=[]
         )
-        d = c.config
+        d = c.get_config()
         e = DotDict()
         e.a = 1
         e.b = 17
@@ -100,7 +100,7 @@ class TestCase(unittest.TestCase):
           use_auto_help=False,
           argv_source=[]
         )
-        d = c.config
+        d = c.get_config()
         e = DotDict()
         e.a = 1
         e.b = 17
@@ -1022,7 +1022,7 @@ string =   from ini
                                     argv_source=['argument 1',
                                                  'argument 2',
                                                  'argument 3'])
-        conf = c.config
+        conf = c.get_config()
         self.assertEqual(conf.keys(), ['admin'])  # there should be nothing but
                                                   # the admin key
 
@@ -1162,7 +1162,7 @@ string =   from ini
                                     argv_source=['--sub1.name=wilma',
                                                  'arg1',
                                                  'arg2'])
-        config = c.config
+        config = c.get_config()
         self.assertEqual(config.sub1.statement,
                          'wilma married fred using password @$*$&26Ht '
                          'but divorced because of arg2.')
