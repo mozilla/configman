@@ -2,7 +2,6 @@
 import contextlib
 
 from configman import Namespace, ConfigurationManager
-
 from fakedb import FakeDatabaseObjects
 
 
