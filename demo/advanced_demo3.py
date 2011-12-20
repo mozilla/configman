@@ -355,6 +355,7 @@ class TransactionExecutor(config_man.RequiredConfig):
 
     #--------------------------------------------------------------------------
     def do_transaction(self, function, *args, **kwargs):
+        """execute a function within the context of a transaction"""
         with self.config.db_transaction() as trans:
             function(trans, *args, **kwargs)
 
@@ -374,6 +375,10 @@ class TransactionExecutorWithBackoff(TransactionExecutor):
 
     #--------------------------------------------------------------------------
     def backoff_generator(self):
+        """Generate a series of integers used for the length of the sleep
+        between retries.  It produces after exhausting the list, it repeats
+        the last value from the list forever.  This generator will never raise
+        the StopIteration exception."""
         for x in self.config.backoff_delays:
             yield x
         while True:
@@ -381,6 +386,8 @@ class TransactionExecutorWithBackoff(TransactionExecutor):
 
     #--------------------------------------------------------------------------
     def responsive_sleep(self, seconds, wait_reason=''):
+        """Sleep for the specified number of seconds, logging every
+        'wait_log_interval' seconds with progress info."""
         for x in xrange(int(seconds)):
             if (self.config.wait_log_interval and
                 not x % self.config.wait_log_interval):
@@ -391,6 +398,7 @@ class TransactionExecutorWithBackoff(TransactionExecutor):
 
     #--------------------------------------------------------------------------
     def do_transaction(self, function, *args, **kwargs):
+        """execute a function within the context of a transaction"""
         for wait_in_seconds in self.backoff_generator():
             try:
                 with self.config.db_transaction() as trans:
