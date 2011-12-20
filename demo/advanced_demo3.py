@@ -373,10 +373,6 @@ class TransactionExecutorWithBackoff(TransactionExecutor):
                                doc='seconds between log during retries')
 
     #--------------------------------------------------------------------------
-    def __init__(self, config):
-        super(TransactionExecutorWithBackoff, self).__init__(config)
-
-    #--------------------------------------------------------------------------
     def backoff_generator(self):
         for x in self.config.backoff_delays:
             yield x
