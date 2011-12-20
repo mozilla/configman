@@ -141,7 +141,7 @@ class FakeDatabaseConnection():
 
 #==============================================================================
 class Postgres(config_man.RequiredConfig):
-    """a configman complient class for setup of Postgres transactions"""
+    """a configman compliant class for setup of Postgres transactions"""
     #--------------------------------------------------------------------------
     # configman parameter definition section
     # here we're setting up the minimal parameters required for connecting
@@ -160,7 +160,7 @@ class Postgres(config_man.RequiredConfig):
     required_config.add_option(
         name='database_port',
         default=5432,
-        doc='the name of the database',
+        doc='the port for the database',
     )
     required_config.add_option(
         name='database_user',
@@ -170,16 +170,16 @@ class Postgres(config_man.RequiredConfig):
     required_config.add_option(
         name='database_password',
         default='secrets',
-        doc='the name of the database',
+        doc="the user's database password",
     )
 
     #--------------------------------------------------------------------------
     def __init__(self, config, local_config):
-        """Initailize the parts needed to start making database connections
+        """Initialize the parts needed to start making database connections
 
         parameters:
-            config - the complete config for the app.  It a real app, this
-                     would be where a logger or other reasources could be
+            config - the complete config for the app.  If a real app, this
+                     would be where a logger or other resources could be
                      found.
             local_config - this is the namespace within the complete config
                            where the actual database parameters are found"""
@@ -336,12 +336,12 @@ def transaction_factory(config, local_config, args):
 class TransactionExecutor(config_man.RequiredConfig):
     required_config = cm.Namespace()
     # setup the option that will specify which database connection/transaction
-    # factory will be used.  Condfig man will query the class for additional
+    # factory will be used.  Config man will query the class for additional
     # config options for the database connection parameters.
     required_config.add_option('database_class',
                                default=Postgres,
                                doc='the database connection source')
-    # this Aggregation will actually instatiate the class in the preceding
+    # this Aggregation will actually instantiate the class in the preceding
     # option called 'database'.  Once instantiated, it will be available as
     # 'db_transaction'.  It will then be used as a source of database
     # connections cloaked as a context.
@@ -444,7 +444,7 @@ if __name__ == "__main__":
         print "\n**** First query"
         executor.do_transaction(query1)
 
-        # this second query has a 50% probablity of failing due to a non-
+        # this second query has a 50% probability of failing due to a non-
         # database problem.  Because the exception raised is not recoverable
         # by the database, it won't get retried even if the
         # transaction_executor_class has the capability
