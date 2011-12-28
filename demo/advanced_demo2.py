@@ -49,9 +49,6 @@ import contextlib
 import threading
 
 from configman import RequiredConfig, ConfigurationManager, Namespace
-import configman as cm
-import configman.config_manager as config_man
-
 
 #------------------------------------------------------------------------------
 class FakeDatabaseConnection():
@@ -236,7 +233,7 @@ def transaction_factory(config, local_config, args):
 
 if __name__ == "__main__":
 
-    definition_source = cm.Namespace()
+    definition_source = Namespace()
     # setup the option that will specify which database connection/transaction
     # factory will be used.  Condfig man will query the class for additional
     # config options for the database connection parameters.
