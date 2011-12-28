@@ -47,8 +47,9 @@
 # application is specified in configuration.  The last line of the file invokes
 # the action.
 
-import configman as cm
-import configman.converters as conv
+from configman import ConfigurationManager, Namespace
+from configman import environment, command_line
+from configman.converters import class_converter
 
 
 # the following three functions are the business logic of the application.
@@ -74,7 +75,7 @@ def action_converter(action):
         return action_dispatch[action]
     except KeyError:
         try:
-            f = conv.class_converter(action)
+            f = class_converter(action)
         except Exception:
             raise Exception("'%s' is not a valid action" % action)
         if f in action_dispatch.values():
@@ -83,7 +84,7 @@ def action_converter(action):
 
 # create the definitions for the parameters that are to come from
 # the command line or config file.
-definition_source = cm.Namespace()
+definition_source = Namespace()
 definition_source.add_option('text',
                                  'Socorro Forever',
                                  'the text input value',
@@ -108,17 +109,17 @@ definition_source.add_option('action',
 # config file of their own.  After reading the hard coded config file, the
 # ConfigurationManager will apply values it got from the environment and then,
 # finally, apply values that it gets from the command line.
-value_sources = ('demo2.ini', cm.environment, cm.command_line)
+value_sources = ('demo2.ini', environment, command_line)
 # the value_sources sequence can contian any object that is a derivation of the
 # type collections.Mapping, a module, or instances of any of the registered
 # handlers. cm.environment is just an alias for os.environ.  cm.command_line is
 # an alias for the 'getopt' module, a registerd handler.
 
 # set up the manager with the definitions and values
-c = cm.ConfigurationManager(definition_source,
-                            value_sources,
-                            app_name='demo2',
-                            app_description=__doc__)
+c = ConfigurationManager(definition_source,
+                         value_sources,
+                         app_name='demo2',
+                         app_description=__doc__)
 
 # fetch the DotDict version of the values
 config = c.get_config()

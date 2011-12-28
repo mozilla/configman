@@ -42,7 +42,10 @@ import datetime
 import types
 import inspect
 
-import datetime_util as dtu
+from .datetime_util import datetime_from_ISO_string as datetime_converter
+from .datetime_util import date_from_ISO_string as date_converter
+
+import datetime_util
 
 
 #------------------------------------------------------------------------------
@@ -187,18 +190,19 @@ def regex_converter(input_str):
 compiled_regexp_type = type(re.compile(r'x'))
 
 #------------------------------------------------------------------------------
-from_string_converters = {int: int,
-                          float: float,
-                          str: str,
-                          unicode: unicode,
-                          bool: boolean_converter,
-                          datetime.datetime: dtu.datetime_from_ISO_string,
-                          datetime.date: dtu.date_from_ISO_string,
-                          datetime.timedelta: timedelta_converter,
-                          type: class_converter,
-                          types.FunctionType: class_converter,
-                          compiled_regexp_type: regex_converter,
-                          }
+from_string_converters = {
+    int: int,
+    float: float,
+    str: str,
+    unicode: unicode,
+    bool: boolean_converter,
+    datetime.datetime: datetime_converter,
+    datetime.date: date_converter,
+    datetime.timedelta: timedelta_converter,
+    type: class_converter,
+    types.FunctionType: class_converter,
+    compiled_regexp_type: regex_converter,
+}
 
 
 #------------------------------------------------------------------------------
@@ -215,18 +219,19 @@ def py_obj_to_str(a_thing):
 
 
 #------------------------------------------------------------------------------
-to_string_converters = {int: str,
-                        float: str,
-                        str: str,
-                        unicode: unicode,
-                        bool: lambda x: 'True' if x else 'False',
-                        datetime.datetime: dtu.datetime_to_ISO_string,
-                        datetime.date: dtu.date_to_ISO_string,
-                        datetime.timedelta: dtu.timedelta_to_str,
-                        type: py_obj_to_str,
-                        types.FunctionType: py_obj_to_str,
-                        compiled_regexp_type: lambda x: x.pattern,
-                        }
+to_string_converters = {
+    int: str,
+    float: str,
+    str: str,
+    unicode: unicode,
+    bool: lambda x: 'True' if x else 'False',
+    datetime.datetime: datetime_util.datetime_to_ISO_string,
+    datetime.date: datetime_util.date_to_ISO_string,
+    datetime.timedelta: datetime_util.timedelta_to_str,
+    type: py_obj_to_str,
+    types.FunctionType: py_obj_to_str,
+    compiled_regexp_type: lambda x: x.pattern,
+}
 
 
 #------------------------------------------------------------------------------

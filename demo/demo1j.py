@@ -46,7 +46,7 @@
 # we run the application.
 
 import sys
-import configman as cm
+from configman import ConfigurationManager
 
 
 # the following three functions are the business logic of the application.
@@ -74,9 +74,9 @@ definition_source = 'demo1j.json'
 # any values loaded from a config file specified by the --admin.conf command
 # line switch, values from the os environment and finally overrides from the
 # commandline.
-c = cm.ConfigurationManager(definition_source,
-                            app_name='demo1j',
-                            app_description=__doc__)
+c = ConfigurationManager(definition_source,
+                         app_name='demo1j',
+                         app_description=__doc__)
 
 # fetch the DOM-like instance that gives access to the configuration info
 config = c.get_config()

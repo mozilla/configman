@@ -36,7 +36,7 @@
 #
 # ***** END LICENSE BLOCK *****
 
-__version__ = '1.0'
+__version__ = '1.0.1'
 
 # Having these here makes it possible to easily import once configman is
 # installed.
@@ -45,8 +45,10 @@ __version__ = '1.0'
 #    from configman import Namespace, ConfigurationManager
 #
 
-from .config_manager import ConfigurationManager
+from .config_manager import ConfigurationManager, RequiredConfig
 from .namespace import Namespace
+
+from .converters import class_converter, regex_converter, timedelta_converter
 
 
 # constants used to refer to Value Source concepts generically

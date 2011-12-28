@@ -46,13 +46,12 @@
 # another.  It offers fake versions of Postgres, MySQL and HBase as the
 # data sources and sinks.
 
-import configman as cm
-import configman.config_manager as config_man
-import configman.converters as conv
+from configman import RequiredConfig, Namespace
+from configman.converters import class_converter
 
 
 # the following class embodies the business logic of the application.
-class DynApp(config_man.RequiredConfig):
+class DynApp(RequiredConfig):
 
     app_name = 'dyn'
     app_version = '0.1'
@@ -60,23 +59,23 @@ class DynApp(config_man.RequiredConfig):
 
     # create the definitions for the parameters that are to come from
     # the command line or config file.
-    required_config = cm.Namespace()
+    required_config = Namespace()
     # we're going to have two namespaces, one for the source and another
     # for the destination.  We use separate namespaces to avoid name
     # collisions.  For example, both the source and destination are going
     # to have 'hostname' and we don't want to mix them up.
-    required_config.source = s = cm.Namespace()
-    required_config.destination = d = cm.Namespace()
+    required_config.source = s = Namespace()
+    required_config.destination = d = Namespace()
     # when the data source class is loaded, it will bring in more
     # configuration parameters gleaned from the loaded class itself.
     s.add_option('storage', 'data_store.CannedDataSource',
                  'the class to handle database interaction for input',
                  short_form='s',
-                 from_string_converter=conv.class_converter)
+                 from_string_converter=class_converter)
     d.add_option('storage', 'data_store.CannedDataSink',
                  'the class to handle database interaction for output',
                  short_form='d',
-                 from_string_converter=conv.class_converter)
+                 from_string_converter=class_converter)
 
     def __init__(self, config):
         super(DynApp, self).__init__()
