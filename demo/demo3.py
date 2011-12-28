@@ -56,12 +56,11 @@
 #   5) the app class defines a parameterless 'main' function that executes the
 #      business logic of the application
 
-import configman as cm
-import configman.config_manager as config_man
+from configman import RequiredConfig, Namespace
 
 
 # the following class embodies the business logic of the application.
-class Demo3App(config_man.RequiredConfig):
+class Demo3App(RequiredConfig):
 
     app_name = 'demo3_app'
     app_version = '0.1'
@@ -69,7 +68,7 @@ class Demo3App(config_man.RequiredConfig):
 
     # create the definitions for the parameters that are to come from
     # the command line or config file.
-    required_config = cm.Namespace()
+    required_config = Namespace()
     required_config.add_option('text', 'Socorro Forever', 'the input value',
                                short_form='t')
 

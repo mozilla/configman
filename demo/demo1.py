@@ -45,7 +45,7 @@
 # we run the application.
 
 import sys
-import configman as cm
+from configman import ConfigurationManager, Namespace
 
 
 # the following three functions are the business logic of the application.
@@ -63,7 +63,7 @@ def upper(x):
 # create the definitions for the parameters that are to come from
 # the command line or config file.  First we create a container called a
 # namespace for the configuration parameters.
-definition_source = cm.Namespace()
+definition_source = Namespace()
 # now we start adding options to the container. This first option
 # defines on the command line '--text' and '-t' swiches.  For configuration
 # files, this defines a top level entry of 'text' and assigns the value
@@ -87,9 +87,9 @@ definition_source.add_option('action',
 # any values loaded from a config file specified by the --admin.conf command
 # line switch, values from the os environment and finally overrides from the
 # commandline.
-c = cm.ConfigurationManager(definition_source,
-                            app_name='demo1',
-                            app_description=__doc__)
+c = ConfigurationManager(definition_source,
+                         app_name='demo1',
+                         app_description=__doc__)
 
 # fetch the DOM-like instance that gives access to the configuration info
 config = c.get_config()

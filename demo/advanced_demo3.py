@@ -81,8 +81,7 @@ import random
 import time
 import socket
 
-import configman as cm
-import configman.config_manager as config_man
+from configman import RequiredConfig, ConfigurationManager, Namespace
 
 
 #------------------------------------------------------------------------------
@@ -140,13 +139,13 @@ class FakeDatabaseConnection():
 
 
 #==============================================================================
-class Postgres(config_man.RequiredConfig):
+class Postgres(RequiredConfig):
     """a configman compliant class for setup of Postgres transactions"""
     #--------------------------------------------------------------------------
     # configman parameter definition section
     # here we're setting up the minimal parameters required for connecting
     # to a database.
-    required_config = cm.Namespace()
+    required_config = Namespace()
     required_config.add_option(
         name='database_host',
         default='localhost',
@@ -333,8 +332,8 @@ def transaction_factory(config, local_config, args):
 
 
 #==============================================================================
-class TransactionExecutor(config_man.RequiredConfig):
-    required_config = cm.Namespace()
+class TransactionExecutor(RequiredConfig):
+    required_config = Namespace()
     # setup the option that will specify which database connection/transaction
     # factory will be used.  Config man will query the class for additional
     # config options for the database connection parameters.
@@ -363,7 +362,7 @@ class TransactionExecutor(config_man.RequiredConfig):
 #==============================================================================
 class TransactionExecutorWithBackoff(TransactionExecutor):
     # back off times
-    required_config = cm.Namespace()
+    required_config = Namespace()
     required_config.add_option('backoff_delays',
                                default=[2, 4, 6, 10, 15],
                                doc='delays in seconds between retries',
@@ -427,14 +426,14 @@ def query2(conn):
 
 #==============================================================================
 if __name__ == "__main__":
-    definition_source = cm.Namespace()
+    definition_source = Namespace()
     definition_source.add_option('transaction_executor_class',
                                  default=TransactionExecutorWithBackoff,
                                  doc='a class that will execute transactions')
 
-    c = cm.ConfigurationManager(definition_source,
-                                app_name='advanced_demo_3',
-                                app_description=__doc__)
+    c = ConfigurationManager(definition_source,
+                             app_name='advanced_demo_3',
+                             app_description=__doc__)
 
     with c.context() as config:
         # the configuration has a class that can execute transactions

@@ -48,6 +48,7 @@
 import contextlib
 import threading
 
+from configman import RequiredConfig, ConfigurationManager, Namespace
 import configman as cm
 import configman.config_manager as config_man
 
@@ -84,13 +85,13 @@ class FakeDatabaseConnection():
 
 
 #==============================================================================
-class PGTransaction(config_man.RequiredConfig):
+class PGTransaction(RequiredConfig):
     """a configman complient class for setup of a Postgres transaction"""
     #--------------------------------------------------------------------------
     # configman parameter definition section
     # here we're setting up the minimal parameters required for connecting
     # to a database.
-    required_config = cm.Namespace()
+    required_config = Namespace()
     required_config.add_option(
         name='database_host',
         default='localhost',
@@ -252,9 +253,9 @@ if __name__ == "__main__":
         function=transaction_factory
     )
 
-    c = cm.ConfigurationManager(definition_source,
-                                app_name='demo4',
-                                app_description=__doc__)
+    c = ConfigurationManager(definition_source,
+                             app_name='demo4',
+                             app_description=__doc__)
     with c.context() as config:
         print "\n**** First query will succeed"
         with config.db_transaction() as trans:
