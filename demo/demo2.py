@@ -47,7 +47,6 @@
 # application is specified in configuration.  The last line of the file invokes
 # the action.
 
-import configman
 from configman import ConfigurationManager, Namespace
 from configman import environment, command_line, class_converter
 
