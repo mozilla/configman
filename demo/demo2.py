@@ -48,7 +48,8 @@
 # the action.
 
 from configman import ConfigurationManager, Namespace
-from configman import environment, command_line, class_converter
+from configman import environment, command_line
+from configman.converters import class_converter
 
 
 # the following three functions are the business logic of the application.

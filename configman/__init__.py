@@ -49,8 +49,6 @@ from .config_manager import ConfigurationManager, RequiredConfig
 from .namespace import Namespace
 
 from .converters import class_converter, regex_converter, timedelta_converter
-from .datetime_util import datetime_from_ISO_string as datetime_converter
-from .datetime_util import date_from_ISO_string as date_converter
 
 
 # constants used to refer to Value Source concepts generically

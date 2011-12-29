@@ -46,7 +46,8 @@
 # another.  It offers fake versions of Postgres, MySQL and HBase as the
 # data sources and sinks.
 
-from configman import RequiredConfig, Namespace, class_converter
+from configman import RequiredConfig, Namespace
+from configman.converters import class_converter
 
 
 # the following class embodies the business logic of the application.
