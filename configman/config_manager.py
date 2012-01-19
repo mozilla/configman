@@ -257,13 +257,15 @@ class ConfigurationManager(object):
     def context(self):
         """return a config as a context that calls close on every item when
         it goes out of scope"""
+        config = None
         try:
             config = self.get_config()
             yield config
         except Exception:
             raise
         finally:
-            self._walk_and_close(config)
+            if config:
+                self._walk_and_close(config)
 
     #--------------------------------------------------------------------------
     def get_config(self):
