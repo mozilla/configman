@@ -1221,3 +1221,43 @@ string =   from ini
                              'wilma married fred using password @$*$&26Ht '
                              'but divorced because of arg2.')
         self.assertTrue(statement.value is None)
+
+    def test_failing_aggregate_error_bubbling(self):
+        """Reproduces and assures this issue
+        https://github.com/mozilla/configman/issues/21
+        """
+        class AggregatedValue(object):
+            def __init__(self, value):
+                self.value = value
+            def close(self):
+                self.value = None
+
+        class SomeException(Exception):
+            pass
+
+        def aggregation_test(all_config, local_namespace, args):
+            # the aggregator might be broken
+            raise SomeException('anything')
+
+        class MyApp(config_manager.RequiredConfig):
+            app_name = 'fred'
+            app_version = '1.0'
+            app_description = "my app"
+            required_config = config_manager.Namespace()
+            required_config.add_aggregation('statement', aggregation_test)
+
+
+        n = config_manager.Namespace()
+        n.admin = config_manager.Namespace()
+        n.admin.add_option('application',
+                           MyApp,
+                           'the app object class')
+
+        c = config_manager.ConfigurationManager(n,
+                                                [getopt],
+                                    use_admin_controls=True,
+                                    use_auto_help=False,
+                                    argv_source=[])
+
+        contextmanager_ = c.context()
+        self.assertRaises(SomeException, contextmanager_.__enter__)
