@@ -261,8 +261,6 @@ class ConfigurationManager(object):
         try:
             config = self.get_config()
             yield config
-        except Exception:
-            raise
         finally:
             if config:
                 self._walk_and_close(config)
