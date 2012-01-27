@@ -119,3 +119,23 @@ class TestCase(unittest.TestCase):
         from configman import tests as tests_module
         self.assertEqual(function(tests_module), 'configman.tests')
         self.assertEqual(function(int), 'int')
+
+    def test_list_to_str(self):
+        function = converters.list_to_str
+        self.assertEqual(function([]), '')
+        self.assertEqual(function(tuple()), '')
+
+        import configman
+        self.assertEqual(function([configman.tests.test_converters.TestCase]),
+                         'configman.tests.test_converters.TestCase')
+        self.assertEqual(function([configman.tests, configman]),
+                         'configman.tests, configman')
+        self.assertEqual(function([int, str, 123, "hello"]),
+                         'int, str, 123, hello')
+
+        self.assertEqual(function((configman.tests.test_converters.TestCase,)),
+                         'configman.tests.test_converters.TestCase')
+        self.assertEqual(function((configman.tests, configman)),
+                         'configman.tests, configman')
+        self.assertEqual(function((int, str, 123, "hello")),
+                         'int, str, 123, hello')
