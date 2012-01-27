@@ -143,8 +143,6 @@ class ConfigurationManager(object):
         else:
             definition_source_list = [definition_source]
 
-        if values_source_list is None:
-            values_source_list = []
         if argv_source is None:
             argv_source = sys.argv[1:]
         if options_banned_from_help is None:
@@ -164,7 +162,8 @@ class ConfigurationManager(object):
         self.option_definitions = Namespace()
         self.definition_source_list = definition_source_list
 
-        if not values_source_list:
+        if values_source_list is None:
+            # nothing set, assume defaults
             if use_admin_controls:
                 values_source_list = (cm.ConfigFileFutureProxy,
                                       cm.environment,
