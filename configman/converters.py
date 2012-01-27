@@ -219,16 +219,24 @@ def py_obj_to_str(a_thing):
 
 
 #------------------------------------------------------------------------------
+def list_to_str(a_list):
+    return ', '.join(to_string_converters[type(x)](x) for x in a_list)
+
+
+#------------------------------------------------------------------------------
 to_string_converters = {
     int: str,
     float: str,
     str: str,
     unicode: unicode,
+    list: list_to_str,
+    tuple: list_to_str,
     bool: lambda x: 'True' if x else 'False',
     datetime.datetime: datetime_util.datetime_to_ISO_string,
     datetime.date: datetime_util.date_to_ISO_string,
     datetime.timedelta: datetime_util.timedelta_to_str,
     type: py_obj_to_str,
+    types.ModuleType: py_obj_to_str,
     types.FunctionType: py_obj_to_str,
     compiled_regexp_type: lambda x: x.pattern,
 }
