@@ -130,3 +130,5 @@ class Aggregation(object):
     #--------------------------------------------------------------------------
     def aggregate(self, all_options, local_namespace, args):
         self.value = self.function(all_options, local_namespace, args)
+        
+
