@@ -39,12 +39,21 @@
 import dotdict
 from option import Option, Aggregation
 
+from copy import deepcopy
+
 
 class Namespace(dotdict.DotDict):
 
     def __init__(self, doc=''):
         super(Namespace, self).__init__()
         object.__setattr__(self, '_doc', doc)  # force into attributes
+        
+    #--------------------------------------------------------------------------
+    def __deepcopy__(self, memo):
+        n = Namespace(doc=self._doc)
+        for k, v in self.iteritems():
+            n[k] = deepcopy(v)
+        return n
 
     #--------------------------------------------------------------------------
     def __setattr__(self, name, value):
