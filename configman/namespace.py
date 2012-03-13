@@ -67,16 +67,8 @@ class Namespace(dotdict.DotDict):
         self.__setitem__(name, o)
 
     #--------------------------------------------------------------------------
-    def add_option(self, name,
-                   default=None,
-                   doc=None,
-                   from_string_converter=None,
-                   short_form=None):
-        an_option = Option(name,
-                           doc=doc,
-                           default=default,
-                           from_string_converter=from_string_converter,
-                           short_form=short_form)
+    def add_option(self, name, *args, **kwargs):
+        an_option = Option(name, *args, **kwargs)
         self[name] = an_option
 
     #--------------------------------------------------------------------------

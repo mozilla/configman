@@ -52,8 +52,9 @@ class Option(object):
                  from_string_converter=None,
                  value=None,
                  short_form=None,
-                 *args,
-                 **kwargs):
+                 exclude_from_print_conf=False,
+                 exclude_from_dump_conf=False,
+                 ):
         self.name = name
         self.short_form = short_form
         self.default = default
@@ -72,6 +73,8 @@ class Option(object):
             and self.from_string_converter):
             # need to convert the default too
             self.default = self.from_string_converter(self.default)
+        self.exclude_from_print_conf = exclude_from_print_conf
+        self.exclude_from_dump_conf = exclude_from_dump_conf
 
     def __eq__(self, other):
         if isinstance(other, Option):
