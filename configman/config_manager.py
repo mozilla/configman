@@ -43,8 +43,7 @@ import inspect
 import os.path
 import contextlib
 import functools
-
-from copy import deepcopy
+import copy
 
 import configman as cm
 import converters as conv
@@ -485,7 +484,7 @@ class ConfigurationManager(object):
                         for o_key, o_val in \
                                 val.value.get_required_config().iteritems():
                             target_namespace.__setattr__(o_key,
-                                                         deepcopy(o_val))
+                                                         copy.deepcopy(o_val))
                     except AttributeError:
                         pass  # there are no required_options for this class
                 else:

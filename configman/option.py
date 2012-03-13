@@ -113,15 +113,6 @@ class Option(object):
         else:
             self.value = val
 
-    #--------------------------------------------------------------------------
-    def __deepcopy__(self, memo):
-        return Option(name=self.name,
-                      default=self.default,
-                      doc=self.doc,
-                      from_string_converter=self.from_string_converter,
-                      value=self.value,
-                      short_form=self.short_form
-                      )
 
 #==============================================================================
 class Aggregation(object):
@@ -140,7 +131,4 @@ class Aggregation(object):
     def aggregate(self, all_options, local_namespace, args):
         self.value = self.function(all_options, local_namespace, args)
         
-    #--------------------------------------------------------------------------
-    def __deepcopy__(self, memo):
-        return Aggregation(self.name, self.function)
-    
+
