@@ -113,7 +113,6 @@ class TestCase(unittest.TestCase):
           'default': '1',
           'doc': "lucy's integer",
           'from_string_converter': int,
-          'other': 'no way'
         }
         o = Option(**data)
         self.assertEqual(o.name, 'lucy')
@@ -126,7 +125,6 @@ class TestCase(unittest.TestCase):
           'default': '1',
           'doc': "lucy's integer",
           'from_string_converter': int,
-          'other': 'no way'
         }
         o = Option('now', **data)
         self.assertEqual(o.name, 'now')
@@ -148,7 +146,6 @@ class TestCase(unittest.TestCase):
           'default': '1.0',
           'doc': "lucy's height",
           'from_string_converter': float,
-          'other': ''
         }
         o = Option('now', **data)
         self.assertEqual(o.name, 'now')
@@ -162,7 +159,6 @@ class TestCase(unittest.TestCase):
           'default': '2011-12-31',
           'doc': "lucy's bday",
           'from_string_converter': dtu.date_from_ISO_string,
-          'other': ''
         }
         o = Option('now', **data)
         self.assertEqual(o.name, 'now')
@@ -176,7 +172,6 @@ class TestCase(unittest.TestCase):
           'doc': "lucy's bday",
           'from_string_converter': \
             'configman.datetime_util.date_from_ISO_string',
-          'other': ''
         }
         o = Option('now', **data)
         self.assertEqual(o.name, 'now')

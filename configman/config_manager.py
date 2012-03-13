@@ -347,7 +347,11 @@ class ConfigurationManager(object):
         @contextlib.contextmanager
         def stdout_opener():
             yield sys.stdout
-        self.write_conf(config_file_type, stdout_opener)
+
+        skip_keys = [k for (k, v)
+                     in self.option_definitions.iteritems()
+                     if isinstance(v, Option) and v.exclude_from_print_conf]
+        self.write_conf(config_file_type, stdout_opener, skip_keys=skip_keys)
 
     #--------------------------------------------------------------------------
     def dump_conf(self, config_pathname=None):
@@ -364,10 +368,15 @@ class ConfigurationManager(object):
 
         opener = functools.partial(open, config_pathname, 'w')
         config_file_type = os.path.splitext(config_pathname)[1][1:]
-        self.write_conf(config_file_type, opener)
+
+        skip_keys = [k for (k, v)
+                     in self.option_definitions.iteritems()
+                     if isinstance(v, Option) and v.exclude_from_dump_conf]
+
+        self.write_conf(config_file_type, opener, skip_keys=skip_keys)
 
     #--------------------------------------------------------------------------
-    def write_conf(self, config_file_type, opener=open):
+    def write_conf(self, config_file_type, opener, skip_keys=None):
         """write a configuration file to a file-like object.
 
         parameters:
@@ -377,8 +386,12 @@ class ConfigurationManager(object):
             opener - a callable object or function that returns a file like
                      object that works as a context in a with statement."""
 
+        blocked_keys = self.admin_controls_list
+        if skip_keys:
+            blocked_keys.extend(skip_keys)
+
         option_iterator = functools.partial(self._walk_config,
-                                       blocked_keys=self.admin_controls_list)
+                                       blocked_keys=blocked_keys)
         with opener() as config_fp:
             value_sources.write(config_file_type,
                                 option_iterator,
@@ -619,7 +632,7 @@ class ConfigurationManager(object):
         return qkey, key, value
 
     #--------------------------------------------------------------------------
-    def _walk_config(self, source=None, prefix='', blocked_keys=[],
+    def _walk_config(self, source=None, prefix='', blocked_keys=(),
                     block_password=False):
         if source == None:
             source = self.option_definitions

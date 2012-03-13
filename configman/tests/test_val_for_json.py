@@ -96,7 +96,8 @@ class TestCase(unittest.TestCase):
               "configman.datetime_util.datetime_from_ISO_string",
           "name": "aaa"
         }
-        self.assertEqual(jrec['aaa'], expect_to_find)
+        for key, value in expect_to_find.items():
+            self.assertEqual(jrec['aaa'][key], value)
 
     def test_json_round_trip(self):
         n = config_manager.Namespace(doc='top')

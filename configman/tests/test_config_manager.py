@@ -44,9 +44,6 @@ import ConfigParser
 import io
 from cStringIO import StringIO
 import getopt
-
-import configman.config_file_future_proxy as config_proxy
-
 import configman.config_manager as config_manager
 from configman.dotdict import DotDict
 import configman.datetime_util as dtu
@@ -1042,21 +1039,22 @@ string =   from ini
                 finally:
                     sys.stdout = temp_stdout
 
-            def write_conf(inner_self, file_type, opener):
+            def write_conf(inner_self, file_type, opener, skip_keys=None):
                 self.assertEqual(file_type, 'ini')
                 with opener() as f:
                     self.assertEqual(f, 17)
 
-        c = MyConfigManager(n,
-                            [getopt],
-                            use_admin_controls=True,
-                            use_auto_help=False,
-                            quit_after_admin=False,
-                            argv_source=['--admin.print_conf=ini',
-                                         'argument 1',
-                                         'argument 2',
-                                         'argument 3'],
-                            config_pathname='fred')
+        MyConfigManager(
+            n,
+            [getopt],
+            use_admin_controls=True,
+            use_auto_help=False,
+            quit_after_admin=False,
+            argv_source=['--admin.print_conf=ini',
+                         'argument 1',
+                         'argument 2',
+                         'argument 3'],
+            config_pathname='fred')
 
     def test_dump_conf(self):
         n = config_manager.Namespace()
@@ -1066,23 +1064,86 @@ string =   from ini
                 inner_self.write_called = False
                 super(MyConfigManager, inner_self).__init__(*args, **kwargs)
 
-            def write_conf(inner_self, file_type, opener):
+            def write_conf(inner_self, file_type, opener, skip_keys=None):
                 self.assertEqual(file_type, 'ini')
                 self.assertEqual(opener.args, ('fred.ini', 'w'))
 
-        c = MyConfigManager(n,
-                            [getopt],
-                            use_admin_controls=True,
-                            use_auto_help=False,
-                            quit_after_admin=False,
-                            argv_source=['--admin.dump_conf=fred.ini',
-                                         'argument 1',
-                                         'argument 2',
-                                         'argument 3'],
-                            config_pathname='fred')
+        MyConfigManager(
+            n,
+            [getopt],
+            use_admin_controls=True,
+            use_auto_help=False,
+            quit_after_admin=False,
+            argv_source=['--admin.dump_conf=fred.ini',
+                         'argument 1',
+                         'argument 2',
+                         'argument 3'],
+            config_pathname='fred'
+        )
+
+    def test_print_conf_some_options_excluded(self):
+        n = config_manager.Namespace()
+        n.add_option('gender',
+                     default='Male',
+                     doc='What kind of genitalia?')
+        n.add_option('salary',
+                     default=10000,
+                     doc='How much do you earn?',
+                     exclude_from_print_conf=True
+                     )
+
+        old_stdout = sys.stdout
+        temp_output = StringIO()
+        sys.stdout = temp_output
+        try:
+            config_manager.ConfigurationManager(
+                n,
+                [getopt],
+                use_admin_controls=True,
+                use_auto_help=False,
+                quit_after_admin=False,
+                argv_source=['--admin.print_conf=ini'],
+                config_pathname='fred'
+            )
+        finally:
+            sys.stdout = old_stdout
+
+        printed = temp_output.getvalue()
+        self.assertTrue('name: gender' in printed)
+        self.assertTrue('name: salary' not in printed)
+
+    def test_dump_conf_some_options_excluded(self):
+        n = config_manager.Namespace()
+        n.add_option('gender',
+                     default='Male',
+                     doc='What kind of genitalia?',
+                     exclude_from_print_conf=True)
+        n.add_option('salary',
+                     default=10000,
+                     doc='How much do you earn?',
+                     exclude_from_dump_conf=True
+                     )
+
+        try:
+            config_manager.ConfigurationManager(
+                n,
+                [getopt],
+                use_admin_controls=True,
+                use_auto_help=False,
+                quit_after_admin=False,
+                argv_source=['--admin.dump_conf=foo.ini'],
+                config_pathname='fred'
+            )
+
+            printed = open('foo.ini').read()
+            self.assertTrue('name: gender' in printed)
+            self.assertTrue('name: salary' not in printed)
+
+        finally:
+            if os.path.isfile('foo.ini'):
+                os.remove('foo.ini')
 
     def test_config_pathname_set(self):
-        n = config_manager.Namespace()
 
         class MyConfigManager(config_manager.ConfigurationManager):
             def __init__(inner_self, *args, **kwargs):
@@ -1168,9 +1229,12 @@ string =   from ini
                          'but divorced because of arg2.')
 
     def test_context(self):
+
         class AggregatedValue(object):
+
             def __init__(self, value):
                 self.value = value
+
             def close(self):
                 self.value = None
 
@@ -1227,8 +1291,10 @@ string =   from ini
         https://github.com/mozilla/configman/issues/21
         """
         class AggregatedValue(object):
+
             def __init__(self, value):
                 self.value = value
+
             def close(self):
                 self.value = None
 
@@ -1245,7 +1311,6 @@ string =   from ini
             app_description = "my app"
             required_config = config_manager.Namespace()
             required_config.add_aggregation('statement', aggregation_test)
-
 
         n = config_manager.Namespace()
         n.admin = config_manager.Namespace()
