@@ -186,49 +186,54 @@ def class_converter(input_str):
     return obj
 
 #------------------------------------------------------------------------------
-class ClassListInNamespaces(RequiredConfig):
-    """a base class for the inner class in the function,
-    'classes_in_namespaces_converter'.  This allows the class to be identified
-    at runtime and therefore able to participate in the to_string function
-    dispatch table, 'to_string_converters'."""
-    @classmethod
-    def to_str(cls):
-        l = []
-        for k, v in  cls.get_required_config().iteritems():
-            if isinstance(v, Namespace):
-                l.append(py_obj_to_str(v['class'].value))
-        return ','.join(l)
-        #return ','.join(py_obj_to_str(v['class'].value)
-                            #for k, v in cls.get_required_config()
-                            #if isinstance(v, Namespace))
-
-#------------------------------------------------------------------------------
-def classes_in_namespaces_converter(namespace_template="name%d"):
+def classes_in_namespaces_converter(namespace_template="name%d",
+                                    class_option_name='class'):
     """take a comma delimited  list of class names, convert each class name 
     into an actual class in an option within a numbered namespace.
     
     parameters:
         namespace_template - a template for the names of the namespaces that 
                              will contain the classes and their associated
-                             required config options."""
+                             required config options.
+        class_option_name - the name to be used for the class option within
+                            the nested namespace"""
     
+    #--------------------------------------------------------------------------
     def class_list_converter(class_list_str):
+        """This function becomes the actual converter used by configman to
+        take a string and convert it into the nested sequence of Namespaces,
+        one for each class in the list."""
         try:
             class_list =  [x for x in class_list_str.split(',')]
         except AttributeError:
             class_list = class_list_str
     
-        class InnerClassList(ClassListInNamespaces):
+        #======================================================================
+        class InnerClassList(RequiredConfig):
+            """This nested class is a proxy list for the classes.  It collects
+            all the config requirements for the listed classes and places them
+            each into their own Namespace
+            """
             required_config = Namespace()
             for namespace_index, a_class in enumerate(class_list):
                 namespace_name = namespace_template % namespace_index
                 required_config[namespace_name] = Namespace()
-                required_config[namespace_name].add_option('class',
+                required_config[namespace_name].add_option(class_option_name,
                                                     default=a_class,
                                                     from_string_converter=
                                                         class_converter)
-        return InnerClassList
-    return class_list_converter
+            @classmethod
+            def to_str(cls):
+                """this method takes this inner class object and turns it back
+                into the original string of classnames.  This is used
+                primarily as for the output of the 'help' option"""
+                return ','.join(
+                    py_obj_to_str(v[class_option_name].value)
+                        for k, v in cls.get_required_config().iteritems()
+                        if isinstance(v, Namespace))
+    
+        return InnerClassList  # result of class_list_converter
+    return class_list_converter  # result of classes_in_namespaces_converter
 
 #------------------------------------------------------------------------------
 def regex_converter(input_str):
