@@ -41,6 +41,7 @@ import re
 import datetime
 import types
 import inspect
+import collections
 
 from required_config import RequiredConfig
 from namespace import Namespace
@@ -186,8 +187,8 @@ def class_converter(input_str):
     return obj
 
 #------------------------------------------------------------------------------
-def classes_in_namespaces_converter(namespace_template="name%d",
-                                    class_option_name='class'):
+def classes_in_namespaces_converter(namespace_template="cls%d",
+                                    class_option_name='cls'):
     """take a comma delimited  list of class names, convert each class name 
     into an actual class in an option within a numbered namespace.
     
@@ -203,10 +204,12 @@ def classes_in_namespaces_converter(namespace_template="name%d",
         """This function becomes the actual converter used by configman to
         take a string and convert it into the nested sequence of Namespaces,
         one for each class in the list."""
-        try:
+        if isinstance(class_list_str, basestring):
             class_list =  [x.strip() for x in class_list_str.split(',')]
-        except AttributeError:
+        elif isinstance(class_list_str, collections.Sequence):
             class_list = class_list_str
+        else:
+            raise TypeError('must be string or list')
     
         #======================================================================
         class InnerClassList(RequiredConfig):
