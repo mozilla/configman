@@ -39,6 +39,22 @@
 import unittest
 import tempfile
 from configman import converters
+from configman import RequiredConfig, Namespace
+
+# the following two classes are used in test_classes_in_namespaces_converter
+# and need to be declared at module level scope
+class Foo(RequiredConfig):
+    required_config = Namespace()
+    required_config.add_option('x',
+                               default=17)
+    required_config.add_option('y',
+                               default=23)
+class Bar(RequiredConfig):
+    required_config = Namespace()
+    required_config.add_option('x',
+                               default=227)
+    required_config.add_option('a',
+                               default=11)
 
 
 class TestCase(unittest.TestCase):
@@ -139,3 +155,23 @@ class TestCase(unittest.TestCase):
                          'configman.tests, configman')
         self.assertEqual(function((int, str, 123, "hello")),
                          'int, str, 123, hello')
+
+    def test_classes_in_namespaces_converter(self):
+        converter_fn = converters.classes_in_namespaces_converter('HH%d')
+        class_list_str = ('configman.tests.test_converters.Foo,'
+                          'configman.tests.test_converters.Bar')
+        result = converter_fn(class_list_str)
+        self.assertTrue(hasattr(result, 'required_config'))
+        req = result.required_config
+        self.assertEqual(len(req), 2)
+        self.assertTrue('HH0' in req)
+        self.assertEqual(len(req.HH0), 1)
+        self.assertTrue('cls' in req.HH0)
+        self.assertTrue('HH1' in req)
+        self.assertEqual(len(req.HH1), 1)
+        self.assertTrue('cls' in req.HH1)
+        self.assertEqual(
+                sorted([x.strip() for x in class_list_str.split(',')]),
+                sorted([x.strip() for x in
+                             converters.py_obj_to_str(result).split(',')]))
+        
