@@ -42,6 +42,9 @@ import datetime
 import types
 import inspect
 
+from required_config import RequiredConfig
+from namespace import Namespace
+
 from .datetime_util import datetime_from_ISO_string as datetime_converter
 from .datetime_util import date_from_ISO_string as date_converter
 
@@ -182,6 +185,50 @@ def class_converter(input_str):
         obj = getattr(obj, name)
     return obj
 
+#------------------------------------------------------------------------------
+class ClassListInNamespaces(RequiredConfig):
+    """a base class for the inner class in the function,
+    'classes_in_namespaces_converter'.  This allows the class to be identified
+    at runtime and therefore able to participate in the to_string function
+    dispatch table, 'to_string_converters'."""
+    @classmethod
+    def to_str(cls):
+        l = []
+        for k, v in  cls.get_required_config().iteritems():
+            if isinstance(v, Namespace):
+                l.append(py_obj_to_str(v['class'].value))
+        return ','.join(l)
+        #return ','.join(py_obj_to_str(v['class'].value)
+                            #for k, v in cls.get_required_config()
+                            #if isinstance(v, Namespace))
+
+#------------------------------------------------------------------------------
+def classes_in_namespaces_converter(namespace_template="name%d"):
+    """take a comma delimited  list of class names, convert each class name 
+    into an actual class in an option within a numbered namespace.
+    
+    parameters:
+        namespace_template - a template for the names of the namespaces that 
+                             will contain the classes and their associated
+                             required config options."""
+    
+    def class_list_converter(class_list_str):
+        try:
+            class_list =  [x for x in class_list_str.split(',')]
+        except AttributeError:
+            class_list = class_list_str
+    
+        class InnerClassList(ClassListInNamespaces):
+            required_config = Namespace()
+            for namespace_index, a_class in enumerate(class_list):
+                namespace_name = namespace_template % namespace_index
+                required_config[namespace_name] = Namespace()
+                required_config[namespace_name].add_option('class',
+                                                    default=a_class,
+                                                    from_string_converter=
+                                                        class_converter)
+        return InnerClassList
+    return class_list_converter
 
 #------------------------------------------------------------------------------
 def regex_converter(input_str):
@@ -215,6 +262,8 @@ def py_obj_to_str(a_thing):
         return a_thing.__name__
     if a_thing.__module__ == "__main__":
         return a_thing.__name__
+    if hasattr(a_thing, 'to_str'):
+        return a_thing.to_str()
     return "%s.%s" % (a_thing.__module__, a_thing.__name__)
 
 
