@@ -166,10 +166,12 @@ class TestCase(unittest.TestCase):
         self.assertEqual(len(req), 2)
         self.assertTrue('HH0' in req)
         self.assertEqual(len(req.HH0), 1)
-        self.assertTrue('class' in req.HH0)
+        self.assertTrue('cls' in req.HH0)
         self.assertTrue('HH1' in req)
         self.assertEqual(len(req.HH1), 1)
-        self.assertTrue('class' in req.HH1)
-        self.assertEqual(sorted(class_list_str.split(',')),
-                         sorted(converters.py_obj_to_str(result).split(',')))
+        self.assertTrue('cls' in req.HH1)
+        self.assertEqual(
+                sorted([x.strip() for x in class_list_str.split(',')]),
+                sorted([x.strip() for x in
+                             converters.py_obj_to_str(result).split(',')]))
         
