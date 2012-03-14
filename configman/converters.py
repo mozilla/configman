@@ -204,7 +204,7 @@ def classes_in_namespaces_converter(namespace_template="name%d",
         take a string and convert it into the nested sequence of Namespaces,
         one for each class in the list."""
         try:
-            class_list =  [x for x in class_list_str.split(',')]
+            class_list =  [x.strip() for x in class_list_str.split(',')]
         except AttributeError:
             class_list = class_list_str
     
@@ -227,7 +227,7 @@ def classes_in_namespaces_converter(namespace_template="name%d",
                 """this method takes this inner class object and turns it back
                 into the original string of classnames.  This is used
                 primarily as for the output of the 'help' option"""
-                return ','.join(
+                return ', '.join(
                     py_obj_to_str(v[class_option_name].value)
                         for k, v in cls.get_required_config().iteritems()
                         if isinstance(v, Namespace))
