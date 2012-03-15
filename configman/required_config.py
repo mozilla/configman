@@ -1,9 +1,11 @@
+from .namespace import Namespace
+
 #==============================================================================
 class RequiredConfig(object):
     #--------------------------------------------------------------------------
     @classmethod
     def get_required_config(cls):
-        result = {}
+        result = Namespace()
         for a_class in cls.__mro__:
             try:
                 result.update(a_class.required_config)
