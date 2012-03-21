@@ -588,10 +588,10 @@ class ConfigurationManager(object):
         aggregates_found = False
         for key, val in source.items():
             if isinstance(val, Namespace):
-                aggregates_found = (aggregates_found or
-                                    self._aggregate(val,
-                                                    base_namespace,
-                                                    local_namespace[key]))
+                new_aggregates_found = self._aggregate(val,
+                                                       base_namespace,
+                                                       local_namespace[key])
+                aggregates_found = new_aggregates_found or aggregates_found
             elif isinstance(val, Aggregation):
                 val.aggregate(base_namespace, local_namespace, self.args)
                 aggregates_found = True
