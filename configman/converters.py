@@ -186,57 +186,76 @@ def class_converter(input_str):
         obj = getattr(obj, name)
     return obj
 
+
 #------------------------------------------------------------------------------
-def classes_in_namespaces_converter(namespace_template="cls%d",
-                                    class_option_name='cls'):
-    """take a comma delimited  list of class names, convert each class name 
+def classes_in_namespaces_converter(template_for_namespace="cls%d",
+                                    name_of_class_option='cls',
+                                    instantiate_classes=False):
+    """take a comma delimited  list of class names, convert each class name
     into an actual class in an option within a numbered namespace.
-    
+
     parameters:
-        namespace_template - a template for the names of the namespaces that 
-                             will contain the classes and their associated
-                             required config options.
+        template_for_namespace - a template for the names of the namespaces
+                                 that will contain the classes and their
+                                 associated required config options.
         class_option_name - the name to be used for the class option within
-                            the nested namespace"""
-    
+                            the nested namespace
+        instantiate_classes - a boolean to determine if there should be an
+                              aggregator added to each namespace that
+                              instantiates each class.  If True, then each
+                              Namespace
+                              """
+
     #--------------------------------------------------------------------------
     def class_list_converter(class_list_str):
         """This function becomes the actual converter used by configman to
         take a string and convert it into the nested sequence of Namespaces,
         one for each class in the list."""
         if isinstance(class_list_str, basestring):
-            class_list =  [x.strip() for x in class_list_str.split(',')]
+            class_list = [x.strip() for x in class_list_str.split(',')]
         elif isinstance(class_list_str, collections.Sequence):
             class_list = class_list_str
         else:
             raise TypeError('must be string or list')
-    
+
         #======================================================================
         class InnerClassList(RequiredConfig):
             """This nested class is a proxy list for the classes.  It collects
             all the config requirements for the listed classes and places them
             each into their own Namespace
             """
+            length = len(class_list)
             required_config = Namespace()
+            keys = []
+            namespace_template = template_for_namespace
+            class_option_name = name_of_class_option
             for namespace_index, a_class in enumerate(class_list):
-                namespace_name = namespace_template % namespace_index
+                namespace_name = template_for_namespace % namespace_index
+                keys.append(namespace_name)
                 required_config[namespace_name] = Namespace()
-                required_config[namespace_name].add_option(class_option_name,
-                                                    default=a_class,
-                                                    from_string_converter=
-                                                        class_converter)
+                required_config[namespace_name].add_option(
+                  name_of_class_option,
+                  default=a_class,
+                  from_string_converter=class_converter
+                )
+                if instantiate_classes:
+                    required_config[namespace_name].add_aggregation(
+                      "%s_instance" % name_of_class_option,
+                      lambda c, lc, a: lc[name_of_class_option](lc))
+
             @classmethod
             def to_str(cls):
                 """this method takes this inner class object and turns it back
                 into the original string of classnames.  This is used
                 primarily as for the output of the 'help' option"""
                 return ', '.join(
-                    py_obj_to_str(v[class_option_name].value)
+                    py_obj_to_str(v[name_of_class_option].value)
                         for k, v in cls.get_required_config().iteritems()
                         if isinstance(v, Namespace))
-    
+
         return InnerClassList  # result of class_list_converter
     return class_list_converter  # result of classes_in_namespaces_converter
+
 
 #------------------------------------------------------------------------------
 def regex_converter(input_str):
