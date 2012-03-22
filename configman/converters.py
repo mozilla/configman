@@ -192,29 +192,65 @@ def classes_in_namespaces_converter(template_for_namespace="cls%d",
                                     name_of_class_option='cls',
                                     instantiate_classes=False):
     """take a comma delimited  list of class names, convert each class name
-    into an actual class in an option within a numbered namespace.
+    into an actual class as an option within a numbered namespace.  This
+    function creates a closure over a new function.  That new function,
+    in turn creates a class derived from RequiredConfig.  The inner function,
+    'class_list_converter', populates the InnerClassList with a Namespace for
+    each of the classes in the class list.  In addition, it puts the each class
+    itself into the subordinate Namespace.  The requirement discovery mechanism
+    of configman then reads the InnerClassList's requried config, pulling in
+    the namespaces and associated classes within.
+
+    For example, if we have a class list like this: "Alpha, Beta", then this
+    converter will add the following Namespaces and options to the
+    configuration:
+
+        "cls0" - the subordinate Namespace for Alpha
+        "cls0.cls" - the option containing the class Alpha itself
+        "cls1" - the subordinate Namespace for Beta
+        "cls1.cls" - the option containing the class Beta itself
+
+    Optionally, the 'class_list_converter' inner function can embue the
+    InnerClassList's subordinate namespaces with aggregates that will
+    instantiate classes from the class list.  This is a convenience to the
+    programmer who would otherwise have to know ahead of time what the
+    namespace names were so that the classes could be instantiated within the
+    context of the correct namespace.  Remember the user could completely
+    change the list of classes at run time, so prediction could be difficult.
+
+        "cls0" - the subordinate Namespace for Alpha
+        "cls0.cls" - the option containing the class Alpha itself
+        "cls0.cls_instance" - an instance of the class Alpha
+        "cls1" - the subordinate Namespace for Beta
+        "cls1.cls" - the option containing the class Beta itself
+        "cls1.cls_instance" - an instance of the class Beta
 
     parameters:
         template_for_namespace - a template for the names of the namespaces
                                  that will contain the classes and their
-                                 associated required config options.
+                                 associated required config options.  The
+                                 namespaces will be numbered sequentially.  By
+                                 default, they will be "cls1", "cls2", etc.
         class_option_name - the name to be used for the class option within
-                            the nested namespace
+                            the nested namespace.  By default, it will choose:
+                            "cls1.cls", "cls2.cls", etc.
         instantiate_classes - a boolean to determine if there should be an
                               aggregator added to each namespace that
                               instantiates each class.  If True, then each
-                              Namespace
+                              Namespace will contain elements for the class, as
+                              well as an aggregator that will instantiate the
+                              class.
                               """
 
     #--------------------------------------------------------------------------
     def class_list_converter(class_list_str):
         """This function becomes the actual converter used by configman to
         take a string and convert it into the nested sequence of Namespaces,
-        one for each class in the list."""
+        one for each class in the list.  It does this by creating a proxy
+        class stuffed with its own 'required_config' that's dynamically
+        generated."""
         if isinstance(class_list_str, basestring):
             class_list = [x.strip() for x in class_list_str.split(',')]
-        elif isinstance(class_list_str, collections.Sequence):
-            class_list = class_list_str
         else:
             raise TypeError('must be string or list')
 
@@ -222,23 +258,33 @@ def classes_in_namespaces_converter(template_for_namespace="cls%d",
         class InnerClassList(RequiredConfig):
             """This nested class is a proxy list for the classes.  It collects
             all the config requirements for the listed classes and places them
-            each into their own Namespace
+            each into their own Namespace.
             """
-            length = len(class_list)
-            required_config = Namespace()
-            keys = []
-            namespace_template = template_for_namespace
-            class_option_name = name_of_class_option
+            # we're dynamically creating a class here.  The following block of
+            # code is actually adding class level attributes to this new class
+            required_config = Namespace()  # 1st requirement for configman
+            subordinate_namespace_names = []  # to help the programmer know
+                                              # what Namespaces we added
+            namespace_template = template_for_namespace  # save the template
+                                                         # for future reference
+            class_option_name = name_of_class_option  # save the class's option
+                                                      # name for the future
+            # for each class in the class list
             for namespace_index, a_class in enumerate(class_list):
+                # figure out the Namespace name
                 namespace_name = template_for_namespace % namespace_index
-                keys.append(namespace_name)
+                subordinate_namespace_names.append(namespace_name)
+                # create the new Namespace
                 required_config[namespace_name] = Namespace()
+                # add the option for the class itself
                 required_config[namespace_name].add_option(
                   name_of_class_option,
+                  #doc=a_class.__doc__  # not helpful if too verbose
                   default=a_class,
                   from_string_converter=class_converter
                 )
                 if instantiate_classes:
+                    # add an aggregator to instantiate the class
                     required_config[namespace_name].add_aggregation(
                       "%s_instance" % name_of_class_option,
                       lambda c, lc, a: lc[name_of_class_option](lc))
@@ -250,7 +296,7 @@ def classes_in_namespaces_converter(template_for_namespace="cls%d",
                 primarily as for the output of the 'help' option"""
                 return ', '.join(
                     py_obj_to_str(v[name_of_class_option].value)
-                        for k, v in cls.get_required_config().iteritems()
+                        for v in cls.get_required_config().values()
                         if isinstance(v, Namespace))
 
         return InnerClassList  # result of class_list_converter

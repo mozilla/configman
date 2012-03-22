@@ -201,6 +201,12 @@ class TestCase(unittest.TestCase):
                              converters.py_obj_to_str(result).split(',')]))
 
     def test_classes_in_namespaces_converter_2(self):
+        converter_fn = converters.classes_in_namespaces_converter('HH%d')
+        class_sequence = (Foo, Bar)
+        self.assertRaises(TypeError, converter_fn, class_sequence)
+        result = converter_fn(class_sequence)
+
+    def test_classes_in_namespaces_converter_3(self):
         n = Namespace()
         n.add_option('kls_list',
                       default='configman.tests.test_converters.Alpha, '
@@ -209,17 +215,16 @@ class TestCase(unittest.TestCase):
                       from_string_converter=
                          converters.classes_in_namespaces_converter('kls%d'))
 
-        cm = ConfigurationManager(n)
+        cm = ConfigurationManager(n, argv_source=[])
         config = cm.get_config()
 
-        self.assertEqual(config.kls_list.length, 3)
-        self.assertEqual(len(config.kls_list.keys), 3)
-        for x in config.kls_list.keys:
+        self.assertEqual(len(config.kls_list.subordinate_namespace_names), 3)
+        for x in config.kls_list.subordinate_namespace_names:
             self.assertTrue(x in config)
             self.assertEqual(config[x].cls, Alpha)
             self.assertTrue('cls_instance' not in config[x])
 
-    def test_classes_in_namespaces_converter_3(self):
+    def test_classes_in_namespaces_converter_4(self):
         n = Namespace()
         n.add_option('kls_list',
                       default='configman.tests.test_converters.Alpha, '
@@ -239,9 +244,8 @@ class TestCase(unittest.TestCase):
                        'configman.tests.test_converters.Alpha'}])
         config = cm.get_config()
 
-        self.assertEqual(config.kls_list.length, 4)
-        self.assertEqual(len(config.kls_list.keys), 4)
-        for x in config.kls_list.keys:
+        self.assertEqual(len(config.kls_list.subordinate_namespace_names), 4)
+        for x in config.kls_list.subordinate_namespace_names:
             self.assertTrue(x in config)
             self.assertTrue('kls_instance' in config[x])
             self.assertTrue(isinstance(config[x].kls_instance,
