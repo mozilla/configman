@@ -39,9 +39,9 @@
 import unittest
 import tempfile
 from configman import converters
-from configman import RequiredConfig, Namespace
+from configman import RequiredConfig, Namespace, ConfigurationManager
 
-# the following two classes are used in test_classes_in_namespaces_converter
+# the following two classes are used in test_classes_in_namespaces_converter1
 # and need to be declared at module level scope
 class Foo(RequiredConfig):
     required_config = Namespace()
@@ -55,6 +55,31 @@ class Bar(RequiredConfig):
                                default=227)
     required_config.add_option('a',
                                default=11)
+
+# the following two classes are used in test_classes_in_namespaces_converter2
+# and test_classes_in_namespaces_converter_3.  They need to be declared at
+#module level scope
+
+class Alpha(RequiredConfig):
+    required_config = Namespace()
+    required_config.add_option('a',
+                               doc='a',
+                               default=17)
+
+    def __init__(self, config):
+        self.config = config
+        self.a = config.a
+
+class Beta(RequiredConfig):
+    required_config = Namespace()
+    required_config.add_option('b',
+                               doc='b',
+                               default=23)
+    def __init__(self, config):
+        self.config = config
+        self.b = config.b
+
+
 
 
 class TestCase(unittest.TestCase):
@@ -156,7 +181,7 @@ class TestCase(unittest.TestCase):
         self.assertEqual(function((int, str, 123, "hello")),
                          'int, str, 123, hello')
 
-    def test_classes_in_namespaces_converter(self):
+    def test_classes_in_namespaces_converter_1(self):
         converter_fn = converters.classes_in_namespaces_converter('HH%d')
         class_list_str = ('configman.tests.test_converters.Foo,'
                           'configman.tests.test_converters.Bar')
@@ -174,4 +199,54 @@ class TestCase(unittest.TestCase):
                 sorted([x.strip() for x in class_list_str.split(',')]),
                 sorted([x.strip() for x in
                              converters.py_obj_to_str(result).split(',')]))
-        
+
+    def test_classes_in_namespaces_converter_2(self):
+        converter_fn = converters.classes_in_namespaces_converter('HH%d')
+        class_sequence = (Foo, Bar)
+        self.assertRaises(TypeError, converter_fn, class_sequence)
+
+    def test_classes_in_namespaces_converter_3(self):
+        n = Namespace()
+        n.add_option('kls_list',
+                      default='configman.tests.test_converters.Alpha, '
+                              'configman.tests.test_converters.Alpha, '
+                              'configman.tests.test_converters.Alpha',
+                      from_string_converter=
+                         converters.classes_in_namespaces_converter('kls%d'))
+
+        cm = ConfigurationManager(n, argv_source=[])
+        config = cm.get_config()
+
+        self.assertEqual(len(config.kls_list.subordinate_namespace_names), 3)
+        for x in config.kls_list.subordinate_namespace_names:
+            self.assertTrue(x in config)
+            self.assertEqual(config[x].cls, Alpha)
+            self.assertTrue('cls_instance' not in config[x])
+
+    def test_classes_in_namespaces_converter_4(self):
+        n = Namespace()
+        n.add_option('kls_list',
+                      default='configman.tests.test_converters.Alpha, '
+                              'configman.tests.test_converters.Alpha, '
+                              'configman.tests.test_converters.Alpha',
+                      from_string_converter=
+                         converters.classes_in_namespaces_converter(
+                          'kls%d',
+                          'kls',
+                          instantiate_classes=True))
+
+        cm = ConfigurationManager(
+          n,
+          [{'kls_list':'configman.tests.test_converters.Alpha, '
+                       'configman.tests.test_converters.Beta, '
+                       'configman.tests.test_converters.Beta, '
+                       'configman.tests.test_converters.Alpha'}])
+        config = cm.get_config()
+
+        self.assertEqual(len(config.kls_list.subordinate_namespace_names), 4)
+        for x in config.kls_list.subordinate_namespace_names:
+            self.assertTrue(x in config)
+            self.assertTrue('kls_instance' in config[x])
+            self.assertTrue(isinstance(config[x].kls_instance,
+                                       config[x].kls))
+
