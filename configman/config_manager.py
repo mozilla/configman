@@ -44,6 +44,7 @@ import os.path
 import contextlib
 import functools
 import copy
+import weakref
 
 import configman as cm
 import converters as conv
@@ -247,11 +248,20 @@ class ConfigurationManager(object):
                 self._walk_and_close(config)
 
     #--------------------------------------------------------------------------
-    def get_config(self):
-        config = self._generate_config()
+    def get_config(self, with_parentage=True):
+        """return a dot notation dictionary hierarchy of the options and
+        namespaces with their final values.
+
+        parameters:
+            with_parentage - if True, each level of the dictionary hierarchy
+                             includes two special entries:
+                             '_parent' - a reference to the parent dict
+                             '_root' - a reference to the base dict of the
+                                       hierarchy"""
+        config = self._generate_config(with_parentage)
         if self._aggregate(self.option_definitions, config, config):
             # state changed, must regenerate
-            return self._generate_config()
+            return self._generate_config(with_parentage)
         else:
             return config
 
@@ -437,18 +447,36 @@ class ConfigurationManager(object):
     #--------------------------------------------------------------------------
     @staticmethod
     def _walk_and_close(a_dict):
-        for val in a_dict.itervalues():
+        for key, val in a_dict.iteritems():
+            if key.startswith('_'):  # skip these
+                continue
             if isinstance(val, collections.Mapping):
                 ConfigurationManager._walk_and_close(val)
             if hasattr(val, 'close') and not inspect.isclass(val):
                 val.close()
 
     #--------------------------------------------------------------------------
-    def _generate_config(self):
+    def _generate_config(self, with_parentage):
         """This routine generates a copy of the DotDict based config"""
         config = DotDict()
         self._walk_config_copy_values(self.option_definitions, config)
+        if with_parentage:
+            self._setup_config_parentage(config)
         return config
+
+    #--------------------------------------------------------------------------
+    @staticmethod
+    def _setup_config_parentage(config):
+        def recursive_descent(c, parent, root):
+            for key, value in c.items():  # can't use iteritems
+                if isinstance(value, DotDict):
+                    recursive_descent(value, c, root)
+            if parent is not None:
+                c._parent = weakref.proxy(parent)
+            else:
+                c._parent = None
+            c._root = weakref.proxy(root)
+        recursive_descent(config, None, config)
 
     #--------------------------------------------------------------------------
     def _walk_expanding_class_options(self, source_namespace=None,
