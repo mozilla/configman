@@ -76,7 +76,7 @@ class TestCase(unittest.TestCase):
           use_auto_help=False,
           argv_source=[]
         )
-        d = c.get_config()
+        d = c.get_config(with_parentage=False)
         e = DotDict()
         e.a = 1
         e.b = 17
@@ -97,7 +97,7 @@ class TestCase(unittest.TestCase):
           use_auto_help=False,
           argv_source=[]
         )
-        d = c.get_config()
+        d = c.get_config(with_parentage=False)
         e = DotDict()
         e.a = 1
         e.b = 17
@@ -182,7 +182,7 @@ class TestCase(unittest.TestCase):
                                     argv_source=[])
         o = {"a": 2, "c.z": 22, "c.x": 'noob', "c.y": "2.89"}
         c._overlay_value_sources_recurse(o)
-        d = c._generate_config()
+        d = c._generate_config(with_parentage=False)
         e = DotDict()
         e.a = 2
         e.b = 17
@@ -211,7 +211,7 @@ class TestCase(unittest.TestCase):
                                     argv_source=[])
         o = {"a": 2, "c.z": 22, "c.x": 'noob', "c.y": "2.89", "n": "not here"}
         c._overlay_value_sources_recurse(o, ignore_mismatches=True)
-        d = c._generate_config()
+        d = c._generate_config(with_parentage=False)
         e = DotDict()
         e.a = 2
         e.b = 17
@@ -1019,7 +1019,7 @@ string =   from ini
                                     argv_source=['argument 1',
                                                  'argument 2',
                                                  'argument 3'])
-        conf = c.get_config()
+        conf = c.get_config(with_parentage=False)
         self.assertEqual(conf.keys(), ['admin'])  # there should be nothing but
                                                   # the admin key
 
@@ -1223,7 +1223,7 @@ string =   from ini
                                     argv_source=['--sub1.name=wilma',
                                                  'arg1',
                                                  'arg2'])
-        config = c.get_config()
+        config = c.get_config(with_parentage=False)
         self.assertEqual(config.sub1.statement,
                          'wilma married fred using password @$*$&26Ht '
                          'but divorced because of arg2.')
@@ -1326,3 +1326,73 @@ string =   from ini
 
         contextmanager_ = c.context()
         self.assertRaises(SomeException, contextmanager_.__enter__)
+
+    def test_setup_config_parentage(self):
+        # this little class gives the weak reference proxy objects a way to
+        # retrieve the original object.  This facilitates testing for identity
+        class LocalDotDict(DotDict):
+            def ref(self):
+                return self
+
+        d = LocalDotDict()
+        config_manager.ConfigurationManager._setup_config_parentage(d)
+
+        self.assertTrue('_parent' in d)
+        self.assertTrue('_root' in d)
+        self.assertEqual(len(d), 2)
+        self.assertTrue(d._parent is None)
+        self.assertEqual(d._root.ref(), d)
+
+        d = LocalDotDict()
+        d.a = LocalDotDict()
+        d.a.aa = LocalDotDict()
+        d.b = LocalDotDict()
+        d.b.bb = LocalDotDict()
+        d.b.bb.bbb = LocalDotDict()
+        d.c = LocalDotDict()
+        config_manager.ConfigurationManager._setup_config_parentage(d)
+
+        self.assertTrue('_parent' in d)
+        self.assertTrue('_root' in d)
+        self.assertEqual(len(d), 5)
+        self.assertTrue(d._parent is None)
+        self.assertTrue(d._root.ref() is d)
+
+        self.assertTrue('_parent' in d.a)
+        self.assertTrue('_root' in d.a)
+        self.assertEqual(len(d.a), 3)
+        self.assertTrue(d.a._parent.ref() is d)
+        self.assertTrue(d.a._root.ref() is d)
+
+        self.assertTrue('_parent' in d.a.aa)
+        self.assertTrue('_root' in d.a.aa)
+        self.assertEqual(len(d.a.aa), 2)
+        self.assertTrue(d.a.aa._parent.ref() is d.a)
+        self.assertTrue(d.a.aa._root.ref() is d)
+
+        self.assertTrue('_parent' in d.b)
+        self.assertTrue('_root' in d.b)
+        self.assertEqual(len(d.b), 3)
+        self.assertTrue(d.b._parent.ref() is d)
+        self.assertTrue(d.b._root.ref() is d)
+
+        self.assertTrue('_parent' in d.b.bb)
+        self.assertTrue('_root' in d.b.bb)
+        self.assertEqual(len(d.b.bb), 3)
+        self.assertTrue(d.b.bb._parent.ref() is d.b)
+        self.assertTrue(d.b.bb._root.ref() is d)
+
+        self.assertTrue('_parent' in d.b.bb.bbb)
+        self.assertTrue('_root' in d.b.bb.bbb)
+        self.assertEqual(len(d.b.bb.bbb), 2)
+        self.assertTrue(d.b.bb.bbb._parent.ref() is d.b.bb)
+        self.assertTrue(d.b.bb.bbb._root.ref() is d)
+
+        self.assertTrue('_parent' in d.c)
+        self.assertTrue('_root' in d.c)
+        self.assertEqual(len(d.c), 2)
+        self.assertTrue(d.c._parent.ref() is d)
+        self.assertTrue(d.c._root.ref() is d)
+
+
+
