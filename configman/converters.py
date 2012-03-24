@@ -187,18 +187,58 @@ def class_converter(input_str):
     return obj
 
 #------------------------------------------------------------------------------
+def class_instantiator(instantiated_name):
+    """ a conversion that will import a class and instantiate it
+    it assumes that the constructor takes a config dict as parametor to the
+    constructor
+    """
+    def inner_fn(input_str):
+        if not input_str:
+            return None
+        parts = input_str.split('.')
+        try:
+            # first try as a complete module
+            package = __import__(input_str)
+        except ImportError:
+            # it must be a class from a module
+            if len(parts) == 1:
+                # since it has only one part, it must be a class from __main__
+                parts = ('__main__', input_str)
+            package = __import__('.'.join(parts[:-1]), globals(), locals(), [])
+        class_obj = package
+        for name in parts[1:]:
+            class_obj = getattr(class_obj, name)
+        # we'll derive a new class from class_obj to add an aggregator that
+        # will instantiate the target class.
+
+        def instantiate_class_obj(config, local_config, args):
+            return class_obj(local_config)
+
+        class InstantiatorForClass(class_obj):
+            required_config = Namespace()
+            required_config.add_aggregation(instantiated_name,
+                                            instantiate_class_obj)
+
+            @classmethod
+            def to_str(cls):
+                return input_str
+
+        return InstantiatorForClass
+    return inner_fn
+
+#------------------------------------------------------------------------------
 def classes_in_namespaces_converter(namespace_template="cls%d",
                                     class_option_name='cls'):
-    """take a comma delimited  list of class names, convert each class name 
+    """take a comma delimited  list of class names, convert each class name
     into an actual class in an option within a numbered namespace.
-    
+
     parameters:
-        namespace_template - a template for the names of the namespaces that 
+        namespace_template - a template for the names of the namespaces that
                              will contain the classes and their associated
                              required config options.
         class_option_name - the name to be used for the class option within
                             the nested namespace"""
-    
+
     #--------------------------------------------------------------------------
     def class_list_converter(class_list_str):
         """This function becomes the actual converter used by configman to
@@ -210,7 +250,7 @@ def classes_in_namespaces_converter(namespace_template="cls%d",
             class_list = class_list_str
         else:
             raise TypeError('must be string or list')
-    
+
         #======================================================================
         class InnerClassList(RequiredConfig):
             """This nested class is a proxy list for the classes.  It collects
@@ -234,7 +274,7 @@ def classes_in_namespaces_converter(namespace_template="cls%d",
                     py_obj_to_str(v[class_option_name].value)
                         for k, v in cls.get_required_config().iteritems()
                         if isinstance(v, Namespace))
-    
+
         return InnerClassList  # result of class_list_converter
     return class_list_converter  # result of classes_in_namespaces_converter
 

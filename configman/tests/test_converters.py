@@ -40,6 +40,7 @@ import unittest
 import tempfile
 from configman import converters
 from configman import RequiredConfig, Namespace
+from configman.dotdict import DotDict
 
 # the following two classes are used in test_classes_in_namespaces_converter
 # and need to be declared at module level scope
@@ -49,6 +50,11 @@ class Foo(RequiredConfig):
                                default=17)
     required_config.add_option('y',
                                default=23)
+
+    def __init__(self, config):
+        self.foo_x = config.x
+        self.foo_y = config.y
+
 class Bar(RequiredConfig):
     required_config = Namespace()
     required_config.add_option('x',
@@ -174,4 +180,24 @@ class TestCase(unittest.TestCase):
                 sorted([x.strip() for x in class_list_str.split(',')]),
                 sorted([x.strip() for x in
                              converters.py_obj_to_str(result).split(',')]))
-        
+
+
+    def test_class_instantiator(self):
+        class_str = 'configman.tests.test_converters.Foo'
+        actual_converter = converters.class_instantiator('foo_instantiated')
+        class_instantiator = actual_converter(class_str)
+        self.assertTrue(Foo in class_instantiator.__mro__)
+        req = class_instantiator.get_required_config()
+        self.assertTrue('foo_instantiated' in req)
+        config = DotDict()
+        config.x = 99
+        config.y = 101
+        req.foo_instantiated.aggregate(config,
+                                       config,
+                                       None)
+        class_instantiated = req.foo_instantiated.value
+        self.assertTrue(isinstance(class_instantiated, Foo))
+
+
+
+
