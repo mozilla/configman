@@ -510,8 +510,9 @@ class ConfigurationManager(object):
         base_namespace.admin = admin = Namespace()
         admin.add_option(name='print_conf',
                          default=None,
-                         doc='write current config to stdout '
-                             '(conf, ini, json)',
+                         doc='write current config to stdout (%s)'
+                             % ', '.join(
+                              value_sources.file_extension_dispatch.keys())
                          )
         admin.add_option(name='dump_conf',
                          default='',

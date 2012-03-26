@@ -41,9 +41,12 @@ import os
 import tempfile
 from cStringIO import StringIO
 import contextlib
+import ConfigParser
 
 import configman.datetime_util as dtu
 import configman.config_manager as config_manager
+
+from ..value_sources import for_configparse
 from ..value_sources.for_configparse import ValueSource
 
 
@@ -75,7 +78,10 @@ class TestCase(unittest.TestCase):
 
     def test_for_configparse_basics(self):
         """test basic use of for_configparse"""
-        tmp_filename = os.path.join(tempfile.gettempdir(), 'test.ini')
+        tmp_filename = os.path.join(
+          tempfile.gettempdir(),
+          'test.%s' % for_configparse.file_name_extension
+        )
         open(tmp_filename, 'w').write("""
 ; comment
 [top_level]
@@ -120,7 +126,10 @@ foo=bar  ; other comment
                 os.remove(tmp_filename)
 
     def test_for_configparse_basics_2(self):
-        tmp_filename = os.path.join(tempfile.gettempdir(), 'test.ini')
+        tmp_filename = os.path.join(
+          tempfile.gettempdir(),
+          'test.%s' % for_configparse.file_name_extension
+        )
         open(tmp_filename, 'w').write("""
 ; comment
 [top_level]
@@ -155,11 +164,17 @@ foo=bar  ; other comment
         n = self._some_namespaces()
         c = config_manager.ConfigurationManager(
           [n],
-          use_admin_controls=True,
+          [ConfigParser],
+          use_admin_controls=False,
           #use_config_files=False,
           use_auto_help=False,
           argv_source=[]
         )
+        out = StringIO()
+        c.write_conf(for_configparse.file_name_extension,
+                     opener=stringIO_context_wrapper(out))
+        received = out.getvalue()
+        out.close()
         expected = """[top_level]
 # name: aaa
 # doc: the a
@@ -205,8 +220,4 @@ password=secret
 # converter: int
 size=100
 """
-        out = StringIO()
-        c.write_conf('ini', opener=stringIO_context_wrapper(out))
-        received = out.getvalue()
-        out.close()
         self.assertEqual(expected.strip(), received.strip())

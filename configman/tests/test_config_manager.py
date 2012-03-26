@@ -40,16 +40,19 @@ import sys
 import os
 import unittest
 from contextlib import contextmanager
-import ConfigParser
 import io
 from cStringIO import StringIO
 import getopt
+import ConfigParser
+
 import configman.config_manager as config_manager
 from configman.dotdict import DotDict
 import configman.datetime_util as dtu
 from configman.config_exceptions import NotAnOptionError
 from configman.value_sources.source_exceptions import \
                                                   AllHandlersFailedException
+
+#from configobj import ConfigObj
 
 
 class TestCase(unittest.TestCase):
@@ -517,7 +520,8 @@ string =   from ini
     def test_overlay_config_10(self):
         """test namespace definition ini file"""
         n = config_manager.Namespace()
-        n.add_option('t', 'tee', 'the t')
+        n.other = config_manager.Namespace()
+        n.other.add_option('t', 'tee', 'the t')
         n.d = config_manager.Namespace()
         n.d.add_option('a', 1, 'the a')
         n.d.b = 17
@@ -525,7 +529,7 @@ string =   from ini
         n.c.add_option('extra', 3.14159, 'the x')
         n.c.add_option('string', 'fred', doc='str')
         ini_data = """
-[top_level]
+[other]
 t=tea
 [d]
 # blank line to be ignored
@@ -538,7 +542,8 @@ string =   from ini
         config.readfp(io.BytesIO(ini_data))
         #g = config_manager.IniValueSource(config)
         e = DotDict()
-        e.t = 'T'
+        e.other = DotDict()
+        e.other.t = 'T'
         e.d = DotDict()
         e.d.a = 16
         e.c = DotDict()
@@ -552,8 +557,8 @@ string =   from ini
                                     argv_source=['--c.extra', '11.0'],
                                     #use_config_files=False,
                                     use_auto_help=False)
-        self.assertEqual(c.option_definitions.t.name, 't')
-        self.assertEqual(c.option_definitions.t.value, 'tea')
+        self.assertEqual(c.option_definitions.other.t.name, 't')
+        self.assertEqual(c.option_definitions.other.t.value, 'tea')
         self.assertEqual(c.option_definitions.d.a, n.d.a)
         self.assertEqual(type(c.option_definitions.d.b), config_manager.Option)
         self.assertEqual(c.option_definitions.d.a.value, 22)
@@ -1109,8 +1114,8 @@ string =   from ini
             sys.stdout = old_stdout
 
         printed = temp_output.getvalue()
-        self.assertTrue('name: gender' in printed)
-        self.assertTrue('name: salary' not in printed)
+        self.assertTrue('gender' in printed)
+        self.assertTrue('salary' not in printed)
 
     def test_dump_conf_some_options_excluded(self):
         n = config_manager.Namespace()
@@ -1131,17 +1136,17 @@ string =   from ini
                 use_admin_controls=True,
                 use_auto_help=False,
                 quit_after_admin=False,
-                argv_source=['--admin.dump_conf=foo.ini'],
+                argv_source=['--admin.dump_conf=foo.conf'],
                 config_pathname='fred'
             )
 
-            printed = open('foo.ini').read()
-            self.assertTrue('name: gender' in printed)
-            self.assertTrue('name: salary' not in printed)
+            printed = open('foo.conf').read()
+            self.assertTrue('gender' in printed)
+            self.assertTrue('salary' not in printed)
 
         finally:
-            if os.path.isfile('foo.ini'):
-                os.remove('foo.ini')
+            if os.path.isfile('foo.conf'):
+                os.remove('foo.conf')
 
     def test_config_pathname_set(self):
 

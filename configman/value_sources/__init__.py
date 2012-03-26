@@ -52,18 +52,23 @@ from ..config_file_future_proxy import ConfigFileFutureProxy
 #import for_xml
 import for_getopt
 import for_json
-import for_configparse
 import for_conf
 import for_mapping
+import for_configparse
 
 # please replace with dynamic discovery
 for_handlers = [for_mapping,
                 for_getopt,
                 for_json,
-                for_configparse,
-                for_conf
+                for_conf,
+                for_configparse
                ]
-
+try:
+    import for_configobj
+    for_handlers.append(for_configobj)
+except ImportError:
+    # the module configobj is not loaded, ignore the error
+    pass
 
 # create a dispatch table of types/objects to modules.  Each type should have
 # a list of modules that can handle that type.

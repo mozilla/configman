@@ -83,7 +83,7 @@ class ValueSource(object):
             # will return a Context Manager Type.
             opener = candidate
         else:
-            raise CantHandleTypeException("don't know how to handle"
+            raise CantHandleTypeException("Conf doesn't know how to handle"
                                                      " %s." % str(candidate))
         self.values = {}
         try:
@@ -105,7 +105,7 @@ class ValueSource(object):
                     except ValueError:
                         self.values[line] = ''
         except Exception, x:
-            raise NotAConfigFileError("couldn't interpret %s as a context "
+            raise NotAConfigFileError("Conf couldn't interpret %s as a config "
                                           "file: %s" % (candidate, str(x)))
 
     def get_values(self, config_manager, ignore_mismatches):
