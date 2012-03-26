@@ -44,12 +44,15 @@ import ConfigParser
 import io
 from cStringIO import StringIO
 import getopt
+
 import configman.config_manager as config_manager
 from configman.dotdict import DotDict, DotDictWithAcquisition
 import configman.datetime_util as dtu
 from configman.config_exceptions import NotAnOptionError
 from configman.value_sources.source_exceptions import \
                                                   AllHandlersFailedException
+import configman.value_sources
+import configman.value_sources.for_configparse
 
 
 class TestCase(unittest.TestCase):
@@ -417,19 +420,16 @@ class TestCase(unittest.TestCase):
         n.c.add_option('extra', 3.14159, 'the x')
         n.c.add_option('string', 'fred', doc='str')
         ini_data = """
-[other]
-t=tea
-[d]
+other.t=tea
 # blank line to be ignored
-a=22
-b = 33
-[c]
-extra = 2.0
-string =   wilma
+d.a=22
+d.b=33
+c.extra = 2.0
+c.string = wilma
 """
-        config = ConfigParser.RawConfigParser()
-        config.readfp(io.BytesIO(ini_data))
-        c = config_manager.ConfigurationManager([n], [config],
+        def strio():
+            return io.BytesIO(ini_data)
+        c = config_manager.ConfigurationManager([n], [strio],
                                     use_admin_controls=True,
                                     use_auto_help=False)
         self.assertEqual(c.option_definitions.other.t.name, 't')
@@ -461,17 +461,14 @@ string =   wilma
         n.c.add_option('extra', 3.14159, 'the x')
         n.c.add_option('string', 'fred', 'str')
         ini_data = """
-[other]
-t=tea
-[d]
+other.t=tea
 # blank line to be ignored
-a=22
-[c]
-extra = 2.0
-string =   from ini
+d.a=22
+c.extra = 2.0
+c.string =   from ini
 """
-        config = ConfigParser.RawConfigParser()
-        config.readfp(io.BytesIO(ini_data))
+        def strio():
+            return io.BytesIO(ini_data)
         e = DotDict()
         e.fred = DotDict()  # should be ignored
         e.fred.t = 'T'  # should be ignored
@@ -489,7 +486,7 @@ string =   from ini
         saved_environ = os.environ
         os.environ = e
         try:
-            c = config_manager.ConfigurationManager([n], [e, config, getopt],
+            c = config_manager.ConfigurationManager([n], [e, strio, getopt],
                                         use_admin_controls=True,
                                         use_auto_help=False,
                                         argv_source=['--other.t', 'TTT',
@@ -517,7 +514,8 @@ string =   from ini
     def test_overlay_config_10(self):
         """test namespace definition ini file"""
         n = config_manager.Namespace()
-        n.add_option('t', 'tee', 'the t')
+        n.other = config_manager.Namespace()
+        n.other.add_option('t', 'tee', 'the t')
         n.d = config_manager.Namespace()
         n.d.add_option('a', 1, 'the a')
         n.d.b = 17
@@ -525,20 +523,17 @@ string =   from ini
         n.c.add_option('extra', 3.14159, 'the x')
         n.c.add_option('string', 'fred', doc='str')
         ini_data = """
-[top_level]
-t=tea
-[d]
+other.t=tea
 # blank line to be ignored
-a=22
-[c]
-extra = 2.0
-string =   from ini
+d.a=22
+c.extra = 2.0
+c.string =   from ini
 """
-        config = ConfigParser.RawConfigParser()
-        config.readfp(io.BytesIO(ini_data))
-        #g = config_manager.IniValueSource(config)
+        def strio():
+            return io.BytesIO(ini_data)
         e = DotDict()
-        e.t = 'T'
+        e.other = DotDict()
+        e.other.t = 'T'
         e.d = DotDict()
         e.d.a = 16
         e.c = DotDict()
@@ -547,13 +542,14 @@ string =   from ini
         #v = config_manager.GetoptValueSource(
           #argv_source=['--c.extra', '11.0']
         #)
-        c = config_manager.ConfigurationManager([n], [e, config, getopt],
+
+        c = config_manager.ConfigurationManager([n], [e, strio, getopt],
                                     use_admin_controls=True,
                                     argv_source=['--c.extra', '11.0'],
                                     #use_config_files=False,
                                     use_auto_help=False)
-        self.assertEqual(c.option_definitions.t.name, 't')
-        self.assertEqual(c.option_definitions.t.value, 'tea')
+        self.assertEqual(c.option_definitions.other.t.name, 't')
+        self.assertEqual(c.option_definitions.other.t.value, 'tea')
         self.assertEqual(c.option_definitions.d.a, n.d.a)
         self.assertEqual(type(c.option_definitions.d.b), config_manager.Option)
         self.assertEqual(c.option_definitions.d.a.value, 22)
@@ -1152,8 +1148,8 @@ string =   from ini
             sys.stdout = old_stdout
 
         printed = temp_output.getvalue()
-        self.assertTrue('name: gender' in printed)
-        self.assertTrue('name: salary' not in printed)
+        self.assertTrue('gender' in printed)
+        self.assertTrue('salary' not in printed)
 
     def test_dump_conf_some_options_excluded(self):
         n = config_manager.Namespace()
@@ -1174,17 +1170,17 @@ string =   from ini
                 use_admin_controls=True,
                 use_auto_help=False,
                 quit_after_admin=False,
-                argv_source=['--admin.dump_conf=foo.ini'],
+                argv_source=['--admin.dump_conf=foo.conf'],
                 config_pathname='fred'
             )
 
-            printed = open('foo.ini').read()
-            self.assertTrue('name: gender' in printed)
-            self.assertTrue('name: salary' not in printed)
+            printed = open('foo.conf').read()
+            self.assertTrue('gender' in printed)
+            self.assertTrue('salary' not in printed)
 
         finally:
-            if os.path.isfile('foo.ini'):
-                os.remove('foo.ini')
+            if os.path.isfile('foo.conf'):
+                os.remove('foo.conf')
 
     def test_config_pathname_set(self):
 

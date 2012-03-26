@@ -52,17 +52,23 @@ from ..config_file_future_proxy import ConfigFileFutureProxy
 #import for_xml
 import for_getopt
 import for_json
-import for_configparse
 import for_conf
 import for_mapping
+import for_configparse
 
 # please replace with dynamic discovery
 for_handlers = [for_mapping,
                 for_getopt,
                 for_json,
+                for_conf,
                 for_configparse,
-                for_conf
                ]
+try:
+    import for_configobj
+    for_handlers.append(for_configobj)
+except ImportError:
+    # the module configobj is not present
+    pass
 
 
 # create a dispatch table of types/objects to modules.  Each type should have
@@ -141,16 +147,21 @@ def wrap(value_source_list, a_config_manager):
     return wrapped_sources
 
 
-def write(file_name_extension,
+def write(config_file_type,
           option_iterator,
           output_stream=sys.stdout):
-    try:
-        file_extension_dispatch[file_name_extension](option_iterator,
-                                                     output_stream)
-    except KeyError:
-        raise UnknownFileExtensionException("%s isn't a registered file"
-                                               " name extension" %
-                                               file_name_extension)
+    if isinstance(config_file_type, basestring):
+        try:
+            file_extension_dispatch[config_file_type](option_iterator,
+                                                         output_stream)
+        except KeyError:
+            raise UnknownFileExtensionException("%s isn't a registered file"
+                                                   " name extension" %
+                                                   config_file_type)
+    else:
+        # this is the case where we've not gotten a file extension, but a
+        # for_handler module.  Use the module's ValueSource's write method
+        config_file_type.ValueSource.write(option_iterator, output_stream)
 
 
 def get_admin_options_from_command_line(config_manager):

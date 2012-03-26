@@ -37,21 +37,20 @@
 # ***** END LICENSE BLOCK *****
 
 import sys
-import ConfigParser
+import collections
+
+import configobj
 
 from source_exceptions import (CantHandleTypeException, ValueException,
                                NotEnoughInformationException)
-from ..config_exceptions import NotAnOptionError
-
-from .. import namespace
-from .. import option
+from ..namespace import Namespace
+from ..option import Option
 from .. import converters as conv
 
 file_name_extension = 'ini'
 
-can_handle = (ConfigParser,
-              ConfigParser.RawConfigParser,  # just the base class, subclasses
-                                             # will be detected too
+can_handle = (configobj,
+              configobj.ConfigObj,
               basestring,
              )
 
@@ -64,45 +63,33 @@ class ValueSource(object):
 
     def __init__(self, source,
                  config_manager=None,
-                 top_level_section_name='top_level'):
+                 top_level_section_name=''):
         self.delayed_parser_instantiation = False
         self.top_level_section_name = top_level_section_name
-        if source is ConfigParser:
+        if source is configobj.ConfigObj:
             try:
                 app = config_manager._get_option('admin.application')
                 source = "%s.%s" % (app.value.app_name, file_name_extension)
-            except (AttributeError, NotAnOptionError):
+            except AttributeError:
                 # we likely don't have the admin.application object set up yet.
                 # we need to delay the instantiation of the ConfigParser
                 # until later.
                 if source is None:
-                    raise NotEnoughInformationException(
-                      "Can't setup an %s file without knowing the file name"
-                          % file_name_extension)
+                    raise NotEnoughInformationException("Can't setup an ini "
+                                                        "file without knowing "
+                                                        "the file name")
                 self.delayed_parser_instantiation = True
                 return
         if (isinstance(source, basestring) and
             source.endswith(file_name_extension)):
             try:
-                self.configparser = self._create_parser(source)
+                self.config_obj = configobj.ConfigObj(source)
             except Exception, x:
-                # FIXME: this doesn't give you a clue why it fail.
-                #  Was it because the file didn't exist (IOError) or because it
-                #  was badly formatted??
                 raise LoadingIniFileFailsException(
-                  "ConfigParser cannot load file: %s" % str(x))
-        elif isinstance(source, ConfigParser.RawConfigParser):
-            self.configparser = source
+                  "ConfigObj cannot load ini: %s" % str(x))
         else:
             raise CantHandleTypeException(
-                        "ConfigParser doesn't know how to handle %s." % source)
-
-    @staticmethod
-    def _create_parser(source):
-        parser = ConfigParser.ConfigParser()
-        parser.optionxform = str
-        parser.read(source)
-        return parser
+                        "ConfigObj doesn't know how to handle %s." % source)
 
     def get_values(self, config_manager, ignore_mismatches):
         """Return a nested dictionary representing the values in the ini file.
@@ -112,38 +99,31 @@ class ValueSource(object):
             try:
                 app = config_manager._get_option('admin.application')
                 source = "%s%s" % (app.value.app_name, file_name_extension)
-                self.configparser = self._create_parser(source)
+                self.config_obj = configobj.ConfigObj(source)
                 self.delayed_parser_instantiation = False
-            except (AttributeError, NotAnOptionError):
+            except AttributeError:
                 # we don't have enough information to get the ini file
                 # yet.  we'll ignore the error for now
                 return {}
-        options = {}
-        for a_section in self.configparser.sections():
-            if a_section == self.top_level_section_name:
-                prefix = ''
-            else:
-                prefix = "%s." % a_section
-            for an_option in self.configparser.options(a_section):
-                name = '%s%s' % (prefix, an_option)
-                options[name] = self.configparser.get(a_section, an_option)
-        return options
+        return self.config_obj
+
+    @staticmethod
+    def recursive_default_dict():
+        return collections.defaultdict(ValueSource.recursive_default_dict)
 
     @staticmethod
     def write(option_iter, output_stream=sys.stdout):
-        print >> output_stream, '[top_level]'
+        # must construct a dict from the iter
+        destination_dict = ValueSource.recursive_default_dict()
         for qkey, key, val in option_iter():
-            if isinstance(val, namespace.Namespace):
-                print >> output_stream, '[%s]' % qkey
-                print >> output_stream, '# %s\n' % val._doc
-            elif isinstance(val, option.Option):
-                print >> output_stream, '# name:', qkey
-                print >> output_stream, '# doc:', val.doc
-                print >> output_stream, '# converter:', \
-                   conv.py_obj_to_str(val.from_string_converter)
-                val_str = conv.option_value_str(val)
-                print >> output_stream, '%s=%s\n' % (key, val_str)
-            elif isinstance(val, option.Aggregation):
-                # there is nothing to do for Aggregations at this time
-                # it appears here anyway as a marker for future enhancements
-                pass
+            if isinstance(val, Namespace):
+                continue
+            d = destination_dict
+            for x in qkey.split('.')[:-1]:
+                d = d[x]
+            if isinstance(val, Option):
+                v = val.value
+                v_str = conv.to_string_converters[type(v)](v)
+                d[key] = v_str
+        config = configobj.ConfigObj(destination_dict)
+        config.write(outfile=output_stream)

@@ -362,9 +362,10 @@ class ConfigurationManager(object):
         """write a configuration file to a file-like object.
 
         parameters:
-            config_file_type - a string containing a registered file type.
-                               Passing in an unregistered string will result in
-                               a KeyError exception
+            config_file_type - a string containing a registered file type OR
+                               a for_XXX module from the value_source
+                               package.  Passing in an string that is
+                               unregistered will result in a KeyError
             opener - a callable object or function that returns a file like
                      object that works as a context in a with statement."""
 
@@ -512,8 +513,9 @@ class ConfigurationManager(object):
         base_namespace.admin = admin = Namespace()
         admin.add_option(name='print_conf',
                          default=None,
-                         doc='write current config to stdout '
-                             '(conf, ini, json)',
+                         doc='write current config to stdout (%s)'
+                             % ', '.join(
+                              value_sources.file_extension_dispatch.keys())
                          )
         admin.add_option(name='dump_conf',
                          default='',
