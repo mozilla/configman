@@ -40,8 +40,7 @@ import sys
 import ConfigParser
 
 from source_exceptions import (CantHandleTypeException, ValueException,
-                               NotEnoughInformationException,
-                              )
+                               NotEnoughInformationException)
 from ..config_exceptions import NotAnOptionError
 
 from .. import namespace

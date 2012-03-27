@@ -52,9 +52,9 @@ from ..config_file_future_proxy import ConfigFileFutureProxy
 #import for_xml
 import for_getopt
 import for_json
+import for_configparse
 import for_conf
 import for_mapping
-import for_configparse
 
 # please replace with dynamic discovery
 for_handlers = [for_mapping,
