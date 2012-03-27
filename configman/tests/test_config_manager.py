@@ -40,10 +40,10 @@ import sys
 import os
 import unittest
 from contextlib import contextmanager
+import ConfigParser
 import io
 from cStringIO import StringIO
 import getopt
-import ConfigParser
 
 import configman.config_manager as config_manager
 from configman.dotdict import DotDict
@@ -51,8 +51,6 @@ import configman.datetime_util as dtu
 from configman.config_exceptions import NotAnOptionError
 from configman.value_sources.source_exceptions import \
                                                   AllHandlersFailedException
-
-#from configobj import ConfigObj
 
 
 class TestCase(unittest.TestCase):
