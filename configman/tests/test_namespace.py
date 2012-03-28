@@ -227,10 +227,10 @@ class TestCase(unittest.TestCase):
         n4 = config_manager.Namespace()
         n4.add_option('name', 'Peter')
         self.assertEqual(n4, n3)
-        
+
     def test_deep_copy(self):
         from copy import deepcopy
-        
+
         n = config_manager.Namespace()
         n2 = deepcopy(n)
         self.assertTrue(n is not n2)
@@ -240,7 +240,7 @@ class TestCase(unittest.TestCase):
         n3 = deepcopy(n)
         self.assertEqual(n, n3)
         self.assertTrue(n.name is not n3.name)
-        
+
         def foo(all, local, args):
             return 17
         n = config_manager.Namespace()

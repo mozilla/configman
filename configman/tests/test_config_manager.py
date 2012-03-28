@@ -45,7 +45,7 @@ import io
 from cStringIO import StringIO
 import getopt
 import configman.config_manager as config_manager
-from configman.dotdict import DotDict
+from configman.dotdict import DotDict, DotDictWithAcquisition
 import configman.datetime_util as dtu
 from configman.config_exceptions import NotAnOptionError
 from configman.value_sources.source_exceptions import \
@@ -182,7 +182,7 @@ class TestCase(unittest.TestCase):
                                     argv_source=[])
         o = {"a": 2, "c.z": 22, "c.x": 'noob', "c.y": "2.89"}
         c._overlay_value_sources_recurse(o)
-        d = c._generate_config()
+        d = c._generate_config(DotDict)
         e = DotDict()
         e.a = 2
         e.b = 17
@@ -211,7 +211,7 @@ class TestCase(unittest.TestCase):
                                     argv_source=[])
         o = {"a": 2, "c.z": 22, "c.x": 'noob', "c.y": "2.89", "n": "not here"}
         c._overlay_value_sources_recurse(o, ignore_mismatches=True)
-        d = c._generate_config()
+        d = c._generate_config(DotDict)
         e = DotDict()
         e.a = 2
         e.b = 17
@@ -569,6 +569,48 @@ string =   from ini
         self.assertEqual(c.option_definitions.c.string.default, 'fred')
         self.assertEqual(c.option_definitions.c.string.value, 'from ini')
 
+    def test_mapping_types_1(self):
+        n = config_manager.Namespace()
+        n.add_option('a')
+        n.a.default = 1
+        n.a.doc = 'the a'
+        n.b = 17
+        n.c = c = config_manager.Namespace()
+        c.x = 'fred'
+        c.y = 3.14159
+        c.add_option('z')
+        c.z.default = 99
+        c.z.doc = 'the 99'
+        c = config_manager.ConfigurationManager([n],
+                                    use_admin_controls=False,
+                                    #use_config_files=False,
+                                    use_auto_help=False,
+                                    argv_source=[])
+        o = {"a": 2, "c.z": 22, "c.x": 'noob', "c.y": "2.89"}
+        c._overlay_value_sources_recurse(o)
+        e = DotDict()
+        e.a = 2
+        e.b = 17
+        e.c = DotDict()
+        e.c.x = 'noob'
+        e.c.y = 2.89
+        e.c.z = 22
+        d = c._generate_config(dict)
+        self.assertTrue(isinstance(d, dict))
+        self.assertTrue(isinstance(d['c'], dict))
+        self.assertEqual(d, e)
+        d = c._generate_config(DotDict)
+        self.assertTrue(isinstance(d, DotDict))
+        self.assertTrue(isinstance(d.c, DotDict))
+        self.assertEqual(d, e)
+        d = c._generate_config(DotDictWithAcquisition)
+        self.assertTrue(isinstance(d, DotDictWithAcquisition))
+        self.assertTrue(isinstance(d.c, DotDictWithAcquisition))
+        self.assertEqual(d, e)
+        self.assertEqual(d.a, 2)
+        self.assertEqual(d.c.a, 2)
+        self.assertEqual(d.c.b, 17)
+
     def test_get_option_names(self):
         n = config_manager.Namespace()
         n.add_option('a', 1, 'the a')
@@ -721,7 +763,8 @@ string =   from ini
             pass
 
         result = Combined.get_required_config()
-        self.assertEqual(result, {'foo': True, 'bar': False})
+        self.assertEqual(result.foo.value, True)
+        self.assertEqual(result.bar.value, False)
 
         c = Combined()
         c.config_assert({'foo': True, 'bar': False})
