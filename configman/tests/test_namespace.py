@@ -229,24 +229,24 @@ class TestCase(unittest.TestCase):
         n4.add_option('name', 'Peter')
         self.assertEqual(n4, n3)
 
-    #def test_deep_copy(self):
-        #from copy import deepcopy
+    def test_deep_copy(self):
+        from copy import deepcopy
 
-        #n = config_manager.Namespace()
-        #n2 = deepcopy(n)
-        #self.assertTrue(n is not n2)
+        n = config_manager.Namespace()
+        n2 = deepcopy(n)
+        self.assertTrue(n is not n2)
 
-        #n = config_manager.Namespace()
-        #n.add_option('name', 'Peter')
-        #n3 = deepcopy(n)
-        #self.assertEqual(n, n3)
-        #self.assertTrue(n.name is not n3.name)
+        n = config_manager.Namespace()
+        n.add_option('name', 'Peter')
+        n3 = deepcopy(n)
+        self.assertEqual(n, n3)
+        self.assertTrue(n.name is not n3.name)
 
-        #def foo(all, local, args):
-            #return 17
-        #n = config_manager.Namespace()
-        #n.add_aggregation('a', foo)
-        #n4 = deepcopy(n)
-        #self.assertTrue(n.a is not n4.a)
+        def foo(all, local, args):
+            return 17
+        n = config_manager.Namespace()
+        n.add_aggregation('a', foo)
+        n4 = deepcopy(n)
+        self.assertTrue(n.a is not n4.a)
 
 
