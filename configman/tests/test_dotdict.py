@@ -37,7 +37,7 @@
 # ***** END LICENSE BLOCK *****
 
 import unittest
-from configman.dotdict import DotDict
+from configman.dotdict import DotDict, DotDictWithAcquisition
 
 
 class TestCase(unittest.TestCase):
@@ -79,11 +79,11 @@ class TestCase(unittest.TestCase):
         self.assertEqual(dd.get('age', 0), 0)
 
     def test_nesting(self):
-        d = DotDict()
+        d = DotDictWithAcquisition()
         d.e = 1
-        d.dd = DotDict()
+        d.dd = DotDictWithAcquisition()
         d.dd.f = 2
-        d.dd.ddd = DotDict()
+        d.dd.ddd = DotDictWithAcquisition()
         d.dd.ddd.g = 3
         d['a'] = 21
         d.dd['a'] = 22
@@ -112,7 +112,7 @@ class TestCase(unittest.TestCase):
         self.assertEqual(d.keys(), ['a', 'dd', 'e'])
         self.assertEqual(list(d.iterkeys()), ['a', 'dd', 'e'])
 
-        d.xxx = DotDict()
+        d.xxx = DotDictWithAcquisition()
         d.xxx.p = 69
         del d.xxx.p
         try:
@@ -122,13 +122,13 @@ class TestCase(unittest.TestCase):
             pass
 
         # initialization
-        d.yy = DotDict(dict(foo='bar'))
+        d.yy = DotDictWithAcquisition(dict(foo='bar'))
         self.assertEqual(d.yy.foo, 'bar')
 
         # clashing names
-        d.zzz = DotDict()
+        d.zzz = DotDictWithAcquisition()
         d.zzz.Bool = 'True'
-        d.zzz.www = DotDict()
+        d.zzz.www = DotDictWithAcquisition()
         self.assertEqual(d.zzz.www.Bool, 'True')
         d.zzz.www.Bool = 'False'
         self.assertEqual(d.zzz.www.Bool, 'False')

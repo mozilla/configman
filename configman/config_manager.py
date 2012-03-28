@@ -54,7 +54,7 @@ import def_sources
 #==============================================================================
 # for convenience define some external symbols here
 from option import Option, Aggregation
-from dotdict import DotDict
+from dotdict import DotDict, DotDictWithAcquisition
 from namespace import Namespace
 from config_file_future_proxy import ConfigFileFutureProxy
 from required_config import RequiredConfig
@@ -247,11 +247,11 @@ class ConfigurationManager(object):
                 self._walk_and_close(config)
 
     #--------------------------------------------------------------------------
-    def get_config(self):
-        config = self._generate_config()
+    def get_config(self, mapping_class=DotDictWithAcquisition):
+        config = self._generate_config(mapping_class)
         if self._aggregate(self.option_definitions, config, config):
             # state changed, must regenerate
-            return self._generate_config()
+            return self._generate_config(mapping_class)
         else:
             return config
 
@@ -444,10 +444,12 @@ class ConfigurationManager(object):
                 val.close()
 
     #--------------------------------------------------------------------------
-    def _generate_config(self):
+    def _generate_config(self, mapping_class):
         """This routine generates a copy of the DotDict based config"""
-        config = DotDict()
-        self._walk_config_copy_values(self.option_definitions, config)
+        config = mapping_class()
+        self._walk_config_copy_values(self.option_definitions,
+                                      config,
+                                      mapping_class)
         return config
 
     #--------------------------------------------------------------------------
@@ -574,14 +576,14 @@ class ConfigurationManager(object):
                 pass
 
     #--------------------------------------------------------------------------
-    def _walk_config_copy_values(self, source, destination):
+    def _walk_config_copy_values(self, source, destination, mapping_class):
         for key, val in source.items():
             value_type = type(val)
             if isinstance(val, Option) or isinstance(val, Aggregation):
                 destination[key] = val.value
             elif value_type == Namespace:
-                destination[key] = d = DotDict()
-                self._walk_config_copy_values(val, d)
+                destination[key] = d = mapping_class()
+                self._walk_config_copy_values(val, d, mapping_class)
 
     #--------------------------------------------------------------------------
     def _aggregate(self, source, base_namespace, local_namespace):
