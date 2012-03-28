@@ -178,7 +178,6 @@ class TestCase(unittest.TestCase):
 
         c_contents = [(qkey, key, val) for qkey, key, val in c._walk_config()]
         c_contents.sort()
-        print c_contents
         e.sort()
         for c_tuple, e_tuple in zip(c_contents, e):
             qkey, key, val = c_tuple
