@@ -39,23 +39,12 @@
 import dotdict
 from option import Option, Aggregation
 
-from copy import deepcopy
-
 
 class Namespace(dotdict.DotDict):
 
     def __init__(self, doc=''):
         super(Namespace, self).__init__()
         object.__setattr__(self, '_doc', doc)  # force into attributes
-        
-    #--------------------------------------------------------------------------
-    def __deepcopy__(self, memo):
-        # necessary because this class implements its own __setattr__ which
-        # defeats the generic 'deepcopy' function.
-        n = Namespace(doc=self._doc)
-        for k, v in self.iteritems():
-            n[k] = deepcopy(v)
-        return n
 
     #--------------------------------------------------------------------------
     def __setattr__(self, name, value):
@@ -64,21 +53,25 @@ class Namespace(dotdict.DotDict):
             o = value
         else:
             o = Option(name=name, default=value, value=value)
-        self.__setitem__(name, o)
+        super(Namespace, self).__setattr__(name, o)
+        #self.__setitem__(name, o)
 
     #--------------------------------------------------------------------------
     def add_option(self, name, *args, **kwargs):
         an_option = Option(name, *args, **kwargs)
-        self[name] = an_option
+        setattr(self, name, an_option)
+        #self[name] = an_option
 
     #--------------------------------------------------------------------------
     def add_aggregation(self, name, function):
         an_aggregation = Aggregation(name, function)
-        self[name] = an_aggregation
+        setattr(self, name, an_aggregation)
+        #self[name] = an_aggregation
 
     #--------------------------------------------------------------------------
     def namespace(self, name, doc=''):
-        self[name] = Namespace(doc=doc)
+        setattr(self, name, Namespace(doc=doc))
+        #self[name] = Namespace(doc=doc)
 
     #--------------------------------------------------------------------------
     def set_value(self, name, value, strict=True):
@@ -86,11 +79,14 @@ class Namespace(dotdict.DotDict):
         name_parts = name.split('.', 1)
         prefix = name_parts[0]
         try:
-            candidate = self[prefix]
+            candidate = getattr(self, prefix)
+            #candidate = self[prefix]
         except KeyError:
             if strict:
                 raise
-            self[prefix] = candidate = Option(name)
+            candidate = Option(name)
+            setattr(self, prefix, candidate)
+            #self[prefix] = candidate = Option(name)
         candidate_type = type(candidate)
         if candidate_type == Namespace:
             candidate.set_value(name_parts[1], value, strict)

@@ -68,23 +68,69 @@ class TestCase(unittest.TestCase):
     def test_key_errors(self):
         dd = DotDict()
 
+        self.assertRaises(KeyError, dd.get('name'))
         try:
-            dd['name']
+            dd.name
             raise AssertionError("should have raised KeyError")
         except KeyError:
             pass
-
-        try:
-            dd.age
-            raise AssertionError("should have raised KeyError")
-        except KeyError:
-            pass
-
-        try:
-            getattr(dd, 'name')
-            raise AssertionError("should have raised KeyError")
-        except KeyError:
-            pass
-
+        #self.assertRaises(KeyError, getattr(dd, 'name'))
         self.assertEqual(dd.get('age'), None)
         self.assertEqual(dd.get('age', 0), 0)
+
+    def test_nesting(self):
+        d = DotDict()
+        d.e = 1
+        d.dd = DotDict()
+        d.dd.f = 2
+        d.dd.ddd = DotDict()
+        d.dd.ddd.g = 3
+        d['a'] = 21
+        d.dd['a'] = 22
+
+        self.assertEqual(d.dd.ddd.e, 1)
+        self.assertEqual(d.dd.e, 1)
+        self.assertEqual(d.e, 1)
+
+        self.assertEqual(d.dd.ddd.a, 22)
+        self.assertEqual(d.dd.a, 22)
+        self.assertEqual(d.a, 21)
+
+        self.assertEqual(d.dd.ddd.f, 2)
+        self.assertEqual(d.dd.f, 2)
+        try:
+            d.f
+            raise AssertionError("should have raised KeyError")
+        except KeyError:
+            pass
+        self.assertEqual(d.dd.dd.dd.dd.ddd.f, 2)
+        self.assertEqual(d.dd.ddd.dd.ddd.dd.ddd.e, 1)
+
+        self.assertEqual(len(d), 3)
+        _keys = [x for x in d]
+        self.assertEqual(_keys, ['a', 'dd', 'e'])
+        self.assertEqual(d.keys(), ['a', 'dd', 'e'])
+        self.assertEqual(list(d.iterkeys()), ['a', 'dd', 'e'])
+
+        d.xxx = DotDict()
+        d.xxx.p = 69
+        del d.xxx.p
+        try:
+            d.xxx.p
+            assert 0
+        except KeyError:
+            pass
+
+        # initialization
+        d.yy = DotDict(dict(foo='bar'))
+        self.assertEqual(d.yy.foo, 'bar')
+
+        # clashing names
+        d.zzz = DotDict()
+        d.zzz.Bool = 'True'
+        d.zzz.www = DotDict()
+        self.assertEqual(d.zzz.www.Bool, 'True')
+        d.zzz.www.Bool = 'False'
+        self.assertEqual(d.zzz.www.Bool, 'False')
+
+
