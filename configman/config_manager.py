@@ -461,7 +461,6 @@ class ConfigurationManager(object):
             expansions_were_done = False
             # can't use iteritems in loop, we're changing the dict
             for key, val in source_namespace.items():
-                print "###%s###%s" % (key, val)
                 if isinstance(val, Namespace):
                     self._walk_expanding_class_options(source_namespace=val,
                                             parent_namespace=source_namespace)
@@ -477,7 +476,6 @@ class ConfigurationManager(object):
                     try:
                         for o_key, o_val in \
                                 val.value.get_required_config().iteritems():
-                            print "***%s***%s" % (o_key, o_val)
                             target_namespace.__setattr__(o_key,
                                                          copy.deepcopy(o_val))
                     except AttributeError:

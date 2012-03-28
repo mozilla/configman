@@ -54,24 +54,20 @@ class Namespace(dotdict.DotDict):
         else:
             o = Option(name=name, default=value, value=value)
         super(Namespace, self).__setattr__(name, o)
-        #self.__setitem__(name, o)
 
     #--------------------------------------------------------------------------
     def add_option(self, name, *args, **kwargs):
         an_option = Option(name, *args, **kwargs)
         setattr(self, name, an_option)
-        #self[name] = an_option
 
     #--------------------------------------------------------------------------
     def add_aggregation(self, name, function):
         an_aggregation = Aggregation(name, function)
         setattr(self, name, an_aggregation)
-        #self[name] = an_aggregation
 
     #--------------------------------------------------------------------------
     def namespace(self, name, doc=''):
         setattr(self, name, Namespace(doc=doc))
-        #self[name] = Namespace(doc=doc)
 
     #--------------------------------------------------------------------------
     def set_value(self, name, value, strict=True):
@@ -80,13 +76,11 @@ class Namespace(dotdict.DotDict):
         prefix = name_parts[0]
         try:
             candidate = getattr(self, prefix)
-            #candidate = self[prefix]
         except KeyError:
             if strict:
                 raise
             candidate = Option(name)
             setattr(self, prefix, candidate)
-            #self[prefix] = candidate = Option(name)
         candidate_type = type(candidate)
         if candidate_type == Namespace:
             candidate.set_value(name_parts[1], value, strict)
