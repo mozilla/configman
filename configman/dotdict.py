@@ -100,7 +100,7 @@ class DotDict(collections.MutableMapping):
     def __getitem__(self, key):
         """define the square bracket operator to refer to the object's __dict__
         for fetching values."""
-        return self.__dict__[key]
+        return getattr(self, key)
 
     def __setitem__(self, key, value):
         """define the square bracket operator to refer to the object's __dict__

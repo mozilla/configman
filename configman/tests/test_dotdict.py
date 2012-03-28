@@ -133,4 +133,17 @@ class TestCase(unittest.TestCase):
         d.zzz.www.Bool = 'False'
         self.assertEqual(d.zzz.www.Bool, 'False')
 
+        # test __setitem__ and __getitem__
+        d = DotDictWithAcquisition()
+        d.a = 17
+        d['dd'] = DotDictWithAcquisition()
+        self.assertEqual(d.dd.a, 17)
+        d['dd']['ddd'] = DotDictWithAcquisition()
+        self.assertEqual(d.dd.ddd.a, 17)
+        self.assertEqual(d['dd']['ddd'].a, 17)
+        self.assertEqual(d['dd']['ddd']['dd'].a, 17)
+
+
+
+
 
