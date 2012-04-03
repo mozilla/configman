@@ -89,7 +89,7 @@ class Gamma(RequiredConfig):
         self.g = config.g
 
 def splitter(class_list_str):
-    return [tuple(line.split('|')) for line in class_list_str.split('\n')]
+    return [tuple(line.split('|')) for line in class_list_str.splitlines()]
 
 def get_class(class_list_element):
     try:
