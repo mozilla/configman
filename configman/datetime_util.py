@@ -52,6 +52,16 @@ def datetime_from_ISO_string(s):
             return datetime.datetime.strptime(s, '%Y-%m-%dT%H:%M:%S.%f')
 
 
+def time_from_string(s):
+    """ Take an ISO date string of the form HH:MM:SS.S
+    and convert it into an instance of datetime.datetime
+    """
+    try:
+        return datetime.time.strftime(s, '%H:%M:%S')
+    except ValueError:
+        return datetime.time.strftime(s, '%H:%M:%S.%f')
+
+
 def date_from_ISO_string(s):
     """ Take an ISO date string of the form YYYY-MM-DD
     and convert it into an instance of datetime.date

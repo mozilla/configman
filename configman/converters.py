@@ -48,6 +48,7 @@ from namespace import Namespace
 
 from .datetime_util import datetime_from_ISO_string as datetime_converter
 from .datetime_util import date_from_ISO_string as date_converter
+from .datetime_util import time_from_string as time_converter
 
 import datetime_util
 
@@ -188,8 +189,23 @@ def class_converter(input_str):
 
 
 #------------------------------------------------------------------------------
+def _default_list_splitter(class_list_str):
+    return [x.strip() for x in class_list_str.split(',')]
+
+#------------------------------------------------------------------------------
+def _default_class_extractor(list_element):
+    return list_element
+
+#------------------------------------------------------------------------------
+def _default_extra_extractor(list_element):
+    raise NotImplementedError()
+
+#------------------------------------------------------------------------------
 def classes_in_namespaces_converter(template_for_namespace="cls%d",
                                     name_of_class_option='cls',
+                                    list_splitter_fn=_default_list_splitter,
+                                    class_extractor=_default_class_extractor,
+                                    extra_extractor=_default_extra_extractor,
                                     instantiate_classes=False):
     """take a comma delimited  list of class names, convert each class name
     into an actual class as an option within a numbered namespace.  This
@@ -234,6 +250,13 @@ def classes_in_namespaces_converter(template_for_namespace="cls%d",
         class_option_name - the name to be used for the class option within
                             the nested namespace.  By default, it will choose:
                             "cls1.cls", "cls2.cls", etc.
+        list_converter - a function that will take the string list of classes
+                         and break it up into a sequence if individual elements
+        class_extractor - a function that will return the string version of
+                          a classname from the result of the list_converter
+        extra_extractor - a function that will return a Namespace of options
+                          created from any extra information associated with
+                          the classes returned by the list_converter function
         instantiate_classes - a boolean to determine if there should be an
                               aggregator added to each namespace that
                               instantiates each class.  If True, then each
@@ -250,7 +273,7 @@ def classes_in_namespaces_converter(template_for_namespace="cls%d",
         class stuffed with its own 'required_config' that's dynamically
         generated."""
         if isinstance(class_list_str, basestring):
-            class_list = [x.strip() for x in class_list_str.split(',')]
+            class_list = list_splitter_fn(class_list_str)
         else:
             raise TypeError('must be derivative of a basestring')
 
@@ -270,7 +293,8 @@ def classes_in_namespaces_converter(template_for_namespace="cls%d",
             class_option_name = name_of_class_option  # save the class's option
                                                       # name for the future
             # for each class in the class list
-            for namespace_index, a_class in enumerate(class_list):
+            for namespace_index, class_list_element in enumerate(class_list):
+                a_class = class_extractor(class_list_element)
                 # figure out the Namespace name
                 namespace_name = template_for_namespace % namespace_index
                 subordinate_namespace_names.append(namespace_name)
@@ -283,6 +307,11 @@ def classes_in_namespaces_converter(template_for_namespace="cls%d",
                   default=a_class,
                   from_string_converter=class_converter
                 )
+                try:
+                    extra_options = extra_extractor(class_list_element)
+                    required_config[namespace_name].update(extra_options)
+                except NotImplementedError:
+                    pass
                 if instantiate_classes:
                     # add an aggregator to instantiate the class
                     required_config[namespace_name].add_aggregation(

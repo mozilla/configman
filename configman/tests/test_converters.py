@@ -79,7 +79,39 @@ class Beta(RequiredConfig):
         self.config = config
         self.b = config.b
 
+class Gamma(RequiredConfig):
+    required_config = Namespace()
+    required_config.add_option('g',
+                               default=30)
 
+    def __init__(self, config):
+        self.config = config
+        self.g = config.g
+
+def splitter(class_list_str):
+    return [tuple(line.split('|')) for line in class_list_str.split('\n')]
+
+def get_class(class_list_element):
+    try:
+        return class_list_element[0].strip()
+    except IndexError:
+        if isinstance(class_list_element, basestring):
+            return class_list_element
+
+def get_extra(class_list_tuple):
+    n = Namespace()
+    n.add_option('frequency',
+                 doc='how often',
+                 default=class_list_tuple[1].strip(),
+                 from_string_converter=int)
+    try:
+        n.add_option('time',
+                     doc='absolute execution time',
+                     default=class_list_tuple[2].strip(),
+                     from_string_converter=converters.time_converter)
+    except IndexError:
+        pass
+    return n
 
 
 class TestCase(unittest.TestCase):
@@ -249,4 +281,47 @@ class TestCase(unittest.TestCase):
             self.assertTrue('kls_instance' in config[x])
             self.assertTrue(isinstance(config[x].kls_instance,
                                        config[x].kls))
+
+    def test_classes_in_namespaces_converter_5(self):
+        source = """configman.tests.test_converters.Alpha|1|02:00:00
+                    configman.tests.test_converters.Beta|2
+                    configman.tests.test_converters.Gamma|3|03:00:00"""
+
+        rc = Namespace()
+        rc.add_option('cx',
+                      default=source,
+                      from_string_converter=
+                          converters.classes_in_namespaces_converter(
+                            list_splitter_fn=splitter,
+                            class_extractor=get_class,
+                            extra_extractor=get_extra,
+                            instantiate_classes=True))
+
+        cm = ConfigurationManager(rc, values_source_list=[])
+        config = cm.get_config()
+
+        self.assertTrue('cx' in config)
+
+        self.assertTrue('cls0' in config)
+        self.assertTrue('cls' in config.cls0)
+        self.assertTrue('cls_instance' in config.cls0)
+        self.assertEqual(config.cls0.cls_instance.a, 17)
+        self.assertTrue('frequency' in config.cls0)
+        self.assertTrue('time' in config.cls0)
+
+        self.assertTrue('cls1' in config)
+        self.assertTrue('cls' in config.cls1)
+        self.assertTrue('cls_instance' in config.cls1)
+        self.assertEqual(config.cls1.cls_instance.b, 23)
+        self.assertTrue('frequency' in config.cls1)
+        self.assertTrue('time' not in config.cls1)
+
+        self.assertTrue('cls2' in config)
+        self.assertTrue('cls' in config.cls2)
+        self.assertTrue('cls_instance' in config.cls2)
+        self.assertEqual(config.cls2.cls_instance.g, 30)
+        self.assertTrue('frequency' in config.cls2)
+        self.assertTrue('time' in config.cls2)
+
+
 
