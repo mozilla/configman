@@ -55,13 +55,15 @@ import for_json
 import for_configparse
 import for_conf
 import for_mapping
+import for_yaml
 
 # please replace with dynamic discovery
 for_handlers = [for_mapping,
                 for_getopt,
                 for_json,
                 for_configparse,
-                for_conf
+                for_conf,
+                for_yaml
                ]
 
 
