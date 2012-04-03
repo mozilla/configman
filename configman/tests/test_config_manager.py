@@ -51,6 +51,8 @@ import configman.datetime_util as dtu
 from configman.config_exceptions import NotAnOptionError
 from configman.value_sources.source_exceptions import \
                                                   AllHandlersFailedException
+import configman.value_sources
+import configman.value_sources.for_configparse
 
 
 class TestCase(unittest.TestCase):
@@ -417,20 +419,14 @@ class TestCase(unittest.TestCase):
         n.c = config_manager.Namespace()
         n.c.add_option('extra', 3.14159, 'the x')
         n.c.add_option('string', 'fred', doc='str')
-        ini_data = """
-[other]
-t=tea
-[d]
-# blank line to be ignored
-a=22
-b = 33
-[c]
-extra = 2.0
-string =   wilma
+        conf_data = """
+other.t=tea
+d.a=22
+d.b = 33
+c.extra = 2.0
+c.string =   wilma
 """
-        config = ConfigParser.RawConfigParser()
-        config.readfp(io.BytesIO(ini_data))
-        c = config_manager.ConfigurationManager([n], [config],
+        c = config_manager.ConfigurationManager([n], [conf_data],
                                     use_admin_controls=True,
                                     use_auto_help=False)
         self.assertEqual(c.option_definitions.other.t.name, 't')
@@ -550,11 +546,17 @@ string =   from ini
         #v = config_manager.GetoptValueSource(
           #argv_source=['--c.extra', '11.0']
         #)
-        c = config_manager.ConfigurationManager([n], [e, config, getopt],
-                                    use_admin_controls=True,
-                                    argv_source=['--c.extra', '11.0'],
-                                    #use_config_files=False,
-                                    use_auto_help=False)
+        try:
+            temp = configman.value_sources.for_handlers
+            configman.value_sources.for_handlers = [
+              configman.value_sources.for_configparse]
+            c = config_manager.ConfigurationManager([n], [e, config, getopt],
+                                        use_admin_controls=True,
+                                        argv_source=['--c.extra', '11.0'],
+                                        #use_config_files=False,
+                                        use_auto_help=False)
+        finally:
+            configman.value_sources.for_handlers = temp
         self.assertEqual(c.option_definitions.other.t.name, 't')
         self.assertEqual(c.option_definitions.other.t.value, 'tea')
         self.assertEqual(c.option_definitions.d.a, n.d.a)

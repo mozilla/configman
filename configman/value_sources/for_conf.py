@@ -46,6 +46,8 @@ to open it.
 
 import functools
 import sys
+import StringIO
+import contextlib
 
 from .. import namespace
 from .. import option as opt
@@ -78,6 +80,15 @@ class ValueSource(object):
             candidate.endswith(file_name_extension)):
             # we're trusting the string represents a filename
             opener = functools.partial(open, candidate)
+        #elif isinstance(candidate, basestring):
+            ## maybe it's just a literal string formatted as a conf file
+
+            #@contextlib.contextmanager
+            #def opener():
+                #strstream = StringIO.StringIO(candidate)
+                #yield strstream
+                #strstream.close()
+
         elif isinstance(candidate, function_type):
             # we're trusting that the function when called with no parameters
             # will return a Context Manager Type.

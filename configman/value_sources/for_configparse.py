@@ -47,11 +47,7 @@ from .. import namespace
 from .. import option
 from .. import converters as conv
 
-try:
-    import configobj
-    file_name_extension = 'inix'
-except ImportError:
-    file_name_extension = 'ini'
+file_name_extension = 'ini'
 
 can_handle = (ConfigParser,
               ConfigParser.RawConfigParser,  # just the base class, subclasses

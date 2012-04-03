@@ -52,7 +52,6 @@ from ..config_file_future_proxy import ConfigFileFutureProxy
 #import for_xml
 import for_getopt
 import for_json
-import for_configparse
 import for_conf
 import for_mapping
 
@@ -61,14 +60,14 @@ for_handlers = [for_mapping,
                 for_getopt,
                 for_json,
                 for_conf,
-                for_configparse
                ]
 try:
     import for_configobj
     for_handlers.append(for_configobj)
 except ImportError:
-    # the module configobj is not loaded, ignore the error
-    pass
+    # the module configobj is not loaded, use for_configparse instead
+    import for_configparse
+    for_handlers.append(for_configparse)
 
 # create a dispatch table of types/objects to modules.  Each type should have
 # a list of modules that can handle that type.
