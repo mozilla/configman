@@ -106,21 +106,6 @@ foo=bar  # other comment
                 self.assertEqual(o.get_values(2, False), r)
                 self.assertEqual(o.get_values(3, True), r)
 
-                # XXX (peterbe): commented out because I'm not sure if
-                # OptionsByIniFile get_values() should depend on the
-                # configuration manager it is given as first argument or not.
-                #c = config_manager.ConfigurationManager([],
-                                            #use_admin_controls=True,
-                                            ##use_config_files=False,
-                                            #auto_help=False,
-                                            #argv_source=[])
-                #self.assertEqual(o.get_values(c, True), {})
-                #self.assertRaises(config_manager.NotAnOptionError,
-                #                  o.get_values, c, False)
-
-                #c.option_definitions.add_option('limit', default=0)
-                #self.assertEqual(o.get_values(c, False), {'limit': '20'})
-                #self.assertEqual(o.get_values(c, True), {'limit': '20'})
             finally:
                 if os.path.isfile(tmp_filename):
                     os.remove(tmp_filename)
