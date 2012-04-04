@@ -40,7 +40,6 @@ import sys
 import collections
 
 import configobj
-from configobj import ConfigObj
 
 from source_exceptions import (CantHandleTypeException, ValueException,
                                NotEnoughInformationException)
@@ -51,7 +50,7 @@ from .. import converters as conv
 file_name_extension = 'ini'
 
 can_handle = (configobj,
-              ConfigObj,
+              configobj.ConfigObj,
               basestring,
              )
 
@@ -67,7 +66,7 @@ class ValueSource(object):
                  top_level_section_name=''):
         self.delayed_parser_instantiation = False
         self.top_level_section_name = top_level_section_name
-        if source is ConfigObj:
+        if source is configobj.ConfigObj:
             try:
                 app = config_manager._get_option('admin.application')
                 source = "%s.%s" % (app.value.app_name, file_name_extension)
@@ -84,7 +83,7 @@ class ValueSource(object):
         if (isinstance(source, basestring) and
             source.endswith(file_name_extension)):
             try:
-                self.config_obj = ConfigObj(source)
+                self.config_obj = configobj.ConfigObj(source)
             except Exception, x:
                 raise LoadingIniFileFailsException(
                   "ConfigObj cannot load ini: %s" % str(x))
@@ -100,7 +99,7 @@ class ValueSource(object):
             try:
                 app = config_manager._get_option('admin.application')
                 source = "%s%s" % (app.value.app_name, file_name_extension)
-                self.config_obj = ConfigObj(source)
+                self.config_obj = configobj.ConfigObj(source)
                 self.delayed_parser_instantiation = False
             except AttributeError:
                 # we don't have enough information to get the ini file
@@ -126,5 +125,5 @@ class ValueSource(object):
                 v = val.value
                 v_str = conv.to_string_converters[type(v)](v)
                 d[key] = v_str
-        config = ConfigObj(destination_dict)
+        config = configobj.ConfigObj(destination_dict)
         config.write(outfile=output_stream)
