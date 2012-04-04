@@ -181,4 +181,3 @@ foo=bar  # other comment
             received = out.getvalue()
             out.close()
             self.assertEqual(expected.strip(), received.strip())
-            assert False
