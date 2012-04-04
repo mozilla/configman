@@ -59,7 +59,6 @@ else:
             yield a_stringIO_instance
         return stringIS_context_manager
 
-
     class TestCase(unittest.TestCase):
         def _some_namespaces(self):
             """set up some namespaces"""
@@ -73,7 +72,8 @@ else:
             n.c.add_option('wilma', 'waspish', 'wife from Flintstones')
             n.d = config_manager.Namespace(doc='d space')
             n.d.add_option('fred', 'crabby', 'male neighbor from I Love Lucy')
-            n.d.add_option('ethel', 'silly', 'female neighbor from I Love Lucy')
+            n.d.add_option('ethel', 'silly',
+                           'female neighbor from I Love Lucy')
             n.x = config_manager.Namespace(doc='x space')
             n.x.add_option('size', 100, 'how big in tons', short_form='s')
             n.x.add_option('password', 'secret', 'the password')
@@ -107,8 +107,8 @@ foo=bar  # other comment
                 self.assertEqual(o.get_values(3, True), r)
 
                 # XXX (peterbe): commented out because I'm not sure if
-                # OptionsByIniFile get_values() should depend on the configuration
-                # manager it is given as first argument or not.
+                # OptionsByIniFile get_values() should depend on the
+                # configuration manager it is given as first argument or not.
                 #c = config_manager.ConfigurationManager([],
                                             #use_admin_controls=True,
                                             ##use_config_files=False,

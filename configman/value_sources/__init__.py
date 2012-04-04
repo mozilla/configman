@@ -70,6 +70,7 @@ except ImportError:
     # the module configobj is not present
     pass
 
+
 # create a dispatch table of types/objects to modules.  Each type should have
 # a list of modules that can handle that type.
 class DispatchByType(collections.defaultdict):

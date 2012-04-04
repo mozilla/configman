@@ -362,9 +362,10 @@ class ConfigurationManager(object):
         """write a configuration file to a file-like object.
 
         parameters:
-            config_file_type - a string containing a registered file type.
-                               Passing in an unregistered string will result in
-                               a KeyError exception
+            config_file_type - a string containing a registered file type OR
+                               a for_XXX module from the value_source
+                               package.  Passing in an string that is
+                               unregistered will result in a KeyError
             opener - a callable object or function that returns a file like
                      object that works as a context in a with statement."""
 

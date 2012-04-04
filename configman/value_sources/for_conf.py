@@ -46,8 +46,6 @@ to open it.
 
 import functools
 import sys
-import StringIO
-import contextlib
 
 from .. import namespace
 from .. import option as opt
