@@ -419,14 +419,17 @@ class TestCase(unittest.TestCase):
         n.c = config_manager.Namespace()
         n.c.add_option('extra', 3.14159, 'the x')
         n.c.add_option('string', 'fred', doc='str')
-        conf_data = """
+        ini_data = """
 other.t=tea
+# blank line to be ignored
 d.a=22
-d.b = 33
+d.b=33
 c.extra = 2.0
-c.string =   wilma
+c.string = wilma
 """
-        c = config_manager.ConfigurationManager([n], [conf_data],
+        def strio():
+            return io.BytesIO(ini_data)
+        c = config_manager.ConfigurationManager([n], [strio],
                                     use_admin_controls=True,
                                     use_auto_help=False)
         self.assertEqual(c.option_definitions.other.t.name, 't')
@@ -458,17 +461,14 @@ c.string =   wilma
         n.c.add_option('extra', 3.14159, 'the x')
         n.c.add_option('string', 'fred', 'str')
         ini_data = """
-[other]
-t=tea
-[d]
+other.t=tea
 # blank line to be ignored
-a=22
-[c]
-extra = 2.0
-string =   from ini
+d.a=22
+c.extra = 2.0
+c.string =   from ini
 """
-        config = ConfigParser.RawConfigParser()
-        config.readfp(io.BytesIO(ini_data))
+        def strio():
+            return io.BytesIO(ini_data)
         e = DotDict()
         e.fred = DotDict()  # should be ignored
         e.fred.t = 'T'  # should be ignored
@@ -486,7 +486,7 @@ string =   from ini
         saved_environ = os.environ
         os.environ = e
         try:
-            c = config_manager.ConfigurationManager([n], [e, config, getopt],
+            c = config_manager.ConfigurationManager([n], [e, strio, getopt],
                                         use_admin_controls=True,
                                         use_auto_help=False,
                                         argv_source=['--other.t', 'TTT',
@@ -523,18 +523,14 @@ string =   from ini
         n.c.add_option('extra', 3.14159, 'the x')
         n.c.add_option('string', 'fred', doc='str')
         ini_data = """
-[other]
-t=tea
-[d]
+other.t=tea
 # blank line to be ignored
-a=22
-[c]
-extra = 2.0
-string =   from ini
+d.a=22
+c.extra = 2.0
+c.string =   from ini
 """
-        config = ConfigParser.RawConfigParser()
-        config.readfp(io.BytesIO(ini_data))
-        #g = config_manager.IniValueSource(config)
+        def strio():
+            return io.BytesIO(ini_data)
         e = DotDict()
         e.other = DotDict()
         e.other.t = 'T'
@@ -546,17 +542,12 @@ string =   from ini
         #v = config_manager.GetoptValueSource(
           #argv_source=['--c.extra', '11.0']
         #)
-        try:
-            temp = configman.value_sources.for_handlers
-            configman.value_sources.for_handlers = [
-              configman.value_sources.for_configparse]
-            c = config_manager.ConfigurationManager([n], [e, config, getopt],
-                                        use_admin_controls=True,
-                                        argv_source=['--c.extra', '11.0'],
-                                        #use_config_files=False,
-                                        use_auto_help=False)
-        finally:
-            configman.value_sources.for_handlers = temp
+
+        c = config_manager.ConfigurationManager([n], [e, strio, getopt],
+                                    use_admin_controls=True,
+                                    argv_source=['--c.extra', '11.0'],
+                                    #use_config_files=False,
+                                    use_auto_help=False)
         self.assertEqual(c.option_definitions.other.t.name, 't')
         self.assertEqual(c.option_definitions.other.t.value, 'tea')
         self.assertEqual(c.option_definitions.d.a, n.d.a)

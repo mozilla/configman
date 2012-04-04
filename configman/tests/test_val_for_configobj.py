@@ -45,7 +45,8 @@ import contextlib
 import configman.datetime_util as dtu
 import configman.config_manager as config_manager
 try:
-    from ..value_sources.for_configobj import ValueSource
+    #from ..value_sources.for_configobj import ValueSource
+    from ..value_sources import for_configobj
 except ImportError:
     # this module is optional.  If it doesn't exsit, that's ok, we'll just
     # igrore the tests
@@ -91,7 +92,7 @@ foo=bar  # other comment
         """)
 
             try:
-                o = ValueSource(tmp_filename)
+                o = for_configobj.ValueSource(tmp_filename)
                 r = {'othersection': {'foo': 'bar'},
                      'name': 'Peter',
                      'awesome': ''}
@@ -136,7 +137,7 @@ foo=bar  # other comment
         """)
 
             try:
-                o = ValueSource(tmp_filename)
+                o = for_configobj.ValueSource(tmp_filename)
                 c = config_manager.ConfigurationManager([],
                                             use_admin_controls=True,
                                             #use_config_files=False,
@@ -176,9 +177,8 @@ foo=bar  # other comment
     fred = crabby
 """
             out = StringIO()
-            c.write_conf('ini', opener=stringIO_context_wrapper(out))
+            c.write_conf(for_configobj, opener=stringIO_context_wrapper(out))
             received = out.getvalue()
             out.close()
-            print received.strip()
-            print expected.strip()
             self.assertEqual(expected.strip(), received.strip())
+            assert False

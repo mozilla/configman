@@ -171,7 +171,7 @@ foo=bar  ; other comment
           argv_source=[]
         )
         out = StringIO()
-        c.write_conf(for_configparse.file_name_extension,
+        c.write_conf(for_configparse,
                      opener=stringIO_context_wrapper(out))
         received = out.getvalue()
         out.close()
