@@ -68,7 +68,6 @@ class TestCase(unittest.TestCase):
     def test_key_errors(self):
         dd = DotDict()
 
-        self.assertRaises(KeyError, dd.get('name'))
         try:
             dd.name
             raise AssertionError("should have raised KeyError")
@@ -165,3 +164,27 @@ class TestCase(unittest.TestCase):
 
         self.assertEqual(dd.get('__SOMETHING'), None)
         self.assertEqual(dd.get('__SOMETHING', 0), 0)
+
+    def test_attribute_errors__with_dunders(self):
+        dd = DotDict()
+        try:
+            dd['__SOMETHING__']
+            raise AssertionError("should have raised AttributeError")
+        except AttributeError:
+            pass
+
+        try:
+            dd.__SOMETHING__
+            raise AssertionError("should have raised AttributeError")
+        except AttributeError:
+            pass
+
+        try:
+            getattr(dd, '__SOMETHING__')
+            raise AssertionError("should have raised AttributeError")
+        except AttributeError:
+            pass
+
+        # you just can't use the high-level function .get()
+        # on these Python special keys
+        self.assertRaises(AttributeError, dd.get, '__SOMETHING__')

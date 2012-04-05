@@ -93,7 +93,7 @@ class DotDict(collections.MutableMapping):
         # a KeyError instead and copy.deepcopy can't handle it.  So we
         # make sure that any missing attribute that begins with '__'
         # raises an AttributeError instead of KeyError.
-        if key.startswith('__'):
+        if key.startswith('__') and key.endswith('__'):
             raise AttributeError(key)
         raise KeyError(key)
 
