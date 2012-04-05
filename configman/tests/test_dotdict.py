@@ -145,9 +145,6 @@ class TestCase(unittest.TestCase):
 
     def test_key_errors__with_dunder(self):
         dd = DotDict()
-
-
-
         try:
             dd['__SOMETHING']
             raise AssertionError("should have raised KeyError")
@@ -161,10 +158,10 @@ class TestCase(unittest.TestCase):
             pass
 
         try:
-            getattr(dd, 'name')
+            getattr(dd, '__SOMETHING')
             raise AssertionError("should have raised KeyError")
         except KeyError:
             pass
 
-        self.assertEqual(dd.get('age'), None)
-        self.assertEqual(dd.get('age', 0), 0)
+        self.assertEqual(dd.get('__SOMETHING'), None)
+        self.assertEqual(dd.get('__SOMETHING', 0), 0)
