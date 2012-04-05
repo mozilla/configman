@@ -143,7 +143,28 @@ class TestCase(unittest.TestCase):
         self.assertEqual(d['dd']['ddd'].a, 17)
         self.assertEqual(d['dd']['ddd']['dd'].a, 17)
 
+    def test_key_errors__with_dunder(self):
+        dd = DotDict()
 
 
 
+        try:
+            dd['__SOMETHING']
+            raise AssertionError("should have raised KeyError")
+        except KeyError:
+            pass
 
+        try:
+            dd.__SOMETHING
+            raise AssertionError("should have raised KeyError")
+        except KeyError:
+            pass
+
+        try:
+            getattr(dd, 'name')
+            raise AssertionError("should have raised KeyError")
+        except KeyError:
+            pass
+
+        self.assertEqual(dd.get('age'), None)
+        self.assertEqual(dd.get('age', 0), 0)
