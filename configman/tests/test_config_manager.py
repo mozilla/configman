@@ -38,6 +38,7 @@
 
 import sys
 import os
+import os.path
 import unittest
 from contextlib import contextmanager
 import ConfigParser
@@ -49,8 +50,10 @@ import configman.config_manager as config_manager
 from configman.dotdict import DotDict, DotDictWithAcquisition
 import configman.datetime_util as dtu
 from configman.config_exceptions import NotAnOptionError
-from configman.value_sources.source_exceptions import \
-                                                  AllHandlersFailedException
+from configman.value_sources.source_exceptions import (
+  AllHandlersFailedException,
+  UnknownFileExtensionException
+)
 import configman.value_sources
 import configman.value_sources.for_configparse
 
@@ -1119,6 +1122,25 @@ c.string =   from ini
                          'argument 3'],
             config_pathname='fred'
         )
+
+    def test_dump_conf_bad_extension(self):
+        n = config_manager.Namespace()
+
+        self.assertRaises(
+          UnknownFileExtensionException,
+          config_manager.ConfigurationManager,
+          n,
+          [getopt],
+          use_admin_controls=True,
+          use_auto_help=False,
+          quit_after_admin=False,
+          argv_source=['--admin.dump_conf=/tmp/fred.xxx',
+                       'argument 1',
+                       'argument 2',
+                       'argument 3'],
+          config_pathname='fred'
+        )
+        self.assertFalse(os.path.exists('/tmp/fred.xxx'))
 
     def test_print_conf_some_options_excluded(self):
         n = config_manager.Namespace()
