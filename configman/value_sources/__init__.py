@@ -146,14 +146,18 @@ def wrap(value_source_list, a_config_manager):
         wrapped_sources.append(wrapped_source)
     return wrapped_sources
 
+def has_registration_for(config_file_type):
+    return config_file_type in file_extension_dispatch
+
 
 def write(config_file_type,
           option_iterator,
-          output_stream=sys.stdout):
+          opener):
     if isinstance(config_file_type, basestring):
         try:
-            file_extension_dispatch[config_file_type](option_iterator,
-                                                         output_stream)
+            writer_fn = file_extension_dispatch[config_file_type]
+            with opener() as output_stream:
+                writer_fn(option_iterator, output_stream)
         except KeyError:
             raise UnknownFileExtensionException("%s isn't a registered file"
                                                    " name extension" %
@@ -161,7 +165,8 @@ def write(config_file_type,
     else:
         # this is the case where we've not gotten a file extension, but a
         # for_handler module.  Use the module's ValueSource's write method
-        config_file_type.ValueSource.write(option_iterator, output_stream)
+        with opener() as output_stream:
+            config_file_type.ValueSource.write(option_iterator, output_stream)
 
 
 def get_admin_options_from_command_line(config_manager):

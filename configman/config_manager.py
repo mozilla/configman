@@ -375,10 +375,10 @@ class ConfigurationManager(object):
 
         option_iterator = functools.partial(self._walk_config,
                                        blocked_keys=blocked_keys)
-        with opener() as config_fp:
-            value_sources.write(config_file_type,
-                                option_iterator,
-                                config_fp)
+
+        value_sources.write(config_file_type,
+                            option_iterator,
+                            opener)
 
     #--------------------------------------------------------------------------
     def log_config(self, logger):

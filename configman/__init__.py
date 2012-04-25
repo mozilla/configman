@@ -36,7 +36,7 @@
 #
 # ***** END LICENSE BLOCK *****
 
-__version__ = '1.0.1'
+__version__ = '1.1.0'
 
 # Having these here makes it possible to easily import once configman is
 # installed.
