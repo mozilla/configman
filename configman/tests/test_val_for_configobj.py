@@ -167,7 +167,7 @@ foo=bar  # other comment
             out.close()
             self.assertEqual(expected.strip(), received.strip())
 
-        def test_configobj_includes(self):
+        def test_configobj_includes_inside_sections(self):
             include_file_name = ''
             ini_file_name = ''
             try:
@@ -222,5 +222,53 @@ foo=bar  # other comment
                 if os.path.isfile(ini_file_name):
                     os.remove(ini_file_name)
 
+        def test_configobj_includes_outside_a_section(self):
+            include_file_name = ''
+            ini_file_name = ''
+            try:
+                with tempfile.NamedTemporaryFile(
+                  'w',
+                  suffix='ini',
+                  delete=False
+                ) as f:
+                    include_file_name = f.name
+                    contents = (
+                      'dbhostname=myserver\n'
+                      'dbname=some_database\n'
+                      'dbuser=dwight\n'
+                      'dbpassword=secrets\n'
+                    )
+                    f.write(contents)
 
-
+                with tempfile.NamedTemporaryFile(
+                  'w',
+                  suffix='ini',
+                  delete=False
+                ) as f:
+                    ini_file_name = f.name
+                    contents = (
+                      '+include %s\n'
+                      '\n'
+                      '[destination]\n'
+                      'x = y\n'
+                      'foo=bar'
+                      % include_file_name
+                    )
+                    f.write(contents)
+                o = for_configobj.ValueSource(ini_file_name)
+                expected_dict = {
+                  'dbhostname': 'myserver',
+                  'dbname': 'some_database',
+                  'dbuser': 'dwight',
+                  'dbpassword': 'secrets',
+                  'destination': {
+                    'x': 'y',
+                    'foo': 'bar'
+                  }
+                }
+                self.assertEqual(o.get_values(1, True), expected_dict)
+            finally:
+                if os.path.isfile(include_file_name):
+                    os.remove(include_file_name)
+                if os.path.isfile(ini_file_name):
+                    os.remove(ini_file_name)
