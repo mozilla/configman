@@ -272,3 +272,67 @@ foo=bar  # other comment
                     os.remove(include_file_name)
                 if os.path.isfile(ini_file_name):
                     os.remove(ini_file_name)
+
+        def test_configobj_relative_includes(self):
+            include_file_name = ''
+            ini_file_name = ''
+            try:
+                db_creds_dir = tempfile.mkdtemp()
+                db_creds_basename = os.path.basename(db_creds_dir)
+                ini_repo_dir = tempfile.mkdtemp()
+                ini_repo_basename = os.path.basename(ini_repo_dir)
+                with tempfile.NamedTemporaryFile(
+                  'w',
+                  suffix='ini',
+                  dir=db_creds_dir,
+                  delete=False
+                ) as f:
+                    include_file_name = f.name
+                    include_file_basename = os.path.basename(f.name)
+                    contents = (
+                      'dbhostname=myserver\n'
+                      'dbname=some_database\n'
+                      'dbuser=dwight\n'
+                      'dbpassword=secrets\n'
+                    )
+                    f.write(contents)
+
+                with tempfile.NamedTemporaryFile(
+                  'w',
+                  suffix='ini',
+                  dir=ini_repo_dir,
+                  delete=False
+                ) as f:
+                    ini_file_name = f.name
+                    contents = (
+                      '+include ../%s/%s\n'
+                      '\n'
+                      '[destination]\n'
+                      '+include ../%s/%s\n'
+                      % (db_creds_basename, include_file_basename,
+                         db_creds_basename, include_file_basename)
+                    )
+                    f.write(contents)
+                o = for_configobj.ValueSource(ini_file_name)
+                expected_dict = {
+                  'dbhostname': 'myserver',
+                  'dbname': 'some_database',
+                  'dbuser': 'dwight',
+                  'dbpassword': 'secrets',
+                  'destination': {
+                    'dbhostname': 'myserver',
+                    'dbname': 'some_database',
+                    'dbuser': 'dwight',
+                    'dbpassword': 'secrets',
+                  }
+                }
+                self.assertEqual(o.get_values(1, True), expected_dict)
+            finally:
+                if os.path.isfile(include_file_name):
+                    os.remove(include_file_name)
+                if os.path.isfile(ini_file_name):
+                    os.remove(ini_file_name)
+                if os.path.isdir(db_creds_dir):
+                    os.rmdir(db_creds_dir)
+                if os.path.isdir(ini_repo_dir):
+                    os.rmdir(ini_repo_dir)

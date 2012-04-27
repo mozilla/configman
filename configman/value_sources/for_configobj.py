@@ -39,6 +39,7 @@
 import sys
 import collections
 import re
+import os.path
 
 import configobj
 
@@ -90,7 +91,7 @@ class ConfigObjWithIncludes(configobj.ConfigObj):
     """
     _include_re = re.compile(r'^\s*\+include\s+(.*?)\s*$')
 
-    def _expand_files(self, file_name):
+    def _expand_files(self, file_name, original_path):
         """This recursive function accepts a file name, opens the file and then
         spools the contents of the file into a list, examining each line as it
         does so.  If it detects a line beginning with "+include", it assumes
@@ -103,7 +104,12 @@ class ConfigObjWithIncludes(configobj.ConfigObj):
                 match = ConfigObjWithIncludes._include_re.match(a_line)
                 if match:
                     include_file = match.group(1)
-                    new_lines = self._expand_files(include_file)
+                    if include_file.startswith('.'):
+                        include_file = os.path.join(
+                          original_path,
+                          include_file
+                        )
+                    new_lines = self._expand_files(include_file, original_path)
                     expanded_file_contents.extend(new_lines)
                 else:
                     expanded_file_contents.append(a_line.rstrip())
@@ -116,7 +122,8 @@ class ConfigObjWithIncludes(configobj.ConfigObj):
         function of the same name.  ConfigObj proceeds, completely unaware
         that it's input file has been preprocessed."""
         if isinstance(infile, basestring):
-            expanded_file_contents = self._expand_files(infile)
+            original_path = os.path.dirname(infile)
+            expanded_file_contents = self._expand_files(infile, original_path)
             super(ConfigObjWithIncludes, self)._load(
               expanded_file_contents,
               configspec
