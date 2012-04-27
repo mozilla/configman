@@ -38,6 +38,8 @@
 
 import sys
 import collections
+import re
+import os.path
 
 import configobj
 
@@ -53,6 +55,81 @@ can_handle = (configobj,
               configobj.ConfigObj,
               basestring,
              )
+
+
+class ConfigObjWithIncludes(configobj.ConfigObj):
+    """This derived class is an extention to ConfigObj that adds nested
+    includes to ini files.  Here's an example:
+
+    db.ini:
+
+        dbhostname=myserver
+        dbname=some_database
+        dbuser=dwight
+        dbpassword=secrets
+
+    app.ini:
+        [source]
+        +include ./db.ini
+
+        [destination]
+        +include ./db.ini
+
+    when the 'app.ini' file is loaded, ConfigObj will respond as if the file
+    had been written like this:
+        [source]
+        dbhostname=myserver
+        dbname=some_database
+        dbuser=dwight
+        dbpassword=secrets
+
+        [destination]
+        dbhostname=myserver
+        dbname=some_database
+        dbuser=dwight
+        dbpassword=secrets
+    """
+    _include_re = re.compile(r'^\s*\+include\s+(.*?)\s*$')
+
+    def _expand_files(self, file_name, original_path):
+        """This recursive function accepts a file name, opens the file and then
+        spools the contents of the file into a list, examining each line as it
+        does so.  If it detects a line beginning with "+include", it assumes
+        the string immediately following is a file name.  Recursing, the file
+        new file is openned and its contents are spooled into the accumulating
+        list."""
+        expanded_file_contents = []
+        with open(file_name) as f:
+            for a_line in f:
+                match = ConfigObjWithIncludes._include_re.match(a_line)
+                if match:
+                    include_file = match.group(1)
+                    if include_file.startswith('.'):
+                        include_file = os.path.join(
+                          original_path,
+                          include_file
+                        )
+                    new_lines = self._expand_files(include_file, original_path)
+                    expanded_file_contents.extend(new_lines)
+                else:
+                    expanded_file_contents.append(a_line.rstrip())
+        return expanded_file_contents
+
+    def _load(self, infile, configspec):
+        """this overrides the original ConfigObj method of the same name.  It
+        runs through the input file collecting lines into a list.  When
+        completed, this method submits the list of lines to the super class'
+        function of the same name.  ConfigObj proceeds, completely unaware
+        that it's input file has been preprocessed."""
+        if isinstance(infile, basestring):
+            original_path = os.path.dirname(infile)
+            expanded_file_contents = self._expand_files(infile, original_path)
+            super(ConfigObjWithIncludes, self)._load(
+              expanded_file_contents,
+              configspec
+            )
+        else:
+            super(ConfigObjWithIncludes, self)._load(infile, configspec)
 
 
 class LoadingIniFileFailsException(ValueException):
@@ -83,7 +160,8 @@ class ValueSource(object):
         if (isinstance(source, basestring) and
             source.endswith(file_name_extension)):
             try:
-                self.config_obj = configobj.ConfigObj(source)
+                #self.config_obj = configobj.ConfigObj(source)
+                self.config_obj = ConfigObjWithIncludes(source)
             except Exception, x:
                 raise LoadingIniFileFailsException(
                   "ConfigObj cannot load ini: %s" % str(x))
