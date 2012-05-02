@@ -47,12 +47,31 @@ import getopt
 
 import configman.config_manager as config_manager
 from configman.dotdict import DotDict, DotDictWithAcquisition
+from configman import Namespace, RequiredConfig
+from configman.converters import class_converter
 import configman.datetime_util as dtu
 from configman.config_exceptions import NotAnOptionError
 from configman.value_sources.source_exceptions import \
                                                   AllHandlersFailedException
 import configman.value_sources
 import configman.value_sources.for_configparse
+
+
+class T1(RequiredConfig):
+    required_config = Namespace()
+    required_config.add_option('a', default=11)
+
+
+class T2(RequiredConfig):
+    required_config = Namespace()
+    required_config.add_option('b', default=22)
+
+
+class T3(RequiredConfig):
+    required_config = Namespace()
+    required_config.add_option('c', default=33)
+    required_config.namespace('ccc')
+    required_config.ccc.add_option('x', default=99)
 
 
 class TestCase(unittest.TestCase):
@@ -778,7 +797,7 @@ c.string =   from ini
 
         n = config_manager.Namespace()
         n.admin = config_manager.Namespace()
-        n.admin.add_option('application',
+        n.add_option('application',
                            MyApp,
                            'the app object class')
         c = config_manager.ConfigurationManager([n],
@@ -802,7 +821,7 @@ c.string =   from ini
 
         n = config_manager.Namespace()
         n.admin = config_manager.Namespace()
-        n.admin.add_option('application',
+        n.add_option('application',
                            MyApp,
                            'the app object class')
 
@@ -821,7 +840,7 @@ c.string =   from ini
                 self.assertTrue('print this (default: True)' not in r)
                 self.assertTrue('  --password' in r)
                 self.assertTrue('the password (default: *********)' in r)
-                self.assertTrue('  --admin.application' not in r)
+                self.assertTrue('  --application' not in r)
 
         def my_exit():
             pass
@@ -850,7 +869,7 @@ c.string =   from ini
 
         n = config_manager.Namespace()
         n.admin = config_manager.Namespace()
-        n.admin.add_option('application',
+        n.add_option('application',
                            MyApp,
                            'the app object class')
 
@@ -894,7 +913,7 @@ c.string =   from ini
 
         n = config_manager.Namespace()
         n.admin = config_manager.Namespace()
-        n.admin.add_option('application',
+        n.add_option('application',
                            MyApp,
                            'the app object class')
 
@@ -905,9 +924,9 @@ c.string =   from ini
         r = c._get_options()
         e = (
              ('admin.print_conf', 'print_conf', None),
-             ('admin.application', 'application', MyApp),
              ('admin.dump_conf', 'dump_conf', ''),
              ('admin.conf', 'conf', './config.ini'),
+             ('application', 'application', MyApp),
              ('password', 'password', 'fred'),
              ('sub.name', 'name', 'ethel'))
         for expected, result in zip(e, r):
@@ -933,10 +952,9 @@ c.string =   from ini
                 inner_self.config = config
 
         n = config_manager.Namespace()
-        n.admin = config_manager.Namespace()
-        n.admin.add_option('application',
-                           MyApp,
-                           'the app object class')
+        n.add_option('application',
+                     MyApp,
+                     'the app object class')
 
         c = config_manager.ConfigurationManager(n,
                                                 [getopt],
@@ -956,6 +974,7 @@ c.string =   from ini
         e = ["app_name: fred",
              "app_version: 1.0",
              "current configuration:",
+             "application: <class 'configman.tests.test_config_manager.MyApp'>",
              "password: *********",
              "sub.name: wilma"]
         for expected, received in zip(e, fl.log):
@@ -978,7 +997,7 @@ c.string =   from ini
 
         n = config_manager.Namespace()
         n.admin = config_manager.Namespace()
-        n.admin.add_option('application',
+        n.add_option('application',
                            MyApp,
                            'the app object class')
 
@@ -1012,7 +1031,7 @@ c.string =   from ini
 
         n = config_manager.Namespace()
         n.admin = config_manager.Namespace()
-        n.admin.add_option('application',
+        n.add_option('application',
                            MyApp,
                            'the app object class')
 
@@ -1047,7 +1066,7 @@ c.string =   from ini
 
         n = config_manager.Namespace()
         n.admin = config_manager.Namespace()
-        n.admin.add_option('application',
+        n.add_option('application',
                            MyApp,
                            'the app object class')
 
@@ -1059,8 +1078,7 @@ c.string =   from ini
                                                  'argument 2',
                                                  'argument 3'])
         conf = c.get_config()
-        self.assertEqual(conf.keys(), ['admin'])  # there should be nothing but
-                                                  # the admin key
+        self.assertEqual(conf.keys(), ['admin', 'application'])  
 
     def test_print_conf(self):
         n = config_manager.Namespace()
@@ -1251,7 +1269,7 @@ c.string =   from ini
 
         n = config_manager.Namespace()
         n.admin = config_manager.Namespace()
-        n.admin.add_option('application',
+        n.add_option('application',
                            MyApp,
                            'the app object class')
 
@@ -1306,10 +1324,9 @@ c.string =   from ini
                 inner_self.config = config
 
         n = config_manager.Namespace()
-        n.admin = config_manager.Namespace()
-        n.admin.add_option('application',
-                           MyApp,
-                           'the app object class')
+        n.add_option('application',
+                     MyApp,
+                     'the app object class')
 
         c = config_manager.ConfigurationManager(n,
                                                 [getopt],
@@ -1353,7 +1370,7 @@ c.string =   from ini
 
         n = config_manager.Namespace()
         n.admin = config_manager.Namespace()
-        n.admin.add_option('application',
+        n.add_option('application',
                            MyApp,
                            'the app object class')
 
@@ -1365,3 +1382,39 @@ c.string =   from ini
 
         contextmanager_ = c.context()
         self.assertRaises(SomeException, contextmanager_.__enter__)
+
+    def test_namespaces_with_conflicting_class_converters(self):
+        rc = Namespace()
+        rc.namespace('source')
+        rc.source.add_option('cls', 
+                             default='configman.tests.test_config_manager.T1',
+                             from_string_converter=class_converter)
+        rc.namespace('destination')
+        rc.destination.add_option('cls',
+                                  default='configman.tests.test_config_manager.T2',
+                                  from_string_converter=class_converter)
+        c = config_manager.ConfigurationManager(
+          rc,
+          [{'source': {'cls': 'configman.tests.test_config_manager.T2'},
+            'destination': {'cls': 'configman.tests.test_config_manager.T3'}},
+           {'source': {'cls': 'configman.tests.test_config_manager.T1'},
+                       'destination': {'cls': 'configman.tests.test_config_manager.T2'}},
+           {'source': {'cls': 'configman.tests.test_config_manager.T3'},
+                       'destination': {'cls': 'configman.tests.test_config_manager.T1'}},           
+          ],
+          use_admin_controls=True,
+          use_auto_help=False,
+          argv_source=[]
+        )
+        conf = c.get_config()
+        self.assertEqual(len(conf), 3)
+        self.assertEqual(conf.keys(), ['admin', 'source', 'destination'])
+        self.assertEqual(len(conf.source), 3)
+        self.assertEqual(conf.source.c, 33)
+        self.assertEqual(conf.source.cls, T3)
+        self.assertEqual(len(conf.source.ccc), 1)
+        self.assertEqual(conf.source.ccc.x, 99)
+        self.assertEqual(len(conf.destination), 2)
+        self.assertEqual(conf.destination.a, 11)
+        self.assertEqual(conf.destination.cls, T1)
+        
