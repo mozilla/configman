@@ -128,7 +128,7 @@ class ConfigurationManager(object):
         if argv_source is None:
             argv_source = sys.argv[1:]
         if options_banned_from_help is None:
-            options_banned_from_help = ['admin.application']
+            options_banned_from_help = ['application']
         self.config_pathname = config_pathname
 
         self.app_name = app_name
@@ -159,7 +159,7 @@ class ConfigurationManager(object):
                                     'admin.conf',
                                     'admin.dump_conf',
                                     'admin.print_conf',
-                                    'admin.application']
+                                    ]
         self.options_banned_from_help = options_banned_from_help
 
         if use_auto_help:
@@ -193,17 +193,17 @@ class ConfigurationManager(object):
         self._walk_expanding_class_options()
 
         # the app_name, app_version and app_description are to come from
-        # if 'admin.application' option if it is present. If it is not present,
+        # if 'application' option if it is present. If it is not present,
         # get the app_name,et al, from parameters passed into the constructor.
         # if those are empty, set app_name, et al, to empty strings
         try:
-            app_option = self._get_option('admin.application')
+            app_option = self._get_option('application')
             self.app_name = getattr(app_option.value, 'app_name', '')
             self.app_version = getattr(app_option.value, 'app_version', '')
             self.app_description = getattr(app_option.value,
                                            'app_description', '')
         except exc.NotAnOptionError:
-            # there is no 'admin.application' option, continue to use the
+            # there is no 'application' option, continue to use the
             # 'app_name' from the parameters passed in, if they exist.
             pass
 
@@ -422,7 +422,7 @@ class ConfigurationManager(object):
             list.  Each item will be fully qualified with dot delimited
             Namespace names.
         """
-        if not source:
+        if source is None:
             source = self.option_definitions
         if names is None:
             names = []
@@ -472,14 +472,10 @@ class ConfigurationManager(object):
                          inspect.ismodule(val.value))):
                     expanded_keys.append(key)
                     expansions_were_done = True
-                    if key == 'application':
-                        target_namespace = parent_namespace
-                    else:
-                        target_namespace = source_namespace
                     try:
                         for o_key, o_val in \
                                 val.value.get_required_config().iteritems():
-                            target_namespace.__setattr__(o_key,
+                            source_namespace.__setattr__(o_key, 
                                                          copy.deepcopy(o_val))
                     except AttributeError:
                         pass  # there are no required_options for this class
@@ -662,7 +658,7 @@ class ConfigurationManager(object):
 
     #--------------------------------------------------------------------------
     def _get_options(self, source=None, options=None, prefix=''):
-        if not source:
+        if source is None:
             source = self.option_definitions
         if options is None:
             options = []
