@@ -171,7 +171,7 @@ def class_converter(input_str):
         return None
     if '.' not in input_str and input_str in _all_named_builtins:
         return eval(input_str)
-    parts = input_str.split('.')
+    parts = [x.strip() for x in input_str.split('.') if x.strip()]
     try:
         # first try as a complete module
         package = __import__(input_str)

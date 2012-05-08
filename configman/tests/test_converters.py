@@ -154,6 +154,15 @@ class TestCase(unittest.TestCase):
         function = converters.class_converter
         self.assertEqual(function(''), None)
 
+    def test_class_converter_with_whitespace(self):
+        """either side whitespace doesn't matter"""
+        function = converters.class_converter
+        self.assertEqual(function("""
+
+         configman.tests.test_converters.Foo
+
+        """), Foo)
+
     def test_py_obj_to_str(self):
         function = converters.py_obj_to_str
         self.assertEqual(function(None), '')
@@ -249,4 +258,3 @@ class TestCase(unittest.TestCase):
             self.assertTrue('kls_instance' in config[x])
             self.assertTrue(isinstance(config[x].kls_instance,
                                        config[x].kls))
-
