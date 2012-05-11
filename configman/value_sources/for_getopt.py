@@ -214,7 +214,8 @@ class ValueSource(object):
                     return name
             else:
                 try:
-                    if short_name == val.short_form:
+                    if (hasattr(val, 'short_form') and
+                        short_name == val.short_form):
                         return '%s%s' % (prefix, val.name)
                 except KeyError:
                     continue

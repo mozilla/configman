@@ -69,6 +69,35 @@ class TestCase(unittest.TestCase):
         self.assertEqual(o.get_values(c, False), {'limit': '10'})
         self.assertEqual(o.get_values(c, True), {'limit': '10'})
 
+    def test_for_getopt_get_values_with_short_form(self):
+        c = config_manager.ConfigurationManager(
+          use_admin_controls=True,
+          #use_config_files=False,
+          use_auto_help=False,
+          argv_source=[]
+        )
+
+        source = ['-l', '10']
+        o = ValueSource(source)
+        c.option_definitions.add_option('limit', default=0, short_form='l')
+        self.assertEqual(o.get_values(c, False), {'limit': '10'})
+        self.assertEqual(o.get_values(c, True), {'limit': '10'})
+
+    def test_for_getopt_get_values_with_aggregates(self):
+        c = config_manager.ConfigurationManager(
+          use_admin_controls=True,
+          #use_config_files=False,
+          use_auto_help=False,
+          argv_source=[]
+        )
+
+        source = ['-l', '10']
+        o = ValueSource(source)
+        c.option_definitions.add_option('limit', default=0, short_form='l')
+        c.option_definitions.add_aggregation('summer', lambda *x: False)
+        self.assertEqual(o.get_values(c, False), {'limit': '10'})
+        self.assertEqual(o.get_values(c, True), {'limit': '10'})
+
     def test_for_getopt_with_ignore(self):
         function = ValueSource.getopt_with_ignore
         args = ['a', 'b', 'c']
