@@ -205,17 +205,15 @@ class ValueSource(object):
     #--------------------------------------------------------------------------
     def find_name_with_short_form(self, short_name, source, prefix):
         for key, val in source.items():
-            type_of_val = type(val)
-            if type_of_val == namespace.Namespace:
+            if isinstance(val, namespace.Namespace):
                 new_prefix = '%s.' % key
                 name = self.find_name_with_short_form(short_name, val,
                                                       new_prefix)
                 if name:
                     return name
-            else:
+            elif isinstance(val, option.Option):
                 try:
-                    if (hasattr(val, 'short_form') and
-                        short_name == val.short_form):
+                    if short_name == val.short_form:
                         return '%s%s' % (prefix, val.name)
                 except KeyError:
                     continue

@@ -96,7 +96,6 @@ foo=bar  # other comment
                 r = {'othersection': {'foo': 'bar'},
                      'name': 'Peter',
                      'awesome': ''}
-                print o.get_values(None, None)
                 assert o.get_values(None, None) == r
                 # in the case of this implementation of a ValueSource,
                 # the two parameters to get_values are dummies.  That may
@@ -280,7 +279,6 @@ foo=bar  # other comment
                 db_creds_dir = tempfile.mkdtemp()
                 db_creds_basename = os.path.basename(db_creds_dir)
                 ini_repo_dir = tempfile.mkdtemp()
-                ini_repo_basename = os.path.basename(ini_repo_dir)
                 with tempfile.NamedTemporaryFile(
                   'w',
                   suffix='ini',
