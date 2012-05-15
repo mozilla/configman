@@ -7,7 +7,7 @@ class RequiredConfig(object):
     @classmethod
     def get_required_config(cls):
         result = Namespace()
-        for a_class in cls.__mro__:
+        for a_class in reversed(cls.__mro__):
             try:
                 result.update(a_class.required_config)
             except AttributeError:
