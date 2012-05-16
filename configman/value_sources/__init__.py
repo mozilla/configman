@@ -156,12 +156,12 @@ def write(config_file_type,
     if isinstance(config_file_type, basestring):
         try:
             writer_fn = file_extension_dispatch[config_file_type]
-            with opener() as output_stream:
-                writer_fn(option_iterator, output_stream)
         except KeyError:
             raise UnknownFileExtensionException("%s isn't a registered file"
                                                    " name extension" %
                                                    config_file_type)
+        with opener() as output_stream:
+            writer_fn(option_iterator, output_stream)
     else:
         # this is the case where we've not gotten a file extension, but a
         # for_handler module.  Use the module's ValueSource's write method
