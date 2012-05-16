@@ -39,7 +39,7 @@
 import collections
 
 import converters as conv
-from config_exceptions import CannotConvertError
+from config_exceptions import CannotConvertError, OptionError
 
 
 #==============================================================================
@@ -116,6 +116,39 @@ class Option(object):
         else:
             self.value = val
 
+    #--------------------------------------------------------------------------
+    def set_default(self, val, force=False):
+        """this function allows a default to be set on an option that dosen't
+        have one.  It is used when a base class defines an Option for use in
+        derived classes but cannot predict what value would useful to the
+        derived classes.  This gives the derived classes the opportunity to
+        set a logical default appropriate for the derived class' context.
+
+        For example:
+
+            class A(RequiredConfig):
+                required_config = Namespace()
+                required_config.add_option(
+                  'x',
+                  default=None
+                )
+
+            class B(A):
+                A.required_config.x.set_default(68)
+
+        parameters:
+            val - the value for the default
+            force - normally this function only works on Options that have not
+                    had a default set (default is None).  This boolean allows
+                    you to override an existing default.
+        """
+        if self.default is None or force:
+            self.default = val
+            self.set_value(val)
+        else:
+            raise OptionError("cannot override existing default without "
+                              "using the 'force' option")
+
 
 #==============================================================================
 class Aggregation(object):
@@ -133,5 +166,5 @@ class Aggregation(object):
     #--------------------------------------------------------------------------
     def aggregate(self, all_options, local_namespace, args):
         self.value = self.function(all_options, local_namespace, args)
-        
+
 

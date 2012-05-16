@@ -43,7 +43,7 @@ import datetime
 import configman.converters as conv
 import configman.datetime_util as dtu
 from configman.option import Option
-from configman.config_exceptions import CannotConvertError
+from configman.config_exceptions import CannotConvertError, OptionError
 
 
 class TestCase(unittest.TestCase):
@@ -352,3 +352,23 @@ class TestCase(unittest.TestCase):
         val = {'justanother': 'dict!'}
         o1.set_value(val)
         self.assertEqual(o1.value, val)
+
+    def test_set_default(self):
+        o1 = Option(
+          'name',
+          default=23
+        )
+        self.assertEqual(o1.value, 23)
+        self.assertRaises(OptionError, o1.set_default, 68)
+        o1.set_default(78, force=True)
+        self.assertTrue(o1.value, 68)
+        self.assertTrue(o1.default, 68)
+
+        o2 = Option(
+          'name',
+          default=None
+        )
+        self.assertTrue(o2.value is None)
+        o2.set_default(68)
+        self.assertTrue(o2.value, 68)
+        self.assertTrue(o2.default, 68)
