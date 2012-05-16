@@ -42,6 +42,7 @@ import datetime
 import types
 import inspect
 import collections
+import json
 
 from required_config import RequiredConfig
 from namespace import Namespace
@@ -316,6 +317,7 @@ from_string_converters = {
     str: str,
     unicode: unicode,
     bool: boolean_converter,
+    dict: json.loads,
     datetime.datetime: datetime_converter,
     datetime.date: date_converter,
     datetime.timedelta: timedelta_converter,
@@ -344,7 +346,6 @@ def py_obj_to_str(a_thing):
 def list_to_str(a_list):
     return ', '.join(to_string_converters[type(x)](x) for x in a_list)
 
-
 #------------------------------------------------------------------------------
 to_string_converters = {
     int: str,
@@ -354,6 +355,7 @@ to_string_converters = {
     list: list_to_str,
     tuple: list_to_str,
     bool: lambda x: 'True' if x else 'False',
+    dict: json.dumps,
     datetime.datetime: datetime_util.datetime_to_ISO_string,
     datetime.date: datetime_util.date_to_ISO_string,
     datetime.timedelta: datetime_util.timedelta_to_str,

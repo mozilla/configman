@@ -190,6 +190,20 @@ class TestCase(unittest.TestCase):
         self.assertEqual(function((int, str, 123, "hello")),
                          'int, str, 123, hello')
 
+    def test_dict_conversions(self):
+        d = {
+          'a': 1,
+          'b': 'fred',
+          'c': 3.1415
+        }
+        converter_fn = converters.to_string_converters[type(d)]
+        s = converter_fn(d)
+
+        # round  trip
+        converter_fn = converters.from_string_converters[type(d)]
+        dd = converter_fn(s)
+        self.assertEqual(dd, d)
+
     def test_classes_in_namespaces_converter_1(self):
         converter_fn = converters.classes_in_namespaces_converter('HH%d')
         class_list_str = ('configman.tests.test_converters.Foo,'

@@ -201,7 +201,10 @@ class ValueSource(object):
                 d = d[x]
             if isinstance(val, Option):
                 v = val.value
-                v_str = conv.to_string_converters[type(v)](v)
+                try:
+                    v_str = conv.to_string_converters[type(v)](v)
+                except KeyError:
+                    v_str = repr(v)
                 d[key] = v_str
         config = configobj.ConfigObj(destination_dict)
         config.write(outfile=output_stream)
