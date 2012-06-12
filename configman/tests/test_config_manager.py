@@ -693,12 +693,8 @@ c.string =   from ini
         n.d.x.add_option('password', 'secrets', 'the password')
         c = config_manager.ConfigurationManager([n],
                                     use_admin_controls=True,
-                                    #use_config_files=False,
                                     use_auto_help=False,
                                     argv_source=[],
-                                    #app_name='foo',
-                                    #app_version='1.0',
-                                    #app_description='This app is cool.'
                                     )
         s = StringIO()
         c.output_summary(output_stream=s)
@@ -708,19 +704,21 @@ c.string =   from ini
         options = r.split('Options:\n')[1]
         s.close()
 
+        padding = '\n' + ' ' * 4
         expect = [
-          ('-a, --aaa', 'the a (default: False)'),
+          ('-a, --aaa', 'the a%s(default: False)' % padding),
           ('--b', '(default: 17)'),
           ('--bee', '(default: True)'),
           ('--c.fred', 'husband from Flintstones'),
           ('--d.fred', 'male neighbor from I Love Lucy'),
-          ('--d.x.password', 'the password (default: *********)'),
-          ('-s, --d.x.size', 'how big in tons (default: 100)'),
+          ('--d.x.password', 'the password%s(default: *********)' % padding),
+          ('-s, --d.x.size', 'how big in tons%s(default: 100)' % padding),
         ]
         point = -1  # used to assert the sort order
         for i, (start, end) in enumerate(expect):
-            self.assertTrue(point < options.find(start + ' ')
-                                  < options.find(' ' + end))
+            self.assertTrue(point < options.find(start)
+                                  < options.find(end),
+                            expect[i])
             point = options.find(end)
 
     def test_output_summary_header(self):
@@ -817,23 +815,26 @@ c.string =   from ini
             app_version = '1.0'
             app_description = "my app"
             required_config = config_manager.Namespace()
-            required_config.add_option('password', 'fred', 'the password')
+            required_config.add_option('password', 'fred', 'the password',
+                                       short_form='p')
+            required_config.add_option('password_wo_default', doc='This one has no default')
+            required_config.add_option('password_wo_docstr', default='Something')
+
 
             def __init__(inner_self, config):
                 inner_self.config = config
 
         n = config_manager.Namespace()
         n.admin = config_manager.Namespace()
-        n.add_option('application',
-                           MyApp,
-                           'the app object class')
+        n.add_option('application', MyApp, 'the app object class',
+                     short_form='a')
 
         class MyConfigManager(config_manager.ConfigurationManager):
             def output_summary(inner_self):
                 output_stream = StringIO()
                 r = super(MyConfigManager, inner_self).output_summary(
-                             output_stream=output_stream,
-                             block_password=False)
+                          output_stream=output_stream,
+                          block_password=False)
                 r = output_stream.getvalue()
                 output_stream.close()
                 self.assertTrue('Application: fred 1.0' in r)
@@ -842,7 +843,7 @@ c.string =   from ini
                 self.assertTrue('  --help' in r and 'print this' in r)
                 self.assertTrue('print this (default: True)' not in r)
                 self.assertTrue('  --password' in r)
-                self.assertTrue('the password (default: *********)' in r)
+                self.assertTrue('(default: *********)' in r)
                 self.assertTrue('  --application' not in r)
 
         def my_exit():
@@ -1081,7 +1082,7 @@ c.string =   from ini
                                                  'argument 2',
                                                  'argument 3'])
         conf = c.get_config()
-        self.assertEqual(conf.keys(), ['admin', 'application'])  
+        self.assertEqual(conf.keys(), ['admin', 'application'])
 
     def test_print_conf(self):
         n = config_manager.Namespace()
@@ -1408,7 +1409,7 @@ c.string =   from ini
     def test_namespaces_with_conflicting_class_converters(self):
         rc = Namespace()
         rc.namespace('source')
-        rc.source.add_option('cls', 
+        rc.source.add_option('cls',
                              default='configman.tests.test_config_manager.T1',
                              from_string_converter=class_converter)
         rc.namespace('destination')
@@ -1422,7 +1423,7 @@ c.string =   from ini
            {'source': {'cls': 'configman.tests.test_config_manager.T1'},
                        'destination': {'cls': 'configman.tests.test_config_manager.T2'}},
            {'source': {'cls': 'configman.tests.test_config_manager.T3'},
-                       'destination': {'cls': 'configman.tests.test_config_manager.T1'}},           
+                       'destination': {'cls': 'configman.tests.test_config_manager.T1'}},
           ],
           use_admin_controls=True,
           use_auto_help=False,
@@ -1439,4 +1440,3 @@ c.string =   from ini
         self.assertEqual(len(conf.destination), 2)
         self.assertEqual(conf.destination.a, 11)
         self.assertEqual(conf.destination.cls, T1)
-        
