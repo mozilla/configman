@@ -241,7 +241,7 @@ class ValueSource(object):
             print >>output_stream, "%s%s=%s\n" % (
               indent_spacer,
               an_option.name,
-              an_option.default
+              conv.option_value_str(an_option)
             )
         next_level = level + 1
         for key, namespace in namespaces:
