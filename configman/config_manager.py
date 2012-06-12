@@ -283,6 +283,8 @@ class ConfigurationManager(object):
         if names_list:
             print >> output_stream, 'Options:'
 
+        pad = ' ' * 4
+
         for name in names_list:
             if name in self.options_banned_from_help:
                 continue
@@ -292,9 +294,11 @@ class ConfigurationManager(object):
             if option.short_form:
                 line += '-%s, ' % option.short_form
             line += '--%s' % name
-            line = line.ljust(30)  # seems to the common practise
+            line += '\n'
 
             doc = option.doc if option.doc is not None else ''
+            if doc:
+                line += '%s%s\n' % (pad, doc)
             try:
                 value = option.value
                 type_of_value = type(value)
@@ -305,13 +309,10 @@ class ConfigurationManager(object):
             if default is not None:
                 if 'password' in name.lower():
                     default = '*********'
-                if doc:
-                    doc += ' '
                 if name not in ('help',):
                     # don't bother with certain dead obvious ones
-                    doc += '(default: %s)' % default
+                    line += '%s(default: %s)\n' % (pad, default)
 
-            line += doc
             print >> output_stream, line
 
     #--------------------------------------------------------------------------
@@ -475,7 +476,7 @@ class ConfigurationManager(object):
                     try:
                         for o_key, o_val in \
                                 val.value.get_required_config().iteritems():
-                            source_namespace.__setattr__(o_key, 
+                            source_namespace.__setattr__(o_key,
                                                          copy.deepcopy(o_val))
                     except AttributeError:
                         pass  # there are no required_options for this class
