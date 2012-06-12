@@ -191,8 +191,9 @@ class ValueSource(object):
 
     @staticmethod
     def write(option_iter, output_stream=sys.stdout):
-        # must construct a dict from the iter
         destination_dict = ValueSource.recursive_default_dict()
+        # reconstitute a hierarchy of dicts of Option objects
+        # from the iterator:
         for qkey, key, val in option_iter():
             if isinstance(val, Namespace):
                 continue
@@ -200,11 +201,60 @@ class ValueSource(object):
             for x in qkey.split('.')[:-1]:
                 d = d[x]
             if isinstance(val, Option):
-                v = val.value
-                try:
-                    v_str = conv.to_string_converters[type(v)](v)
-                except KeyError:
-                    v_str = repr(v)
-                d[key] = v_str
-        config = configobj.ConfigObj(destination_dict)
-        config.write(outfile=output_stream)
+                d[key] = val
+        ValueSource._write_ini(
+          destination_dict,
+          level=0,
+          indent_size=4,
+          output_stream=output_stream
+        )
+
+    @staticmethod
+    def _write_ini(source_dict, level=0, indent_size=4,
+                   output_stream=sys.stdout):
+        """this function prints the components of a configobj ini file.  It is
+        recursive for outputing the nested sections of the ini file."""
+        options = [
+          value
+          for value in source_dict.values()
+              if isinstance(value, Option)
+        ]
+        options.sort(cmp=lambda x, y: cmp(x.name, y.name))
+        namespaces = [
+          (key, value)
+          for key, value in source_dict.items()
+              if isinstance(value, collections.defaultdict)
+        ]
+        namespaces.sort()
+        indent_spacer = " " * (level * indent_size)
+        for an_option in options:
+            print >>output_stream, "%s# name: %s" % (indent_spacer,
+                                                     an_option.name)
+            print >>output_stream, "%s# doc: %s" % (indent_spacer,
+                                                    an_option.doc)
+            print >>output_stream, "%s# converter: %s" % (
+              indent_spacer,
+              conv.py_obj_to_str(
+                an_option.from_string_converter
+              )
+            )
+            print >>output_stream, "%s%s=%s\n" % (
+              indent_spacer,
+              an_option.name,
+              an_option.default
+            )
+        next_level = level + 1
+        for key, namespace in namespaces:
+            print >>output_stream, "%s%s%s%s\n" % (
+              " " * level * indent_size,
+              "[" * next_level,
+              key,
+              "]" * next_level
+            )
+            ValueSource._write_ini(
+              namespace,
+              level=level+1,
+              indent_size=indent_size,
+              output_stream=output_stream
+            )
+
