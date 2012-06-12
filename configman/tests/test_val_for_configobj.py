@@ -149,16 +149,47 @@ foo=bar  # other comment
               use_auto_help=False,
               argv_source=[]
             )
-            expected = """aaa = 2011-05-04T15:10:00
-[x]
-    password = secret
-    size = 100
+            expected = \
+"""# name: aaa
+# doc: the a
+# converter: configman.datetime_util.datetime_from_ISO_string
+aaa=2011-05-04 15:10:00
+
 [c]
-    wilma = waspish
-    fred = stupid
+
+    # name: fred
+    # doc: husband from Flintstones
+    # converter: str
+    fred=stupid
+
+    # name: wilma
+    # doc: wife from Flintstones
+    # converter: str
+    wilma=waspish
+
 [d]
-    ethel = silly
-    fred = crabby
+
+    # name: ethel
+    # doc: female neighbor from I Love Lucy
+    # converter: str
+    ethel=silly
+
+    # name: fred
+    # doc: male neighbor from I Love Lucy
+    # converter: str
+    fred=crabby
+
+[x]
+
+    # name: password
+    # doc: the password
+    # converter: str
+    password=secret
+
+    # name: size
+    # doc: how big in tons
+    # converter: int
+    size=100
 """
             out = StringIO()
             c.write_conf(for_configobj, opener=stringIO_context_wrapper(out))
