@@ -68,15 +68,15 @@ else:
               from_string_converter=dtu.datetime_from_ISO_string
             )
             n.c = config_manager.Namespace(doc='c space')
-            n.c.add_option('fred', 'stupid', 'husband from Flintstones')
-            n.c.add_option('wilma', 'waspish', 'wife from Flintstones')
+            n.c.add_option('fred', 'stupid, deadly', 'husband from Flintstones')
+            n.c.add_option('wilma', "waspish's", 'wife from Flintstones')
             n.d = config_manager.Namespace(doc='d space')
-            n.d.add_option('fred', 'crabby', 'male neighbor from I Love Lucy')
-            n.d.add_option('ethel', 'silly',
+            n.d.add_option('fred', "'''crabby'''", 'male neighbor from I Love Lucy')
+            n.d.add_option('ethel', '"""silly"""',
                            'female neighbor from I Love Lucy')
             n.x = config_manager.Namespace(doc='x space')
             n.x.add_option('size', 100, 'how big in tons', short_form='s')
-            n.x.add_option('password', 'secret', 'the password')
+            n.x.add_option('password', 'secret "message"', 'the password')
             return n
 
         def test_for_configobj_basics(self):
@@ -153,43 +153,43 @@ foo=bar  # other comment
 """# name: aaa
 # doc: the a
 # converter: configman.datetime_util.datetime_from_ISO_string
-aaa=2011-05-04 15:10:00
+aaa='2011-05-04T15:10:00'
 
 [c]
 
     # name: fred
     # doc: husband from Flintstones
     # converter: str
-    fred=stupid
+    fred='stupid, deadly'
 
     # name: wilma
     # doc: wife from Flintstones
     # converter: str
-    wilma=waspish
+    wilma="waspish's"
 
 [d]
 
     # name: ethel
     # doc: female neighbor from I Love Lucy
     # converter: str
-    ethel=silly
+    ethel='\"\"\"silly\"\"\"'
 
     # name: fred
     # doc: male neighbor from I Love Lucy
     # converter: str
-    fred=crabby
+    fred="\'\'\'crabby\'\'\'"
 
 [x]
 
     # name: password
     # doc: the password
     # converter: str
-    password=secret
+    password='secret "message"'
 
     # name: size
     # doc: how big in tons
     # converter: int
-    size=100
+    size='100'
 """
             out = StringIO()
             c.write_conf(for_configobj, opener=stringIO_context_wrapper(out))

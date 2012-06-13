@@ -238,10 +238,15 @@ class ValueSource(object):
                 an_option.from_string_converter
               )
             )
-            print >>output_stream, "%s%s=%s\n" % (
+            option_value = conv.option_value_str(an_option)
+            if isinstance(option_value, unicode):
+                option_value = option_value.encode('utf8')
+
+            option_format = '%s%s=%r\n'
+            print >>output_stream, option_format % (
               indent_spacer,
               an_option.name,
-              conv.option_value_str(an_option)
+              option_value
             )
         next_level = level + 1
         for key, namespace in namespaces:
