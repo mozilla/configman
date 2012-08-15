@@ -97,12 +97,7 @@ type_handler_dispatch = DispatchByType(list)
 for a_handler in for_handlers:
     try:
         for a_type_supported in a_handler.can_handle:
-            try:
-                type_handler_dispatch[a_type_supported].append(a_handler)
-            except TypeError:
-                # likely this is an instance of a handleable type that is not
-                # hashable. Replace it with its base type and try to continue.
-                type_handler_dispatch[type(a_type_supported)].append(a_handler)
+            type_handler_dispatch[a_type_supported].append(a_handler)
     except AttributeError:
         # this module has no can_handle attribute, therefore cannot really
         # be a handler and an error should be raised
