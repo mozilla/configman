@@ -45,10 +45,10 @@ __version__ = '1.1.1'
 #    from configman import Namespace, ConfigurationManager
 #
 
-from .config_manager import ConfigurationManager, RequiredConfig
-from .namespace import Namespace
+from config_manager import ConfigurationManager, RequiredConfig
+from namespace import Namespace
 
-from .converters import class_converter, regex_converter, timedelta_converter
+from converters import class_converter, regex_converter, timedelta_converter
 
 
 # constants used to refer to Value Source concepts generically
