@@ -8,3 +8,4 @@ demo/demo1.ini
 demo/demo1.json
 demo/demo2.ini
 docs/_build/
+*.pyc
