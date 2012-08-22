@@ -1,0 +1,19 @@
+# http://travis-ci.org/#!/mozilla/configman
+language: python
+
+python:
+    - 2.6
+    - 2.7
+
+before_install:
+    - pip install nose --use-mirrors
+
+install:
+    - python setup.py install
+
+script:
+    - nosetests configman
+
+notifications:
+    irc:
+        channels: "irc.mozilla.org#breakpad"
