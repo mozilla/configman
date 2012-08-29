@@ -36,7 +36,8 @@
 #
 # ***** END LICENSE BLOCK *****
 
-__version__ = '1.1.1'
+import os
+__version__ = open(os.path.join(os.path.dirname(__file__), 'version.txt')).read()
 
 # Having these here makes it possible to easily import once configman is
 # installed.
