@@ -61,13 +61,12 @@ def main(app_object=None):
     # parameters.  For a module to be acceptable, it must have a main
     # function that accepts a DotDict derivative as its input parameter.
     app_definition = Namespace()
-    app_definition.admin = admin = Namespace()
-    admin.add_option('application',
-                     doc='the fully qualified module or class of the '
-                         'application',
-                     default=app_object,
-                     from_string_converter=class_converter
-                    )
+    app_definition.add_option('application',
+                              doc='the fully qualified module or class of the '
+                                  'application',
+                              default=app_object,
+                              from_string_converter=class_converter
+                             )
     app_name = getattr(app_object, 'app_name', 'unknown')
     app_version = getattr(app_object, 'app_version', '0.0')
     app_description = getattr(app_object, 'app_description', 'no idea')
