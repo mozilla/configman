@@ -1450,7 +1450,8 @@ c.string =   from ini
             app_version = '1.0'
             app_description = "my app"
             required_config = config_manager.Namespace()
-            required_config.add_option('password', 'fred', 'the password')
+            required_config.namespace('toplevel')
+            required_config.toplevel.add_option('password', 'fred', 'the password')
 
 
         n = config_manager.Namespace()
@@ -1469,13 +1470,16 @@ c.string =   from ini
         )
 
         # but check we can still do it if the file exists
-        open('x.ini', 'w').write('password=something\n')
+        open('x.ini', 'w').write(
+            '[toplevel]\n'
+            'password=something\n'
+        )
         try:
             c = config_manager.ConfigurationManager(
                 (n, getopt,),
                 argv_source=['--admin.conf=x.ini']
             )
             with c.context() as config:
-                self.assertEqual(config.password, 'something')
+                self.assertEqual(config.toplevel.password, 'something')
         finally:
             os.remove('x.ini')
