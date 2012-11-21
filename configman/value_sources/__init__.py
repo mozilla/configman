@@ -38,6 +38,7 @@
 
 import collections
 import inspect
+import os
 import sys
 
 from source_exceptions import (NoHandlerForType, ModuleHandlesNothingException,
@@ -126,6 +127,12 @@ def wrap(value_source_list, a_config_manager):
     for a_source in value_source_list:
         if a_source is ConfigFileFutureProxy:
             a_source = a_config_manager._get_option('admin.conf').value
+            # if you have specified an admin.conf value that is different
+            # from the default, the raise hell if the file doesn't exist
+            default = a_config_manager._get_option('admin.conf').default
+            if a_source and a_source != default and not os.path.isfile(a_source):
+                raise IOError(a_source)
+
         handlers = type_handler_dispatch.get_handlers(a_source)
         wrapped_source = None
         error_history = []
