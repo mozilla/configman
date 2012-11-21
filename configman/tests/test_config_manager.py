@@ -1440,3 +1440,46 @@ c.string =   from ini
         self.assertEqual(len(conf.destination), 2)
         self.assertEqual(conf.destination.a, 11)
         self.assertEqual(conf.destination.cls, T1)
+
+    def test_admin_conf_missing_file_ioerror(self):
+        """if you specify an `--admin.conf=...` file that doesn't exist it
+        should not let you get away with it.
+        """
+        class MyApp(config_manager.RequiredConfig):
+            app_name = 'fred'
+            app_version = '1.0'
+            app_description = "my app"
+            required_config = config_manager.Namespace()
+            required_config.namespace('toplevel')
+            required_config.toplevel.add_option('password', 'fred', 'the password')
+
+
+        n = config_manager.Namespace()
+        n.admin = config_manager.Namespace()
+        n.add_option(
+            'application',
+            MyApp,
+            'the app object class'
+        )
+
+        self.assertRaises(
+            IOError,
+            config_manager.ConfigurationManager,
+            (n, getopt,),
+            argv_source=['--admin.conf=x.ini']
+        )
+
+        # but check we can still do it if the file exists
+        open('x.ini', 'w').write(
+            '[toplevel]\n'
+            'password=something\n'
+        )
+        try:
+            c = config_manager.ConfigurationManager(
+                (n, getopt,),
+                argv_source=['--admin.conf=x.ini']
+            )
+            with c.context() as config:
+                self.assertEqual(config.toplevel.password, 'something')
+        finally:
+            os.remove('x.ini')

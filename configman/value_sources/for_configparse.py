@@ -36,6 +36,7 @@
 #
 # ***** END LICENSE BLOCK *****
 
+import os
 import sys
 import ConfigParser
 
