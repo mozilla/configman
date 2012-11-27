@@ -23,7 +23,7 @@ setup(
         'Environment :: Console',
     ],
     packages=['configman'],
-    package_data={'configman': ['*/*']},
+    package_data={'configman': ['*/*', 'version.txt']},
     scripts=[],
     zip_safe=False,
 ),
