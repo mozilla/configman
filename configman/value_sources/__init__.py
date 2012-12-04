@@ -130,8 +130,12 @@ def wrap(value_source_list, a_config_manager):
             # if you have specified an admin.conf value that is different
             # from the default, the raise hell if the file doesn't exist
             default = a_config_manager._get_option('admin.conf').default
-            if a_source and a_source != default and not os.path.isfile(a_source):
-                raise IOError(a_source)
+            if (a_source and a_source != default
+                         and not os.path.isfile(a_source)):
+                try:
+                    a_source = __import__(a_source)
+                except ImportError:
+                    raise IOError(a_source)
 
         handlers = type_handler_dispatch.get_handlers(a_source)
         wrapped_source = None

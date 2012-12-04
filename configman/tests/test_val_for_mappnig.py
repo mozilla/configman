@@ -36,37 +36,48 @@
 #
 # ***** END LICENSE BLOCK *****
 
-import types
-import collections
+import unittest
 import os
 
-from source_exceptions import CantHandleTypeException
-from ..dotdict import DotDict
-
-can_handle = (os.environ,
-              collections.Mapping,
-              types.ModuleType
-             )
-
-def get_symbols_from_module(a_module):
-    return dict((key, getattr(a_module, key)) for key in dir(a_module)
-                 if isinstance(key, basestring))
+from configman.value_sources.for_mapping import ValueSource
+from configman.dotdict import DotDict
 
 
-class ValueSource(object):
-    def __init__(self, source, the_config_manager=None):
-        if source is os.environ:
-            self.always_ignore_mismatches = True
-        elif isinstance(source, collections.Mapping):
-            self.always_ignore_mismatches = False
-        elif isinstance(source, types.ModuleType):
-            self.always_ignore_mismatches = True
-            source = get_symbols_from_module(source)
-        else:
-            raise CantHandleTypeException("don't know how to handle %s."
-                                          % source)
-        self.source = DotDict(source)
+class TestCase(unittest.TestCase):
 
-    def get_values(self, config_manager=None,
-                         ignore_mismatches=None):
-        return self.source
+    def test_for_mapping(self):
+        d = {'fred': 'wilma',
+             'number': 23,
+            }
+        d_as_value_source = ValueSource(d)
+        vals = d_as_value_source.get_values()
+        self.assertEqual(vals.fred, 'wilma')
+        self.assertEqual(vals.number, 23)
+        self.assertFalse(d_as_value_source.always_ignore_mismatches)
+
+    def test_for_dotdict(self):
+        d = DotDict({'fred': 'wilma',
+             'number': 23,
+            })
+        d.subdict = DotDict()
+        d.subdict.fred = 'ethel'
+        d_as_value_source = ValueSource(d)
+        vals = d_as_value_source.get_values()
+        self.assertEqual(vals.fred, 'wilma')
+        self.assertEqual(vals.number, 23)
+        self.assertEqual(vals.subdict.fred, 'ethel')
+        self.assertFalse(d_as_value_source.always_ignore_mismatches)
+
+    def test_for_environ(self):
+        environ_as_value_source = ValueSource(os.environ)
+        vals = environ_as_value_source.get_values()
+        # what is guaranteed to be in the environment?
+        self.assertTrue(vals.USER)
+        self.assertTrue(environ_as_value_source.always_ignore_mismatches)
+
+    def test_for_modules(self):
+        os_as_value_source = ValueSource(os)
+        vals = os_as_value_source.get_values()
+        self.assertTrue(vals.path)
+        self.assertTrue(vals.path.split)
+
