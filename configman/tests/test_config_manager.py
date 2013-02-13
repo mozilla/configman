@@ -41,7 +41,6 @@ import os
 import os.path
 import unittest
 from contextlib import contextmanager
-import ConfigParser
 import io
 from cStringIO import StringIO
 import getopt
@@ -56,8 +55,6 @@ from configman.value_sources.source_exceptions import (
   AllHandlersFailedException,
   UnknownFileExtensionException
 )
-import configman.value_sources
-import configman.value_sources.for_configparse
 
 
 class T1(RequiredConfig):
