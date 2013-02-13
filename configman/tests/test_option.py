@@ -264,6 +264,16 @@ class TestCase(unittest.TestCase):
         opt.set_value(u't')
         self.assertEqual(opt.value, True)
 
+    def test_list_converter_inOption(self):
+        some_list = ['some', 'values', 'here']
+        opt = Option('some name', default=some_list)
+        self.assertEqual(opt.default, some_list)
+        self.assertEqual(opt.from_string_converter,
+                         conv.list_converter)
+
+        opt.set_value('list, of, things')
+        self.assertEqual(opt.value, ['list', 'of', 'things'])
+
     def test_timedelta_converter_inOption(self):
         one_day = datetime.timedelta(days=1)
         opt = Option('some name', default=one_day)

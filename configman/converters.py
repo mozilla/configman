@@ -161,6 +161,13 @@ def boolean_converter(input_str):
 
 
 #------------------------------------------------------------------------------
+def list_converter(input_str):
+    """ a conversion function for list
+    """
+    return [x.strip() for x in input_str.split(',') if x.strip()]
+
+
+#------------------------------------------------------------------------------
 import __builtin__
 _all_named_builtins = dir(__builtin__)
 
@@ -318,6 +325,7 @@ from_string_converters = {
     unicode: unicode,
     bool: boolean_converter,
     dict: json.loads,
+    list: list_converter,
     datetime.datetime: datetime_converter,
     datetime.date: date_converter,
     datetime.timedelta: timedelta_converter,
