@@ -53,8 +53,7 @@ class ValueSource(object):
         elif isinstance(source, collections.Mapping):
             self.always_ignore_mismatches = False
         else:
-            raise CantHandleTypeException(
-                                      "don't know how to handle %s." % source)
+            raise CantHandleTypeException()
         self.source = source
 
     def get_values(self, config_manager, ignore_mismatches):

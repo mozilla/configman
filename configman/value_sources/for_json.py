@@ -45,7 +45,7 @@ from ..namespace import Namespace
 from ..option import Option, Aggregation
 
 from source_exceptions import (ValueException, NotEnoughInformationException,
-                               NoHandlerForType)
+                               CantHandleTypeException)
 
 can_handle = (basestring,
               json
@@ -86,8 +86,7 @@ class ValueSource(object):
                 raise LoadingJsonFileFailsException("Cannot load json: %s" %
                                                     str(x))
         else:
-            raise NoHandlerForType("json can't handle: %s" %
-                                      str(source))
+            raise CantHandleTypeException()
 
     def get_values(self, config_manager, ignore_mismatches):
         return self.values

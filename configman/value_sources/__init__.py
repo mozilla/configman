@@ -118,7 +118,7 @@ for a_handler in for_handlers:
                                                     a_handler.ValueSource.write
     except AttributeError:
         # this handler doesn't have a 'file_name_extension' or ValueSource
-        # therefore it is not eligibe for the write file dispatcher
+        # therefore it is not eligible for the write file dispatcher
         pass
 
 
@@ -146,10 +146,15 @@ def wrap(value_source_list, a_config_manager):
             except ValueException, x:
                 # a failure is not necessarily fatal, we need to try all of
                 # the handlers.  It's only fatal when they've all failed
-                error_history.append(str(x))
+                exception_as_str = str(x)
+                if exception_as_str:
+                    error_history.append(str(x))
         if wrapped_source is None:
-            errors = '; '.join(error_history)
-            raise AllHandlersFailedException(errors)
+            if error_history:
+                errors = '; '.join(error_history)
+                raise AllHandlersFailedException(errors)
+            else:
+                raise NoHandlerForType(type(a_source))
         wrapped_sources.append(wrapped_source)
     return wrapped_sources
 

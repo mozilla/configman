@@ -95,8 +95,7 @@ class ValueSource(object):
         elif isinstance(source, ConfigParser.RawConfigParser):
             self.configparser = source
         else:
-            raise CantHandleTypeException(
-                        "ConfigParser doesn't know how to handle %s." % source)
+            raise CantHandleTypeException()
 
     @staticmethod
     def _create_parser(source):
