@@ -56,6 +56,7 @@ from option import Option, Aggregation
 from dotdict import DotDict, DotDictWithAcquisition
 from namespace import Namespace
 from config_file_future_proxy import ConfigFileFutureProxy
+from required_config import RequiredConfig
 
 
 #==============================================================================
@@ -515,6 +516,7 @@ class ConfigurationManager(object):
                                     '%s.ini' % self.app_name)
             else:
                 # there is no app_name yet
+                # we'll punt and use 'config'
                 return None
         return self.config_pathname
 

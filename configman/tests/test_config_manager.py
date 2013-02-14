@@ -1111,7 +1111,7 @@ c.string =   from ini
                     os.path.isdir = temp_fn
                 return r
 
-        self.assertRaises(IOError,
+        self.assertRaises(AllHandlersFailedException,
                           MyConfigManager,
                           use_admin_controls=True,
                           use_auto_help=False,
