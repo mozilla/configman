@@ -130,6 +130,8 @@ class DotDict(collections.MutableMapping):
         return len([x for x in self.__iter__()])
 
     def keys_breadth_first(self, include_dicts=False):
+        """a generator that returns all the keys in a set of nested
+        DotDict instances.  The keys take the form X.Y.Z"""
         namespaces = []
         for k, v in self.iteritems():
             if isinstance(v, DotDict):
@@ -143,6 +145,8 @@ class DotDict(collections.MutableMapping):
                 yield '%s.%s' % (n, x)
 
     def dot_lookup(self, key, d=None):
+        """an alternative method for accessing values within nested
+        DotDict instances.  It accepts keys in the form X.Y.Z"""
         if d is None:
             d = self
         key_split = key.split('.')
@@ -152,6 +156,9 @@ class DotDict(collections.MutableMapping):
         return cur_dict
 
     def assign(self, key, value, d=None):
+        """an alternative method for assigning values to nested DotDict
+        instances.  It accepts keys in the form of X.Y.Z.  If any nested
+        DotDict instances don't yet exist, they will be created."""
         if d is None:
             d = self
         key_split = key.split('.')
@@ -160,12 +167,15 @@ class DotDict(collections.MutableMapping):
             try:
                 cur_dict = cur_dict[k]
             except KeyError:
-                cur_dict[k] = DotDict()
+                cur_dict[k] = self.__class__()  # so that derived classes
+                                                # remain true to type
                 cur_dict = cur_dict[k]
         cur_dict[key_split[-1]] = value
 
 
     def parent(self, key):
+        """when given a key of the form X.Y.Z, this method will return the
+        parent DotDict of the 'Z' key."""
         parent_key = '.'.join(key.split('.')[:-1])
         if not parent_key:
             return None
