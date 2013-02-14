@@ -69,11 +69,6 @@ class Option(object):
         if value is None:
             value = default
         self.value = value
-        #self.set_value(value)
-        #if (type(self.value) != type(self.default)
-            #and self.from_string_converter):
-            ## need to convert the default too
-            #self.default = self.from_string_converter(self.default)
         self.exclude_from_print_conf = exclude_from_print_conf
         self.exclude_from_dump_conf = exclude_from_dump_conf
 

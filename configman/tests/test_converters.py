@@ -220,7 +220,6 @@ class TestCase(unittest.TestCase):
         class_list_str = ('configman.tests.test_converters.Foo,'
                           'configman.tests.test_converters.Bar')
         result = converter_fn(class_list_str)
-        print "RRRRR", result, type(result)
         self.assertTrue(hasattr(result, 'required_config'))
         req = result.required_config
         self.assertEqual(len(req), 2)
