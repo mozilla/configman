@@ -39,7 +39,6 @@
 import collections
 import inspect
 import os
-import sys
 
 from source_exceptions import (NoHandlerForType, ModuleHandlesNothingException,
                                AllHandlersFailedException,

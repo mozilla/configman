@@ -43,7 +43,6 @@ import inspect
 import os.path
 import contextlib
 import functools
-import copy
 
 import configman as cm
 import converters as conv
@@ -57,7 +56,6 @@ from option import Option, Aggregation
 from dotdict import DotDict, DotDictWithAcquisition
 from namespace import Namespace
 from config_file_future_proxy import ConfigFileFutureProxy
-from required_config import RequiredConfig
 
 
 #==============================================================================
@@ -229,56 +227,6 @@ class ConfigurationManager(object):
 
         if quit_after_admin and admin_tasks_done:
             sys.exit()
-
-    #--------------------------------------------------------------------------
-    def _overlay_expand(self):
-        keys_have_been_processed = True
-        processed_keys = []
-
-        while keys_have_been_processed:
-            keys = [x for x in self.option_definitions.keys_breadth_first()]
-            keys_have_been_processed = False
-
-            # first: fetch all the default values from the value sources before
-            # applying the from string conversions
-            for key in keys:
-                if key not in processed_keys:
-                    for a_value_source in self.values_source_list:
-                        try:
-                            val_src_dict = a_value_source.get_values(
-                                self,
-                                True
-                            )
-                            if not isinstance(val_src_dict, DotDict):
-                                val_src_dict = DotDict(val_src_dict)
-                            opt = self.option_definitions.dot_lookup(key)
-                            try:
-                                opt.default = val_src_dict.dot_lookup(key)
-                            except (AttributeError, KeyError):
-                                opt.default = val_src_dict[key]
-                        except KeyError:
-                            pass  # okay, that source doesn't have this value
-
-            # second: step through all the keys converting them to their proper
-            # types and bringing in any new keys in the process
-            for key in keys:
-                if key not in processed_keys:
-                    an_option = self.option_definitions.dot_lookup(key)
-                    if isinstance(an_option, Aggregation):
-                        continue
-                    an_option.set_value(an_option.default)
-                    processed_keys.append(key)
-                    keys_have_been_processed = True
-                    try:
-                        new_req = an_option.value.get_required_config()
-                        current_base_dict = self.option_definitions.parent(key)
-                        if current_base_dict is None:
-                            current_base_dict = self.option_definitions
-                        current_base_dict.update(new_req.safe_copy())
-                    except AttributeError, x:
-                        # there are apparently no namespaces to bring in from
-                        # this option's value
-                        pass
 
     #--------------------------------------------------------------------------
     @contextlib.contextmanager
@@ -482,6 +430,56 @@ class ConfigurationManager(object):
                 names.append("%s%s" % (prefix, key))
             # skip aggregations, we want only Options
         return names
+
+    #--------------------------------------------------------------------------
+    def _overlay_expand(self):
+        keys_have_been_processed = True
+        processed_keys = []
+
+        while keys_have_been_processed:
+            keys = [x for x in self.option_definitions.keys_breadth_first()]
+            keys_have_been_processed = False
+
+            # first: fetch all the default values from the value sources before
+            # applying the from string conversions
+            for key in keys:
+                if key not in processed_keys:
+                    for a_value_source in self.values_source_list:
+                        try:
+                            val_src_dict = a_value_source.get_values(
+                                self,
+                                True
+                            )
+                            if not isinstance(val_src_dict, DotDict):
+                                val_src_dict = DotDict(val_src_dict)
+                            opt = self.option_definitions.dot_lookup(key)
+                            try:
+                                opt.default = val_src_dict.dot_lookup(key)
+                            except (AttributeError, KeyError):
+                                opt.default = val_src_dict[key]
+                        except KeyError:
+                            pass  # okay, that source doesn't have this value
+
+            # second: step through all the keys converting them to their proper
+            # types and bringing in any new keys in the process
+            for key in keys:
+                if key not in processed_keys:
+                    an_option = self.option_definitions.dot_lookup(key)
+                    if isinstance(an_option, Aggregation):
+                        continue
+                    an_option.set_value(an_option.default)
+                    processed_keys.append(key)
+                    keys_have_been_processed = True
+                    try:
+                        new_req = an_option.value.get_required_config()
+                        current_base_dict = self.option_definitions.parent(key)
+                        if current_base_dict is None:
+                            current_base_dict = self.option_definitions
+                        current_base_dict.update(new_req.safe_copy())
+                    except AttributeError, x:
+                        # there are apparently no namespaces to bring in from
+                        # this option's value
+                        pass
 
     #--------------------------------------------------------------------------
     @staticmethod
