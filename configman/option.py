@@ -68,11 +68,12 @@ class Option(object):
         self.from_string_converter = from_string_converter
         if value is None:
             value = default
-        self.set_value(value)
-        if (type(self.value) != type(self.default)
-            and self.from_string_converter):
-            # need to convert the default too
-            self.default = self.from_string_converter(self.default)
+        self.value = value
+        #self.set_value(value)
+        #if (type(self.value) != type(self.default)
+            #and self.from_string_converter):
+            ## need to convert the default too
+            #self.default = self.from_string_converter(self.default)
         self.exclude_from_print_conf = exclude_from_print_conf
         self.exclude_from_dump_conf = exclude_from_dump_conf
 
@@ -101,7 +102,9 @@ class Option(object):
         return conv.from_string_converters.get(default_type, default_type)
 
     #--------------------------------------------------------------------------
-    def set_value(self, val):
+    def set_value(self, val=None):
+        if val is None:
+            val = self.default
         if isinstance(val, basestring):
             try:
                 self.value = self.from_string_converter(val)
@@ -166,5 +169,13 @@ class Aggregation(object):
     #--------------------------------------------------------------------------
     def aggregate(self, all_options, local_namespace, args):
         self.value = self.function(all_options, local_namespace, args)
+
+    #--------------------------------------------------------------------------
+    def __eq__(self, other):
+        if isinstance(other, Aggregation):
+            return (
+                self.name == other.name
+                and self.function == other.function
+            )
 
 

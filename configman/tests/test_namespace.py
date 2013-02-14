@@ -112,21 +112,18 @@ class TestCase(unittest.TestCase):
           u'"short_form": null}}')
         config = config_manager.ConfigurationManager(
           [j],
-          #use_config_files=False,
           use_auto_help=False,
           use_admin_controls=True,
           argv_source=[]
         )
+
+        config.output_summary()
 
         option = config_manager.Option(
           'bday',
           default=datetime.date(1979, 12, 13),
         )
         assert option.value == config.option_definitions.bday.value
-        self.assertEqual(
-          config.option_definitions.bday.default,
-          option.default
-        )
 
     def test_walk_expanding_class_options(self):
         class A(config_manager.RequiredConfig):
@@ -248,4 +245,57 @@ class TestCase(unittest.TestCase):
         n4 = deepcopy(n)
         self.assertTrue(n.a is not n4.a)
 
+    def test_empty_copy(self):
+        n = config_manager.Namespace()
+        nc = n.safe_copy()
+        self.assertEqual(n, nc)
 
+    def test_flat_copy(self):
+        n = config_manager.Namespace()
+        n.add_option(
+            'dwight',
+            doc='uncle',
+            default=17
+        )
+        n.add_option(
+            'wilma',
+            doc='aunt',
+            default=config_manager.Namespace,
+            from_string_converter=eval
+        )
+        n.add_aggregation(
+            'robert',
+             eval
+        )
+        nc = n.safe_copy()
+        self.assertEqual(n, nc)
+
+    def test_deeper_copy(self):
+        n = config_manager.Namespace()
+        n.add_option(
+            'dwight',
+            doc='uncle',
+            default=17
+        )
+        n.add_option(
+            'wilma',
+            doc='aunt',
+            default=config_manager.Namespace,
+            from_string_converter=eval
+        )
+        n.namespace('d')
+        n.d.add_option(
+            'victor',
+            doc='uncle',
+            default=17
+        )
+        n.d.add_option(
+            'sarah',
+            doc='grandmother',
+            default=int,
+            short_form='x',
+            from_string_converter=eval
+        )
+        nc = n.safe_copy()
+        self.assertEqual(n, nc)
+        self.assertEqual(n.d, nc.d)

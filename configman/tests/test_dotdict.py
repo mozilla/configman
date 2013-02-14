@@ -188,3 +188,85 @@ class TestCase(unittest.TestCase):
         # you just can't use the high-level function .get()
         # on these Python special keys
         self.assertRaises(AttributeError, dd.get, '__something__')
+
+    def test_keys_breadth_first(self):
+        d = DotDict()
+        d.a = 1
+        d.b = 2
+        d.c = 3
+        d.d = DotDict()
+        d.d.a = 4
+        d.d.b = 5
+        d.d.c = 6
+        d.d.d = DotDict()
+        d.d.d.a = 7
+        d.e = DotDict()
+        d.e.a = 8
+        expected = ['a', 'b', 'c', 'd.a', 'd.b', 'd.c', 'd.d.a', 'e.a']
+        actual = [x for x in d.keys_breadth_first()]
+        actual.sort()
+        self.assertEqual(expected, actual)
+
+    def test_dot_lookup(self):
+        d = DotDict()
+        d.a = 1
+        d.b = 2
+        d.c = 3
+        d.d = DotDict()
+        d.d.a = 4
+        d.d.b = 5
+        d.d.c = 6
+        d.d.d = DotDict()
+        d.d.d.a = 7
+        d.e = DotDict()
+        d.e.a = 8
+
+        self.assertEqual(d.dot_lookup('a'), 1)
+        self.assertEqual(d.dot_lookup('b'), 2)
+        self.assertEqual(d.dot_lookup('c'), 3)
+        self.assertEqual(d.dot_lookup('d.a'), 4)
+        self.assertEqual(d.dot_lookup('d.b'), 5)
+        self.assertEqual(d.dot_lookup('d.c'), 6)
+        self.assertEqual(d.dot_lookup('d.d.a'), 7)
+        self.assertEqual(d.dot_lookup('e.a'), 8)
+
+        self.assertTrue(isinstance(d.dot_lookup('d'), DotDict))
+        self.assertTrue(isinstance(d.dot_lookup('d.d'), DotDict))
+
+        self.assertRaises(
+            KeyError,
+            d.dot_lookup,
+            'x'
+        )
+        self.assertRaises(
+            KeyError,
+            d.dot_lookup,
+            'd.x'
+        )
+        self.assertRaises(
+            KeyError,
+            d.dot_lookup,
+            'd.d.x'
+        )
+
+    def test_parent(self):
+        d = DotDict()
+        d.a = 1
+        d.b = 2
+        d.c = 3
+        d.d = DotDict()
+        d.d.a = 4
+        d.d.b = 5
+        d.d.c = 6
+        d.d.d = DotDict()
+        d.d.d.a = 7
+        d.e = DotDict()
+        d.e.a = 8
+
+        self.assertEqual(d.parent('d.d.a'), d.dot_lookup('d.d'))
+        self.assertTrue(d.parent('d') is None)
+
+    def test_assign(self):
+        d = DotDict()
+        d.assign('a.b', 10)
+        self.assertEqual(d.dot_lookup('a.b'), 10)

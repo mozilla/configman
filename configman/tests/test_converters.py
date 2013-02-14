@@ -220,6 +220,7 @@ class TestCase(unittest.TestCase):
         class_list_str = ('configman.tests.test_converters.Foo,'
                           'configman.tests.test_converters.Bar')
         result = converter_fn(class_list_str)
+        print "RRRRR", result, type(result)
         self.assertTrue(hasattr(result, 'required_config'))
         req = result.required_config
         self.assertEqual(len(req), 2)
@@ -229,6 +230,11 @@ class TestCase(unittest.TestCase):
         self.assertTrue('HH1' in req)
         self.assertEqual(len(req.HH1), 1)
         self.assertTrue('cls' in req.HH1)
+        inner_namespace = result.get_required_config()
+        for k in inner_namespace.keys_breadth_first():
+            o = inner_namespace.dot_lookup(k)
+            o.set_value()
+
         self.assertEqual(
                 sorted([x.strip() for x in class_list_str.split(',')]),
                 sorted([x.strip() for x in

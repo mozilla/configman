@@ -157,7 +157,7 @@ class TestCase(unittest.TestCase):
         self.assertEqual(c.option_definitions.b.name, 'b')
         self.assertEqual(c.option_definitions.c.extra.name, 'extra')
         self.assertEqual(c.option_definitions.c.extra.doc, 'the x')
-        self.assertEqual(c.option_definitions.c.extra.default, 3.14159)
+        self.assertEqual(c.option_definitions.c.extra.default, '11.0')
         self.assertEqual(c.option_definitions.c.extra.value, 11.0)
 
     def test_overlay_config_6a(self):
@@ -179,5 +179,5 @@ class TestCase(unittest.TestCase):
         self.assertEqual(c.option_definitions.b.name, 'b')
         self.assertEqual(c.option_definitions.c.extra.name, 'extra')
         self.assertEqual(c.option_definitions.c.extra.doc, 'the x')
-        self.assertEqual(c.option_definitions.c.extra.default, 3.14159)
+        self.assertEqual(c.option_definitions.c.extra.default, '11.0')
         self.assertEqual(c.option_definitions.c.extra.value, 11.0)
