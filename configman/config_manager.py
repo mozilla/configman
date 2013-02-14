@@ -43,7 +43,6 @@ import inspect
 import os.path
 import contextlib
 import functools
-import copy
 
 import configman as cm
 import converters as conv
@@ -77,6 +76,7 @@ class ConfigurationManager(object):
                  app_version='',
                  app_description='',
                  config_pathname='.',
+                 config_optional=True,
                  ):
         """create and initialize a configman object.
 
@@ -115,7 +115,11 @@ class ConfigurationManager(object):
           app_description - assigns a description for the app to be used in
                             the help output.
           config_pathname - a hard coded path to the directory of or the full
-                            path and name of the configuration file."""
+                            path and name of the configuration file.
+          config_optional - a boolean indicating if a missing default config
+                            file is optional.  Note: this is only for the
+                            default config file.  If a config file is specified
+                            on the commandline, it _must_ exsist."""
         # instead of allowing mutables as default keyword argument values...
         if definition_source is None:
             definition_source_list = []
@@ -130,6 +134,7 @@ class ConfigurationManager(object):
         if options_banned_from_help is None:
             options_banned_from_help = ['application']
         self.config_pathname = config_pathname
+        self.config_optional = config_optional
 
         self.app_name = app_name
         self.app_version = app_version
@@ -175,22 +180,21 @@ class ConfigurationManager(object):
                                           self.option_definitions)
 
         if use_admin_controls:
-            # some admin options need to be loaded from the command line
-            # prior to processing the rest of the command line options.
-            admin_options = value_sources.get_admin_options_from_command_line(
-                                                                          self)
-            # integrate the admin_options with 'option_definitions'
-            self._overlay_value_sources_recurse(source=admin_options,
-                                        ignore_mismatches=True)
+            # the name of the config file needs to be loaded from the command
+            # line prior to processing the rest of the command line options.
+            config_filename = \
+                value_sources.config_filename_from_commandline(self)
+            if (config_filename
+                and cm.ConfigFileFutureProxy in values_source_list
+                ):
+                self.option_definitions.admin.conf.default = config_filename
 
-        self.values_source_list = value_sources.wrap(values_source_list,
-                                                     self)
+        self.values_source_list = value_sources.wrap(
+            values_source_list,
+            self
+        )
 
-        # first pass to get classes & config path - ignore bad options
-        self._overlay_value_sources(ignore_mismatches=True)
-
-        # walk tree expanding class options
-        self._walk_expanding_class_options()
+        self._overlay_expand()
 
         # the app_name, app_version and app_description are to come from
         # if 'application' option if it is present. If it is not present,
@@ -207,14 +211,6 @@ class ConfigurationManager(object):
             # 'app_name' from the parameters passed in, if they exist.
             pass
 
-        # second pass to include config file values - ignore bad options
-        self._overlay_value_sources(ignore_mismatches=True)
-
-        # walk tree expanding class options
-        self._walk_expanding_class_options()
-
-        # third pass to get values - complain about bad options
-        self._overlay_value_sources(ignore_mismatches=False)
 
         if use_auto_help and self._get_option('help').value:
             self.output_summary()
@@ -437,6 +433,56 @@ class ConfigurationManager(object):
         return names
 
     #--------------------------------------------------------------------------
+    def _overlay_expand(self):
+        keys_have_been_processed = True
+        processed_keys = []
+
+        while keys_have_been_processed:
+            keys = [x for x in self.option_definitions.keys_breadth_first()]
+            keys_have_been_processed = False
+
+            # first: fetch all the default values from the value sources before
+            # applying the from string conversions
+            for key in keys:
+                if key not in processed_keys:
+                    for a_value_source in self.values_source_list:
+                        try:
+                            val_src_dict = a_value_source.get_values(
+                                self,
+                                True
+                            )
+                            if not isinstance(val_src_dict, DotDict):
+                                val_src_dict = DotDict(val_src_dict)
+                            opt = self.option_definitions.dot_lookup(key)
+                            try:
+                                opt.default = val_src_dict.dot_lookup(key)
+                            except (AttributeError, KeyError):
+                                opt.default = val_src_dict[key]
+                        except KeyError:
+                            pass  # okay, that source doesn't have this value
+
+            # second: step through all the keys converting them to their proper
+            # types and bringing in any new keys in the process
+            for key in keys:
+                if key not in processed_keys:
+                    an_option = self.option_definitions.dot_lookup(key)
+                    if isinstance(an_option, Aggregation):
+                        continue
+                    an_option.set_value(an_option.default)
+                    processed_keys.append(key)
+                    keys_have_been_processed = True
+                    try:
+                        new_req = an_option.value.get_required_config()
+                        current_base_dict = self.option_definitions.parent(key)
+                        if current_base_dict is None:
+                            current_base_dict = self.option_definitions
+                        current_base_dict.update(new_req.safe_copy())
+                    except AttributeError, x:
+                        # there are apparently no namespaces to bring in from
+                        # this option's value
+                        pass
+
+    #--------------------------------------------------------------------------
     @staticmethod
     def _walk_and_close(a_dict):
         for val in a_dict.itervalues():
@@ -455,36 +501,6 @@ class ConfigurationManager(object):
         return config
 
     #--------------------------------------------------------------------------
-    def _walk_expanding_class_options(self, source_namespace=None,
-                                     parent_namespace=None):
-        if source_namespace is None:
-            source_namespace = self.option_definitions
-        expanded_keys = []
-        expansions_were_done = True
-        while expansions_were_done:
-            expansions_were_done = False
-            # can't use iteritems in loop, we're changing the dict
-            for key, val in source_namespace.items():
-                if isinstance(val, Namespace):
-                    self._walk_expanding_class_options(source_namespace=val,
-                                            parent_namespace=source_namespace)
-                elif (key not in expanded_keys and
-                        (inspect.isclass(val.value) or
-                         inspect.ismodule(val.value))):
-                    expanded_keys.append(key)
-                    expansions_were_done = True
-                    try:
-                        for o_key, o_val in \
-                                val.value.get_required_config().iteritems():
-                            source_namespace.__setattr__(o_key,
-                                                         copy.deepcopy(o_val))
-                    except AttributeError:
-                        pass  # there are no required_options for this class
-                else:
-                    pass  # don't need to touch other types of Options
-            self._overlay_value_sources(ignore_mismatches=True)
-
-    #--------------------------------------------------------------------------
     def _setup_auto_help(self):
         help_option = Option(name='help', doc='print this', default=False)
         self.definition_source_list.append({'help': help_option})
@@ -501,7 +517,7 @@ class ConfigurationManager(object):
             else:
                 # there is no app_name yet
                 # we'll punt and use 'config'
-                return os.path.join(self.config_pathname, 'config.ini')
+                return None
         return self.config_pathname
 
     #--------------------------------------------------------------------------
@@ -528,51 +544,6 @@ class ConfigurationManager(object):
                                  '(path/filename)',
                              )
         return base_namespace
-
-    #--------------------------------------------------------------------------
-    def _overlay_value_sources(self, ignore_mismatches=True):
-        for a_settings_source in self.values_source_list:
-            try:
-                this_source_ignore_mismatches = (ignore_mismatches or
-                                    a_settings_source.always_ignore_mismatches)
-            except AttributeError:
-                # the settings source doesn't have the concept of always
-                # ignoring mismatches, so the original value of
-                # ignore_mismatches stands
-                this_source_ignore_mismatches = ignore_mismatches
-            options = a_settings_source.get_values(self,
-                            ignore_mismatches=this_source_ignore_mismatches)
-            self._overlay_value_sources_recurse(options,
-                            ignore_mismatches=this_source_ignore_mismatches)
-
-    #--------------------------------------------------------------------------
-    def _overlay_value_sources_recurse(self, source, destination=None,
-                                       prefix='', ignore_mismatches=True):
-        if destination is None:
-            destination = self.option_definitions
-        for key, val in source.items():
-            try:
-                sub_destination = destination
-                for subkey in key.split('.'):
-                    sub_destination = sub_destination[subkey]
-            except KeyError:
-                if ignore_mismatches:
-                    continue
-                if key == subkey:
-                    raise exc.NotAnOptionError('%s is not an option' % key)
-                raise exc.NotAnOptionError('%s subpart %s is not an option' %
-                                       (key, subkey))
-            except TypeError:
-                pass
-            if isinstance(sub_destination, Namespace):
-                self._overlay_value_sources_recurse(val, sub_destination,
-                                            prefix=('%s.%s' % (prefix, key)))
-            elif isinstance(sub_destination, Option):
-                sub_destination.set_value(val)
-            elif isinstance(sub_destination, Aggregation):
-                # there is nothing to do for Aggregations at this time
-                # it appears here anyway as a marker for future enhancements
-                pass
 
     #--------------------------------------------------------------------------
     def _walk_config_copy_values(self, source, destination, mapping_class):

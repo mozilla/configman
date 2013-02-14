@@ -148,7 +148,6 @@ class TestCase(unittest.TestCase):
         c = config_manager.ConfigurationManager(
           [n],
           use_admin_controls=True,
-          #use_config_files=False,
           use_auto_help=False,
           argv_source=[]
         )
@@ -188,91 +187,6 @@ class TestCase(unittest.TestCase):
         n.x.add_option('password', 'secret', 'the password')
         return n
 
-    def test_overlay_config_1(self):
-        n = config_manager.Namespace()
-        n.add_option('a')
-        n.a.default = 1
-        n.a.doc = 'the a'
-        n.b = 17
-        n.c = c = config_manager.Namespace()
-        c.x = 'fred'
-        c.y = 3.14159
-        c.add_option('z')
-        c.z.default = 99
-        c.z.doc = 'the 99'
-        c = config_manager.ConfigurationManager([n],
-                                    use_admin_controls=False,
-                                    #use_config_files=False,
-                                    use_auto_help=False,
-                                    argv_source=[])
-        o = {"a": 2, "c.z": 22, "c.x": 'noob', "c.y": "2.89"}
-        c._overlay_value_sources_recurse(o)
-        d = c._generate_config(DotDict)
-        e = DotDict()
-        e.a = 2
-        e.b = 17
-        e.c = DotDict()
-        e.c.x = 'noob'
-        e.c.y = 2.89
-        e.c.z = 22
-        self.assertEqual(d, e)
-
-    def test_overlay_config_2(self):
-        n = config_manager.Namespace()
-        n.add_option('a')
-        n.a.default = 1
-        n.a.doc = 'the a'
-        n.b = 17
-        n.c = c = config_manager.Namespace()
-        c.x = 'fred'
-        c.y = 3.14159
-        c.add_option('z')
-        c.z.default = 99
-        c.z.doc = 'the 99'
-        c = config_manager.ConfigurationManager([n],
-                                    use_admin_controls=False,
-                                    #use_config_files=False,
-                                    use_auto_help=False,
-                                    argv_source=[])
-        o = {"a": 2, "c.z": 22, "c.x": 'noob', "c.y": "2.89", "n": "not here"}
-        c._overlay_value_sources_recurse(o, ignore_mismatches=True)
-        d = c._generate_config(DotDict)
-        e = DotDict()
-        e.a = 2
-        e.b = 17
-        e.c = DotDict()
-        e.c.x = 'noob'
-        e.c.y = 2.89
-        e.c.z = 22
-        self.assertEqual(d, e)
-
-    def test_overlay_config_3(self):
-        n = config_manager.Namespace()
-        n.add_option('a')
-        n.a.default = 1
-        n.a.doc = 'the a'
-        n.b = 17
-        n.c = c = config_manager.Namespace()
-        c.x = 'fred'
-        c.y = 3.14159
-        c.add_option('z')
-        c.z.default = 99
-        c.z.doc = 'the 99'
-        c = config_manager.ConfigurationManager([n],
-                                    use_admin_controls=True,
-                                    #use_config_files=False,
-                                    use_auto_help=False,
-                                    argv_source=[])
-        output = {
-          "a": 2,
-          "c.z": 22,
-          "c.x": 'noob',
-          "c.y": "2.89",
-          "c.n": "not here"
-        }
-        self.assertRaises(NotAnOptionError,
-                          c._overlay_value_sources_recurse, output,
-                          ignore_mismatches=False)
 
     def test_overlay_config_4(self):
         """test overlay dict w/flat source dict"""
@@ -296,7 +210,7 @@ class TestCase(unittest.TestCase):
         self.assertEqual(c.option_definitions.b.name, 'b')
         self.assertEqual(c.option_definitions.c.extra.name, 'extra')
         self.assertEqual(c.option_definitions.c.extra.doc, 'the x')
-        self.assertEqual(c.option_definitions.c.extra.default, 3.14159)
+        self.assertEqual(c.option_definitions.c.extra.default, 2.89)
         self.assertEqual(c.option_definitions.c.extra.value, 2.89)
 
     def test_overlay_config_4a(self):
@@ -321,7 +235,7 @@ class TestCase(unittest.TestCase):
         self.assertEqual(c.option_definitions.b.name, 'b')
         self.assertEqual(c.option_definitions.c.extra.name, 'extra')
         self.assertEqual(c.option_definitions.c.extra.doc, 'the x')
-        self.assertEqual(c.option_definitions.c.extra.default, 3.14159)
+        self.assertEqual(c.option_definitions.c.extra.default, 2.89)
         self.assertEqual(c.option_definitions.c.extra.value, 2.89)
 
     def test_overlay_config_5(self):
@@ -366,7 +280,7 @@ class TestCase(unittest.TestCase):
         self.assertEqual(c.option_definitions.b.name, 'b')
         self.assertEqual(c.option_definitions.c.extra.name, 'extra')
         self.assertEqual(c.option_definitions.c.extra.doc, 'the x')
-        self.assertEqual(c.option_definitions.c.extra.default, 3.14159)
+        self.assertEqual(c.option_definitions.c.extra.default, '11.0')
         self.assertEqual(c.option_definitions.c.extra.value, 11.0)
 
     def test_overlay_config_6a(self):
@@ -389,7 +303,7 @@ class TestCase(unittest.TestCase):
         self.assertEqual(c.option_definitions.b.name, 'b')
         self.assertEqual(c.option_definitions.c.extra.name, 'extra')
         self.assertEqual(c.option_definitions.c.extra.doc, 'the x')
-        self.assertEqual(c.option_definitions.c.extra.default, 3.14159)
+        self.assertEqual(c.option_definitions.c.extra.default, '11.0')
         self.assertEqual(c.option_definitions.c.extra.value, 11.0)
 
     def test_overlay_config_7(self):
@@ -419,15 +333,15 @@ class TestCase(unittest.TestCase):
         self.assertEqual(type(c.option_definitions.b), config_manager.Option)
         self.assertEqual(c.option_definitions.a.value, 22)
         self.assertEqual(c.option_definitions.b.value, 33)
-        self.assertEqual(c.option_definitions.b.default, 17)
+        self.assertEqual(c.option_definitions.b.default, '33')
         self.assertEqual(c.option_definitions.b.name, 'b')
         self.assertEqual(c.option_definitions.c.extra.name, 'extra')
         self.assertEqual(c.option_definitions.c.extra.doc, 'the x')
-        self.assertEqual(c.option_definitions.c.extra.default, 3.14159)
+        self.assertEqual(c.option_definitions.c.extra.default, '2.0')
         self.assertEqual(c.option_definitions.c.extra.value, 2.0)
         self.assertEqual(c.option_definitions.c.string.name, 'string')
         self.assertEqual(c.option_definitions.c.string.doc, 'str')
-        self.assertEqual(c.option_definitions.c.string.default, 'fred')
+        self.assertEqual(c.option_definitions.c.string.default, 'wilma')
         self.assertEqual(c.option_definitions.c.string.value, 'wilma')
 
     def test_overlay_config_8(self):
@@ -460,15 +374,15 @@ c.string = wilma
         self.assertEqual(type(c.option_definitions.d.b), config_manager.Option)
         self.assertEqual(c.option_definitions.d.a.value, 22)
         self.assertEqual(c.option_definitions.d.b.value, 33)
-        self.assertEqual(c.option_definitions.d.b.default, 17)
+        self.assertEqual(c.option_definitions.d.b.default, '33')
         self.assertEqual(c.option_definitions.d.b.name, 'b')
         self.assertEqual(c.option_definitions.c.extra.name, 'extra')
         self.assertEqual(c.option_definitions.c.extra.doc, 'the x')
-        self.assertEqual(c.option_definitions.c.extra.default, 3.14159)
+        self.assertEqual(c.option_definitions.c.extra.default, '2.0')
         self.assertEqual(c.option_definitions.c.extra.value, 2.0)
         self.assertEqual(c.option_definitions.c.string.name, 'string')
         self.assertEqual(c.option_definitions.c.string.doc, 'str')
-        self.assertEqual(c.option_definitions.c.string.default, 'fred')
+        self.assertEqual(c.option_definitions.c.string.default, 'wilma')
         self.assertEqual(c.option_definitions.c.string.value, 'wilma')
 
     def test_overlay_config_9(self):
@@ -526,11 +440,11 @@ c.string =   from ini
         self.assertEqual(c.option_definitions.d.b.name, 'b')
         self.assertEqual(c.option_definitions.c.extra.name, 'extra')
         self.assertEqual(c.option_definitions.c.extra.doc, 'the x')
-        self.assertEqual(c.option_definitions.c.extra.default, 3.14159)
+        self.assertEqual(c.option_definitions.c.extra.default, '11.0')
         self.assertEqual(c.option_definitions.c.extra.value, 11.0)
         self.assertEqual(c.option_definitions.c.string.name, 'string')
         self.assertEqual(c.option_definitions.c.string.doc, 'str')
-        self.assertEqual(c.option_definitions.c.string.default, 'fred')
+        self.assertEqual(c.option_definitions.c.string.default, 'from ini')
         self.assertEqual(c.option_definitions.c.string.value, 'from ini')
 
     def test_overlay_config_10(self):
@@ -580,54 +494,12 @@ c.string =   from ini
         self.assertEqual(c.option_definitions.d.b.name, 'b')
         self.assertEqual(c.option_definitions.c.extra.name, 'extra')
         self.assertEqual(c.option_definitions.c.extra.doc, 'the x')
-        self.assertEqual(c.option_definitions.c.extra.default, 3.14159)
+        self.assertEqual(c.option_definitions.c.extra.default, '11.0')
         self.assertEqual(c.option_definitions.c.extra.value, 11.0)
         self.assertEqual(c.option_definitions.c.string.name, 'string')
         self.assertEqual(c.option_definitions.c.string.doc, 'str')
-        self.assertEqual(c.option_definitions.c.string.default, 'fred')
+        self.assertEqual(c.option_definitions.c.string.default, 'from ini')
         self.assertEqual(c.option_definitions.c.string.value, 'from ini')
-
-    def test_mapping_types_1(self):
-        n = config_manager.Namespace()
-        n.add_option('a')
-        n.a.default = 1
-        n.a.doc = 'the a'
-        n.b = 17
-        n.c = c = config_manager.Namespace()
-        c.x = 'fred'
-        c.y = 3.14159
-        c.add_option('z')
-        c.z.default = 99
-        c.z.doc = 'the 99'
-        c = config_manager.ConfigurationManager([n],
-                                    use_admin_controls=False,
-                                    #use_config_files=False,
-                                    use_auto_help=False,
-                                    argv_source=[])
-        o = {"a": 2, "c.z": 22, "c.x": 'noob', "c.y": "2.89"}
-        c._overlay_value_sources_recurse(o)
-        e = DotDict()
-        e.a = 2
-        e.b = 17
-        e.c = DotDict()
-        e.c.x = 'noob'
-        e.c.y = 2.89
-        e.c.z = 22
-        d = c._generate_config(dict)
-        self.assertTrue(isinstance(d, dict))
-        self.assertTrue(isinstance(d['c'], dict))
-        self.assertEqual(d, e)
-        d = c._generate_config(DotDict)
-        self.assertTrue(isinstance(d, DotDict))
-        self.assertTrue(isinstance(d.c, DotDict))
-        self.assertEqual(d, e)
-        d = c._generate_config(DotDictWithAcquisition)
-        self.assertTrue(isinstance(d, DotDictWithAcquisition))
-        self.assertTrue(isinstance(d.c, DotDictWithAcquisition))
-        self.assertEqual(d, e)
-        self.assertEqual(d.a, 2)
-        self.assertEqual(d.c.a, 2)
-        self.assertEqual(d.c.b, 17)
 
     def test_get_option_names(self):
         n = config_manager.Namespace()
@@ -929,7 +801,7 @@ c.string =   from ini
         e = (
              ('admin.print_conf', 'print_conf', None),
              ('admin.dump_conf', 'dump_conf', ''),
-             ('admin.conf', 'conf', './config.ini'),
+             ('admin.conf', 'conf', None),
              ('application', 'application', MyApp),
              ('password', 'password', 'fred'),
              ('sub.name', 'name', 'ethel'))
@@ -1351,13 +1223,18 @@ c.string =   from ini
                      MyApp,
                      'the app object class')
 
-        c = config_manager.ConfigurationManager(n,
-                                                [getopt],
-                                    use_admin_controls=True,
-                                    use_auto_help=False,
-                                    argv_source=['--sub1.name=wilma',
-                                                 'arg1',
-                                                 'arg2'])
+        c = config_manager.ConfigurationManager(
+            n,
+            [getopt],
+            use_admin_controls=False,
+            use_auto_help=False,
+            argv_source=[
+                '--sub1.name=wilma',
+                'arg1',
+                'arg2'
+            ]
+        )
+
         with c.context() as config:
             statement = config.sub1.statement
             self.assertEqual(statement.value,
@@ -1465,7 +1342,7 @@ c.string =   from ini
         self.assertRaises(
             IOError,
             config_manager.ConfigurationManager,
-            (n, getopt,),
+            (n,),
             argv_source=['--admin.conf=x.ini']
         )
 
@@ -1476,7 +1353,7 @@ c.string =   from ini
         )
         try:
             c = config_manager.ConfigurationManager(
-                (n, getopt,),
+                (n,),
                 argv_source=['--admin.conf=x.ini']
             )
             with c.context() as config:

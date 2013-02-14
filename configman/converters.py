@@ -302,6 +302,7 @@ def classes_in_namespaces_converter(template_for_namespace="cls%d",
                 """this method takes this inner class object and turns it back
                 into the original string of classnames.  This is used
                 primarily as for the output of the 'help' option"""
+                print "in correct to_str"
                 return ', '.join(
                     py_obj_to_str(v[name_of_class_option].value)
                         for v in cls.get_required_config().values()

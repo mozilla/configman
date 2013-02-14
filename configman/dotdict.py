@@ -76,6 +76,11 @@ class DotDict(collections.MutableMapping):
             initializer - a mapping of keys and values to be added to this
                           mapping."""
         if isinstance(initializer, collections.Mapping):
+            for k, v in initializer.iteritems():
+                if isinstance(v, collections.Mapping):
+                    self.__dict__[k] = DotDict(v)
+                else:
+                    self.__dict__[k] = v
             self.__dict__.update(initializer)
         elif initializer is not None:
             raise TypeError('can only initialize with a Mapping')
@@ -123,6 +128,59 @@ class DotDict(collections.MutableMapping):
     def __len__(self):
         """makes the len function also ignore the '_' keys"""
         return len([x for x in self.__iter__()])
+
+    def keys_breadth_first(self, include_dicts=False):
+        """a generator that returns all the keys in a set of nested
+        DotDict instances.  The keys take the form X.Y.Z"""
+        namespaces = []
+        for k, v in self.iteritems():
+            if isinstance(v, DotDict):
+                namespaces.append(k)
+                if include_dicts:
+                    yield k
+            else:
+                yield k
+        for n in namespaces:
+            for x in self[n].keys_breadth_first(include_dicts):
+                yield '%s.%s' % (n, x)
+
+    def dot_lookup(self, key, d=None):
+        """an alternative method for accessing values within nested
+        DotDict instances.  It accepts keys in the form X.Y.Z"""
+        if d is None:
+            d = self
+        key_split = key.split('.')
+        cur_dict = d
+        for k in key_split:
+            cur_dict = cur_dict[k]
+        return cur_dict
+
+    def assign(self, key, value, d=None):
+        """an alternative method for assigning values to nested DotDict
+        instances.  It accepts keys in the form of X.Y.Z.  If any nested
+        DotDict instances don't yet exist, they will be created."""
+        if d is None:
+            d = self
+        key_split = key.split('.')
+        cur_dict = d
+        for k in key_split[:-1]:
+            try:
+                cur_dict = cur_dict[k]
+            except KeyError:
+                cur_dict[k] = self.__class__()  # so that derived classes
+                                                # remain true to type
+                cur_dict = cur_dict[k]
+        cur_dict[key_split[-1]] = value
+
+
+    def parent(self, key):
+        """when given a key of the form X.Y.Z, this method will return the
+        parent DotDict of the 'Z' key."""
+        parent_key = '.'.join(key.split('.')[:-1])
+        if not parent_key:
+            return None
+        else:
+            return self.dot_lookup(parent_key)
 
 
 class DotDictWithAcquisition(DotDict):
@@ -174,3 +232,4 @@ class DotDictWithAcquisition(DotDict):
             if key.startswith('__'):
                 raise
             raise KeyError(key)
+

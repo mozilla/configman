@@ -229,6 +229,11 @@ class TestCase(unittest.TestCase):
         self.assertTrue('HH1' in req)
         self.assertEqual(len(req.HH1), 1)
         self.assertTrue('cls' in req.HH1)
+        inner_namespace = result.get_required_config()
+        for k in inner_namespace.keys_breadth_first():
+            o = inner_namespace.dot_lookup(k)
+            o.set_value()
+
         self.assertEqual(
                 sorted([x.strip() for x in class_list_str.split(',')]),
                 sorted([x.strip() for x in
