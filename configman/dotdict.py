@@ -40,6 +40,20 @@
 import collections
 import weakref
 
+def iteritems_breadth_first(a_mapping, include_dicts=False):
+    """a generator that returns all the keys in a set of nested
+    Mapping instances.  The keys take the form X.Y.Z"""
+    subordinate_mappings = []
+    for key, value in a_mapping.iteritems():
+        if isinstance(value, collections.Mapping):
+            subordinate_mappings.append((key, value))
+            if include_dicts:
+                yield key, value
+        else:
+            yield key, value
+    for key, a_map in subordinate_mappings:
+        for sub_key, value in iteritems_breadth_first(a_map, include_dicts):
+            yield '%s.%s' % (key, sub_key), value
 
 
 class DotDict(collections.MutableMapping):
@@ -55,6 +69,21 @@ class DotDict(collections.MutableMapping):
         d.b = 17
         assert d['b'] == 17
         assert d.b == 17
+
+    We can even use combination keys:
+
+        d = DotDict()
+        d.x = DotDict()
+        d.x.y = DotDict()
+        d.x.y.a = 'Wilma'
+        assert d['x.y.a'] == 'Wilma'
+        assert d['x.y'].a == 'Wilma'
+        assert d['x'].y.a == 'Wilma'
+        assert d.x.y.a == 'Wilma'
+        assert d.x.y['a'] == 'Wilma'
+        assert d.x['y.a'] == 'Wilma'
+        assert d['x'].y['a'] == 'Wilma'
+        assert d['x']['y']['a'] == 'Wilma'
 
     Because it is a Mapping and key lookup for mappings requires the raising of
     a KeyError when a Key is missing, KeyError is used when an AttributeError
@@ -76,7 +105,8 @@ class DotDict(collections.MutableMapping):
             initializer - a mapping of keys and values to be added to this
                           mapping."""
         if isinstance(initializer, collections.Mapping):
-            self.__dict__.update(initializer)
+            for key, value in iteritems_breadth_first(initializer):
+                self[key] = value
         elif initializer is not None:
             raise TypeError('can only initialize with a Mapping')
 
@@ -99,53 +129,166 @@ class DotDict(collections.MutableMapping):
 
     def __getitem__(self, key):
         """define the square bracket operator to refer to the object's __dict__
-        for fetching values."""
-        return getattr(self, key)
+        for fetching values.  It accepts keys in the form X.Y.Z"""
+        key_split = key.split('.')
+        current = self
+        for k in key_split:
+            current = getattr(current, k)
+        return current
 
     def __setitem__(self, key, value):
         """define the square bracket operator to refer to the object's __dict__
         for setting values."""
-        setattr(self, key, value)
+        if '.' in key:
+            self.assign(key, value)
+        else:
+            setattr(self, key, value)
 
     def __delitem__(self, key):
         """define the square bracket operator to refer to the object's __dict__
-        for deleting values."""
-        del self.__dict__[key]
+        for deleting values.
+        examples:
+           d = DotDict()
+           d['a.b.c'] = 8
+           assert isinstance(d.a, DotDict)
+           assert isinstance(d.a.b, DotDict)
+           del d['a.b.c']
+           assert isinstance(d.a, DotDict)
+           assert isinstance(d.a.b, DotDict)
+           assert 'c' not in d.a.b
+
+           d = DotDict()
+           d['a.b.c'] = 8
+           del d.a
+           assert 'a' not in d
+        """
+        key_split = key.split('.')
+        current = self
+        for k in key_split[:-1]:
+            current = getattr(current, k)
+        current.__delattr__(key_split[-1])
 
     def __iter__(self):
         """redirect the default iterator to iterate over the object's __dict__
         making sure that it ignores the special '_' keys.  We want those items
         ignored or we risk infinite recursion, not with this function, but
         with the clients of this class deep within configman"""
-        return (k for k in self.__dict__
-                     if not k.startswith('_'))
+        return (key for key in self.__dict__
+                     if not key.startswith('_'))
 
     def __len__(self):
         """makes the len function also ignore the '_' keys"""
         return len([x for x in self.__iter__()])
+
+    def keys_breadth_first(self, include_dicts=False):
+        """a generator that returns all the keys in a set of nested
+        DotDict instances.  The keys take the form X.Y.Z"""
+        namespaces = []
+        for key, value in self.iteritems():
+            if isinstance(value, DotDict):
+                namespaces.append(key)
+                if include_dicts:
+                    yield key
+            else:
+                yield key
+        for a_namespace in namespaces:
+            for key in self[a_namespace].keys_breadth_first(include_dicts):
+                yield '%s.%s' % (a_namespace, key)
+
+    def assign(self, key, value):
+        """an alternative method for assigning values to nested DotDict
+        instances.  It accepts keys in the form of X.Y.Z.  If any nested
+        DotDict instances don't yet exist, they will be created."""
+        key_split = key.split('.')
+        cur_dict = self
+        for k in key_split[:-1]:
+            try:
+                cur_dict = cur_dict[k]
+            except KeyError:
+                cur_dict[k] = self.__class__()  # so that derived classes
+                                                # remain true to type
+                cur_dict = cur_dict[k]
+        cur_dict[key_split[-1]] = value
+
+    def parent(self, key):
+        """when given a key of the form X.Y.Z, this method will return the
+        parent DotDict of the 'Z' key."""
+        parent_key = '.'.join(key.split('.')[:-1])
+        if not parent_key:
+            return None
+        else:
+            return self[parent_key]
 
 
 class DotDictWithAcquisition(DotDict):
     """This mapping, a derivative of DotDict, has special semantics when
     nested with mappings of the same type.
 
-        d = DotDict()
+        d = DotDictWithAcquisition()
         d.a = 23
-        d.dd = DotDict()
+        d.dd = DotDictWithAcquisition()
         assert d.dd.a == 23
 
-    Nested instances of DotDict, when faced with a key not within the local
-    mapping, will defer to the parent DotDict to find a key.  Only if the key
-    is not found in the root of the nested mappings will the KeyError be
-    raised.  This is similar to the "acquisition" system found in Zope.
+    Nested instances of DotDictWithAcquisition, when faced with a key not
+    within the local mapping, will defer to the parent DotDict to find a key.
+    Only if the key is not found in the root of the nested mappings will the
+    KeyError be raised.  This is similar to the "acquisition" system found in
+    Zope.
 
-        d = DotDict()
-        d.dd = DotDict()
+        d = DotDictWithAcquisition()
+        d.dd = DotDictWithAcquisition()
         try:
             d.dd.x
         except KeyError:
             print "'x' was not found in d.dd or in d"
+
+    When used with keys of the form 'x.y.z', acquisition can allow it to return
+    acquired values even if the intermediate keys don't exist:
+
+        d = DotDictWithAcquisition()
+        d.a = 39
+        assert d['x.y.z.a'] == 39
+
+    Interestingly, indexing each component individually will result in a
+    KeyError:
+
+        d = DotDictWithAcquisition()
+        d.a = 39
+        try:
+            print d.x.y.z.a
+        except KeyError, e:
+            assert str(e) == 'x'
+
+    This behavior seems inconsistent, but really works so by design.  The form
+    d.x.y.z.a is really equivalent to:
+
+        t0 = d.x
+        t1 = t0.y
+        t2 = t1.z
+        result = t2.a
+
+    When broken out into separate operations, we want key errors to happen.
+    Contrarily, the form d['x.y.z.a'] is a single lookup operation that reveals
+    that our goal is to get a value for 'a'.  Since this class has acquisition,
+    and 'a' is defined in the base, it is perfectly allowable.
     """
+
+    def __getitem__(self, key):
+        """define the square bracket operator to refer to the object's __dict__
+        for fetching values.  It accepts keys in the form 'x.y.z'"""
+        key_split = key.split('.')
+        last_index = len(key_split) - 1
+        current = self
+        for i, k in enumerate(key_split):
+            try:
+                current = getattr(current, k)
+            except KeyError:
+                if i == last_index:
+                    raise
+                temp_dict = DotDictWithAcquisition()
+                temp_dict._parent = weakref.proxy(current)
+                current = temp_dict
+        return current
 
     def __setattr__(self, key, value):
         """this function saves keys into the mapping's __dict__.  If the
@@ -174,3 +317,4 @@ class DotDictWithAcquisition(DotDict):
             if key.startswith('__'):
                 raise
             raise KeyError(key)
+

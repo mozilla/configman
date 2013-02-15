@@ -45,7 +45,7 @@ from source_exceptions import (NoHandlerForType, ModuleHandlesNothingException,
                                AllHandlersFailedException,
                                UnknownFileExtensionException,
                                ValueException)
-
+from ..dotdict import iteritems_breadth_first
 from ..config_file_future_proxy import ConfigFileFutureProxy
 
 # replace with dynamic discovery and loading
@@ -138,8 +138,6 @@ def wrap(value_source_list, a_config_manager):
         error_history = []
         for a_handler in handlers:
             try:
-                #print "the source:", a_source
-                #print "the handler:", a_handler
                 wrapped_source = a_handler.ValueSource(a_source,
                                                        a_config_manager)
                 break
@@ -181,5 +179,5 @@ def get_admin_options_from_command_line(config_manager):
                                                        config_manager)
     values = command_line_value_source.get_values(config_manager,
                                                   ignore_mismatches=True)
-    return dict([(key, val) for key, val in values.iteritems()
+    return dict([(key, val) for key, val in iteritems_breadth_first(values)
                                           if key.startswith('admin.')])

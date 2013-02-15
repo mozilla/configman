@@ -1465,7 +1465,7 @@ c.string =   from ini
         self.assertRaises(
             IOError,
             config_manager.ConfigurationManager,
-            (n, getopt,),
+            (n,),
             argv_source=['--admin.conf=x.ini']
         )
 
