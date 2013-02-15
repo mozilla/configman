@@ -76,8 +76,7 @@ class ValueSource(object):
         elif isinstance(source, collections.Sequence):
             self.argv_source = source
         else:
-            raise CantHandleTypeException("don't know how to handle"
-                                             " %s." % str(source))
+            raise CantHandleTypeException()
 
     def get_values(self, config_manager, ignore_mismatches):
         """This is the black sheep of the crowd of ValueSource implementations.

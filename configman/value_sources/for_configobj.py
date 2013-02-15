@@ -166,8 +166,7 @@ class ValueSource(object):
                 raise LoadingIniFileFailsException(
                   "ConfigObj cannot load ini: %s" % str(x))
         else:
-            raise CantHandleTypeException(
-                        "ConfigObj doesn't know how to handle %s." % source)
+            raise CantHandleTypeException()
 
     def get_values(self, config_manager, ignore_mismatches):
         """Return a nested dictionary representing the values in the ini file.
