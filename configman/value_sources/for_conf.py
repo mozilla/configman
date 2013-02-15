@@ -83,8 +83,7 @@ class ValueSource(object):
             # will return a Context Manager Type.
             opener = candidate
         else:
-            raise CantHandleTypeException("Conf doesn't know how to handle"
-                                                     " %s." % str(candidate))
+            raise CantHandleTypeException()
         self.values = {}
         try:
             with opener() as f:

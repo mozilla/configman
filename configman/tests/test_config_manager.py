@@ -53,6 +53,7 @@ from configman.converters import class_converter
 import configman.datetime_util as dtu
 from configman.config_exceptions import NotAnOptionError
 from configman.value_sources.source_exceptions import (
+  NoHandlerForType,
   AllHandlersFailedException,
   UnknownFileExtensionException
 )
@@ -1239,7 +1240,7 @@ c.string =   from ini
                     os.path.isdir = temp_fn
                 return r
 
-        self.assertRaises(AllHandlersFailedException,
+        self.assertRaises(NoHandlerForType,
                           MyConfigManager,
                           use_admin_controls=True,
                           use_auto_help=False,
@@ -1441,18 +1442,16 @@ c.string =   from ini
         self.assertEqual(conf.destination.a, 11)
         self.assertEqual(conf.destination.cls, T1)
 
-    def test_admin_conf_missing_file_ioerror(self):
-        """if you specify an `--admin.conf=...` file that doesn't exist it
-        should not let you get away with it.
-        """
+
+    def _common_app_namespace_setup(self):
         class MyApp(config_manager.RequiredConfig):
             app_name = 'fred'
             app_version = '1.0'
             app_description = "my app"
             required_config = config_manager.Namespace()
             required_config.namespace('toplevel')
-            required_config.toplevel.add_option('password', 'fred', 'the password')
-
+            required_config.toplevel.add_option('password', 'fred',
+                                                'the password')
 
         n = config_manager.Namespace()
         n.admin = config_manager.Namespace()
@@ -1461,11 +1460,19 @@ c.string =   from ini
             MyApp,
             'the app object class'
         )
+        return n
+
+
+    def test_admin_conf_missing_file_ioerror(self):
+        """if you specify an `--admin.conf=...` file that doesn't exist it
+        should not let you get away with it.
+        """
+        n = self._common_app_namespace_setup()
 
         self.assertRaises(
             IOError,
             config_manager.ConfigurationManager,
-            (n, getopt,),
+            (n,),
             argv_source=['--admin.conf=x.ini']
         )
 
@@ -1476,10 +1483,50 @@ c.string =   from ini
         )
         try:
             c = config_manager.ConfigurationManager(
-                (n, getopt,),
+                (n,),
                 argv_source=['--admin.conf=x.ini']
             )
             with c.context() as config:
                 self.assertEqual(config.toplevel.password, 'something')
+        finally:
+            os.remove('x.ini')
+
+    def test_admin_conf_all_handlers_fail(self):
+        """no handler found produces empty message"""
+        n = self._common_app_namespace_setup()
+
+        # make a config file that nothing will understand
+        open('x.fred', 'w').write(
+            '[toplevel]\n'
+            'password=something\n'
+        )
+        try:
+            self.assertRaises(
+                NoHandlerForType,
+                config_manager.ConfigurationManager,
+                (n,),
+                argv_source=['--admin.conf=x.fred']
+            )
+        finally:
+            os.remove('x.fred')
+
+    def test_admin_conf_fail_message_gets_through(self):
+        """make sure AllHandlersFailedException message gets through"""
+        n = self._common_app_namespace_setup()
+
+        # make a config file that fails to load in its proper handler
+        open('x.ini', 'w').write(
+            'this makes no sense as an ini file'
+        )
+        try:
+            config_manager.ConfigurationManager(
+                (n,),
+                argv_source=['--admin.conf=x.ini']
+            )
+            assert False, "where's the missing exception?"
+        except AllHandlersFailedException, x:
+            self.assertTrue('ConfigParser cannot load' in str(x))
+            if 'configobj' in sys.modules.keys():
+                self.assertTrue('ConfigObj cannot load' in str(x))
         finally:
             os.remove('x.ini')
