@@ -434,51 +434,81 @@ class ConfigurationManager(object):
 
     #--------------------------------------------------------------------------
     def _overlay_expand(self):
-        keys_have_been_processed = True
-        processed_keys = []
+        """This method overlays each of the value sources onto the default
+        in each of the defined options.  It does so using a breadth first
+        iteration, overlaying and expanding each level of the tree in turn.
+        As soon as no changes were made to any level, the loop breaks and the
+        work is done.
 
-        while keys_have_been_processed:
+        "expansion" means converting an option value into its real type from
+        string. If the resultant type has its own configuration options, bring
+        those into the current namespace and then proceed to overlay/expand
+        those.
+        """
+        keys_have_been_processed = True  # loop control, False breaks the loop
+        processed_keys = []  # a list of keys that have been expanded
+
+        while keys_have_been_processed:  # loop until nothing more is done
+            # keys holds a list of all keys in the option definitons in
+            # breadth first order using this form: [ 'x', 'y', 'z', 'x.a',
+            # 'x.b', 'z.a', 'z.b', 'x.a.j', 'x.a.k', 'x.b.h']
             keys = [x for x in self.option_definitions.keys_breadth_first()]
-            keys_have_been_processed = False
+            keys_have_been_processed = False  # setup to break loop
 
-            # first: fetch all the default values from the value sources before
+            # overlay process:
+            # fetch all the default values from the value sources before
             # applying the from string conversions
             for key in keys:
-                if key not in processed_keys:
+                if key not in processed_keys:  # skip all keys previously seen
+                    # loop through all the value sources looking for values
+                    # that match this current key.
                     for a_value_source in self.values_source_list:
                         try:
+                            # get all the option values from this value source
                             val_src_dict = a_value_source.get_values(
                                 self,
                                 True
                             )
+                            # make sure it is in the form of a DotDict
                             if not isinstance(val_src_dict, DotDict):
                                 val_src_dict = DotDict(val_src_dict)
+                            # get the Option for this key
                             opt = self.option_definitions.dot_lookup(key)
                             try:
+                                # overlay the default with the new value from
+                                # the value source
                                 opt.default = val_src_dict.dot_lookup(key)
                             except (AttributeError, KeyError):
                                 opt.default = val_src_dict[key]
                         except KeyError:
                             pass  # okay, that source doesn't have this value
 
-            # second: step through all the keys converting them to their proper
+            # expansion process:
+            # step through all the keys converting them to their proper
             # types and bringing in any new keys in the process
             for key in keys:
-                if key not in processed_keys:
+                if key not in processed_keys:  # skip all keys previously seen
                     an_option = self.option_definitions.dot_lookup(key)
                     if isinstance(an_option, Aggregation):
-                        continue
+                        continue  # aggregations are ignored
+                    # apply the from string conversion to make the real value
                     an_option.set_value(an_option.default)
+                    # mark this key as having been seen an processed
                     processed_keys.append(key)
+                    # new values have been seen, don't let loop break
                     keys_have_been_processed = True
                     try:
+                        # try to fetch new requirements from this value
                         new_req = an_option.value.get_required_config()
-                        current_base_dict = self.option_definitions.parent(key)
-                        if current_base_dict is None:
-                            current_base_dict = self.option_definitions
-                        current_base_dict.update(new_req.safe_copy())
+                        # get the parent namespace
+                        current_namespace = self.option_definitions.parent(key)
+                        if current_namespace is None:
+                            # we're at the top level, use the base namespace
+                            current_namespace = self.option_definitions
+                        # add the new Options to the namespace
+                        current_namespace.update(new_req.safe_copy())
                     except AttributeError, x:
-                        # there are apparently no namespaces to bring in from
+                        # there are apparently no new Options to bring in from
                         # this option's value
                         pass
 
