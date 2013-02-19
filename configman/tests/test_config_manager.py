@@ -1360,3 +1360,27 @@ c.string =   from ini
                 self.assertEqual(config.toplevel.password, 'something')
         finally:
             os.remove('x.ini')
+
+    def test_bad_options(self):
+        rc = Namespace()
+        rc.namespace('source')
+        rc.source.add_option('cls',
+                             default='configman.tests.test_config_manager.T1',
+                             from_string_converter=class_converter)
+        rc.namespace('destination')
+        rc.destination.add_option('cls',
+                                  default='configman.tests.test_config_manager.T2',
+                                  from_string_converter=class_converter)
+        self.assertRaises( # classy is not an option
+            NotAnOptionError,
+            config_manager.ConfigurationManager,
+            rc,
+            [{'source': {'clos': 'configman.tests.test_config_manager.T2'},
+              'destination': {'cls': 'configman.tests.test_config_manager.T3'}},
+             {'source': {'cls': 'configman.tests.test_config_manager.T1'},
+                         'destination': {'cls': 'configman.tests.test_config_manager.T2'}},
+             {'source': {'classy': 'configman.tests.test_config_manager.T3'},
+                         'destination': {'cls': 'configman.tests.test_config_manager.T1'}},
+            ],
+        )
+

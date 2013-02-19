@@ -231,7 +231,7 @@ class TestCase(unittest.TestCase):
         self.assertTrue('cls' in req.HH1)
         inner_namespace = result.get_required_config()
         for k in inner_namespace.keys_breadth_first():
-            o = inner_namespace.dot_lookup(k)
+            o = inner_namespace[k]
             o.set_value()
 
         self.assertEqual(

@@ -446,7 +446,7 @@ class ConfigurationManager(object):
         those.
         """
         keys_have_been_processed = True  # loop control, False breaks the loop
-        processed_keys = []  # a list of keys that have been expanded
+        processed_keys = set()  # a set of keys that have been expanded
 
         while keys_have_been_processed:  # loop until nothing more is done
             # keys holds a list of all keys in the option definitons in
@@ -473,13 +473,10 @@ class ConfigurationManager(object):
                             if not isinstance(val_src_dict, DotDict):
                                 val_src_dict = DotDict(val_src_dict)
                             # get the Option for this key
-                            opt = self.option_definitions.dot_lookup(key)
-                            try:
-                                # overlay the default with the new value from
-                                # the value source
-                                opt.default = val_src_dict.dot_lookup(key)
-                            except (AttributeError, KeyError):
-                                opt.default = val_src_dict[key]
+                            opt = self.option_definitions[key]
+                            # overlay the default with the new value from
+                            # the value source
+                            opt.default = val_src_dict[key]
                         except KeyError:
                             pass  # okay, that source doesn't have this value
 
@@ -488,13 +485,13 @@ class ConfigurationManager(object):
             # types and bringing in any new keys in the process
             for key in keys:
                 if key not in processed_keys:  # skip all keys previously seen
-                    an_option = self.option_definitions.dot_lookup(key)
+                    an_option = self.option_definitions[key]
                     if isinstance(an_option, Aggregation):
                         continue  # aggregations are ignored
                     # apply the from string conversion to make the real value
                     an_option.set_value(an_option.default)
                     # mark this key as having been seen an processed
-                    processed_keys.append(key)
+                    processed_keys.add(key)
                     # new values have been seen, don't let loop break
                     keys_have_been_processed = True
                     try:
@@ -511,6 +508,30 @@ class ConfigurationManager(object):
                         # there are apparently no new Options to bring in from
                         # this option's value
                         pass
+
+        # check for bad options from value sources:
+        for a_value_source in self.values_source_list:
+            try:
+                if a_value_source.always_ignore_mismatches:
+                    continue
+            except AttributeError:
+                # ok, this values source doesn't have the concept
+                pass
+            value_source_mapping = a_value_source.get_values(self, True)
+            value_source_keys_set = set([
+                k for k in
+                DotDict(value_source_mapping).keys_breadth_first()
+            ])
+            unmatched_keys = value_source_keys_set.difference(processed_keys)
+            if unmatched_keys:
+                if len(unmatched_keys) > 1:
+                    raise exc.NotAnOptionError(
+                        "%s are not valid Options" % unmatched_keys
+                    )
+                else:
+                    raise exc.NotAnOptionError(
+                        "%s is not a valid Option" % unmatched_keys.pop()
+                    )
 
     #--------------------------------------------------------------------------
     @staticmethod
