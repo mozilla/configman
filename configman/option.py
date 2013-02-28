@@ -75,6 +75,8 @@ class Option(object):
             self.default = self.from_string_converter(self.default)
         self.exclude_from_print_conf = exclude_from_print_conf
         self.exclude_from_dump_conf = exclude_from_dump_conf
+        self.comment_out = False  # used internally
+
 
     def __eq__(self, other):
         if isinstance(other, Option):

@@ -77,6 +77,7 @@ class ConfigurationManager(object):
                  app_version='',
                  app_description='',
                  config_pathname='.',
+                 config_optional=True,
                  ):
         """create and initialize a configman object.
 
@@ -115,7 +116,12 @@ class ConfigurationManager(object):
           app_description - assigns a description for the app to be used in
                             the help output.
           config_pathname - a hard coded path to the directory of or the full
-                            path and name of the configuration file."""
+                            path and name of the configuration file.
+          config_optional - a boolean indicating if a missing default config
+                            file is optional.  Note: this is only for the
+                            default config file.  If a config file is specified
+                            on the commandline, it _must_ exsist."""
+
         # instead of allowing mutables as default keyword argument values...
         if definition_source is None:
             definition_source_list = []
@@ -130,6 +136,7 @@ class ConfigurationManager(object):
         if options_banned_from_help is None:
             options_banned_from_help = ['application']
         self.config_pathname = config_pathname
+        self.config_optional = config_optional
 
         self.app_name = app_name
         self.app_version = app_version
@@ -175,10 +182,15 @@ class ConfigurationManager(object):
                                           self.option_definitions)
 
         if use_admin_controls:
-            # some admin options need to be loaded from the command line
-            # prior to processing the rest of the command line options.
-            admin_options = value_sources.get_admin_options_from_command_line(
-                                                                          self)
+            # the name of the config file needs to be loaded from the command
+            # line prior to processing the rest of the command line options.
+            config_filename = \
+                value_sources.config_filename_from_commandline(self)
+            if (config_filename
+                and cm.ConfigFileFutureProxy in values_source_list
+                ):
+                self.option_definitions.admin.conf.default = config_filename
+
             # integrate the admin_options with 'option_definitions'
             self._overlay_value_sources_recurse(source=admin_options,
                                         ignore_mismatches=True)
@@ -374,11 +386,28 @@ class ConfigurationManager(object):
         if skip_keys:
             blocked_keys.extend(skip_keys)
 
-        option_iterator = functools.partial(self._walk_config,
-                                       blocked_keys=blocked_keys)
+        if blocked_keys:
+            option_defs = self.option_definitions.safe_copy()
+            for a_blocked_key in blocked_keys:
+                try:
+                    del option_defs[a_blocked_key]
+                except (AttributeError, KeyError):
+                    # okay that key isn't here
+                    pass
+            # remove empty namespaces
+            all_keys = [k for k in
+                        option_defs.keys_breadth_first(include_dicts=True)]
+            for key in all_keys:
+                candidate = option_defs[key]
+                if (isinstance(candidate, Namespace) and not len(candidate)):
+                    del option_defs[key]
+        else:
+            option_defs = self.option_definitions
+
+        # self._migrate_options_for_acquisition(option_defs)
 
         value_sources.write(config_file_type,
-                            option_iterator,
+                            option_defs,
                             opener)
 
     #--------------------------------------------------------------------------

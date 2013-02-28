@@ -185,28 +185,8 @@ class ValueSource(object):
         return self.config_obj
 
     @staticmethod
-    def recursive_default_dict():
-        return collections.defaultdict(ValueSource.recursive_default_dict)
-
-    @staticmethod
-    def write(option_iter, output_stream=sys.stdout):
-        destination_dict = ValueSource.recursive_default_dict()
-        # reconstitute a hierarchy of dicts of Option objects
-        # from the iterator:
-        for qkey, key, val in option_iter():
-            if isinstance(val, Namespace):
-                continue
-            d = destination_dict
-            for x in qkey.split('.')[:-1]:
-                d = d[x]
-            if isinstance(val, Option):
-                d[key] = val
-        ValueSource._write_ini(
-          destination_dict,
-          level=0,
-          indent_size=4,
-          output_stream=output_stream
-        )
+    def write(source_mapping, output_stream=sys.stdout):
+        ValueSource._write_ini(source_mapping, output_stream=output_stream)
 
     @staticmethod
     def _write_ini(source_dict, level=0, indent_size=4,
@@ -222,7 +202,7 @@ class ValueSource(object):
         namespaces = [
           (key, value)
           for key, value in source_dict.items()
-              if isinstance(value, collections.defaultdict)
+              if isinstance(value, Namespace)
         ]
         namespaces.sort()
         indent_spacer = " " * (level * indent_size)
@@ -241,7 +221,10 @@ class ValueSource(object):
             if isinstance(option_value, unicode):
                 option_value = option_value.encode('utf8')
 
-            option_format = '%s%s=%r\n'
+            if an_option.comment_out:
+                option_format = '%s# %s=%r\n'
+            else:
+                option_format = '%s%s=%r\n'
             print >>output_stream, option_format % (
               indent_spacer,
               an_option.name,
