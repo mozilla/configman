@@ -71,7 +71,6 @@ class Namespace(dotdict.DotDict):
 
     #--------------------------------------------------------------------------
     def set_value(self, name, value, strict=True):
-
         name_parts = name.split('.', 1)
         prefix = name_parts[0]
         try:
@@ -86,3 +85,32 @@ class Namespace(dotdict.DotDict):
             candidate.set_value(name_parts[1], value, strict)
         else:
             candidate.set_value(value)
+
+    #--------------------------------------------------------------------------
+    def safe_copy(self):
+        new_namespace = Namespace()
+        for key, opt in self.iteritems():
+            if isinstance(opt, Option):
+                new_namespace.add_option(
+                    opt.name,
+                    default=opt.default,
+                    doc=opt.doc,
+                    from_string_converter=opt.from_string_converter,
+                    value=opt.value,
+                    short_form=opt.short_form,
+                    exclude_from_print_conf=opt.exclude_from_print_conf,
+                    exclude_from_dump_conf=opt.exclude_from_dump_conf
+                )
+            elif isinstance(opt, Aggregation):
+                new_namespace.add_aggregation(
+                    opt.name,
+                    opt.function
+                )
+            elif isinstance(opt, Namespace):
+                new_namespace[key] = opt.safe_copy()
+        return new_namespace
+
+
+
+
+

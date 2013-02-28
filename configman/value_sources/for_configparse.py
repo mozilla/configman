@@ -130,20 +130,53 @@ class ValueSource(object):
         return options
 
     @staticmethod
-    def write(option_iter, output_stream=sys.stdout):
-        print >> output_stream, '[top_level]'
-        for qkey, key, val in option_iter():
-            if isinstance(val, namespace.Namespace):
-                print >> output_stream, '[%s]' % qkey
-                print >> output_stream, '# %s\n' % val._doc
-            elif isinstance(val, option.Option):
-                print >> output_stream, '# name:', qkey
-                print >> output_stream, '# doc:', val.doc
-                print >> output_stream, '# converter:', \
-                   conv.py_obj_to_str(val.from_string_converter)
-                val_str = conv.option_value_str(val)
-                print >> output_stream, '%s=%s\n' % (key, val_str)
-            elif isinstance(val, option.Aggregation):
-                # there is nothing to do for Aggregations at this time
-                # it appears here anyway as a marker for future enhancements
-                pass
+    def write(source_mapping, output_stream=sys.stdout):
+        print >> output_stream, '[top_level]\n'
+        ValueSource._write_ini(source_mapping, output_stream=output_stream)
+
+    @staticmethod
+    def _write_ini(source_dict, namespace_name=None, output_stream=sys.stdout):
+        options = [
+          value
+          for value in source_dict.values()
+              if isinstance(value, option.Option)
+        ]
+        options.sort(cmp=lambda x, y: cmp(x.name, y.name))
+        namespaces = [
+          (key, value)
+          for key, value in source_dict.items()
+              if isinstance(value, namespace.Namespace)
+        ]
+        for an_option in options:
+            print >>output_stream, "# name: %s" % an_option.name
+            print >>output_stream, "# doc: %s" % an_option.doc
+            print >>output_stream, "# converter: %s" % (
+              conv.py_obj_to_str(
+                an_option.from_string_converter
+              ),
+            )
+            option_value = conv.option_value_str(an_option)
+            if isinstance(option_value, unicode):
+                option_value = option_value.encode('utf8')
+
+            if an_option.comment_out:
+                option_format = '# %s=%r\n'
+            else:
+                option_format = '%s=%r\n'
+            print >>output_stream, option_format % (
+              an_option.name,
+              option_value
+            )
+        for key, a_namespace in namespaces:
+            if namespace_name:
+                namespace_label = ''.join((namespace_name, '.', key))
+            else:
+                namespace_label = key
+            print >>output_stream, "[%s]\n" % namespace_label
+            ValueSource._write_ini(
+              a_namespace,
+              namespace_name=namespace_label,
+              output_stream=output_stream
+            )
+
+
