@@ -37,7 +37,11 @@
 # ***** END LICENSE BLOCK *****
 
 import unittest
-from configman.dotdict import DotDict, DotDictWithAcquisition
+from configman.dotdict import (
+    DotDict,
+    DotDictWithAcquisition,
+    iteritems_breadth_first,
+)
 
 
 class TestCase(unittest.TestCase):
@@ -56,6 +60,48 @@ class TestCase(unittest.TestCase):
         self.assertEqual(dd.get('gender'), 'male')
         self.assertEqual(dd.get('junk'), None)
         self.assertEqual(dd.get('junk', 'trash'), 'trash')
+
+    def test_getting_and_setting_2(self):
+        d = DotDict()
+        d['a'] = 17
+        self.assertEqual(d['a'], 17)
+        self.assertEqual(d.a, 17)
+        d['b.d'] = 23
+        self.assertEqual(d['b.d'], 23)
+        self.assertEqual(d['b']['d'], 23)
+        self.assertEqual(d.b['d'], 23)
+        self.assertEqual(d.b.d, 23)
+
+    def test_access_combos(self):
+        d = DotDictWithAcquisition()
+        d.x = DotDictWithAcquisition()
+        d.x.y = DotDictWithAcquisition()
+        d.x.y.a = 'Wilma'
+        self.assertEqual(d['x.y.a'], 'Wilma')
+        self.assertEqual(d['x.y'].a, 'Wilma')
+        self.assertEqual(d['x'].y.a, 'Wilma')
+        self.assertEqual(d.x.y.a, 'Wilma')
+        self.assertEqual(d.x.y['a'], 'Wilma')
+        self.assertEqual(d.x['y.a'], 'Wilma')
+        self.assertEqual(d['x'].y['a'], 'Wilma')
+        self.assertEqual(d['x']['y']['a'], 'Wilma')
+        self.assertTrue(isinstance(d.x, DotDictWithAcquisition))
+        self.assertTrue(isinstance(d.x.y, DotDictWithAcquisition))
+
+    def test_access_combos_2(self):
+        d = DotDict()
+        d.x = DotDict()
+        d.x.y = DotDict()
+        d.x.y.a = 'Wilma'
+        self.assertEqual(d['x.y.a'], 'Wilma')
+        self.assertEqual(d['x.y'].a, 'Wilma')
+        self.assertEqual(d['x'].y.a, 'Wilma')
+        self.assertEqual(d.x.y.a, 'Wilma')
+        self.assertEqual(d.x.y['a'], 'Wilma')
+        self.assertEqual(d.x['y.a'], 'Wilma')
+        self.assertEqual(d['x'].y['a'], 'Wilma')
+        self.assertEqual(d['x']['y']['a'], 'Wilma')
+
 
     def test_deleting_attributes(self):
         dd = DotDict()
@@ -188,3 +234,139 @@ class TestCase(unittest.TestCase):
         # you just can't use the high-level function .get()
         # on these Python special keys
         self.assertRaises(AttributeError, dd.get, '__something__')
+
+    def test_keys_breadth_first(self):
+        d = DotDict()
+        d.a = 1
+        d.b = 2
+        d.c = 3
+        d.d = DotDict()
+        d.d.a = 4
+        d.d.b = 5
+        d.d.c = 6
+        d.d.d = DotDict()
+        d.d.d.a = 7
+        d.e = DotDict()
+        d.e.a = 8
+        expected = ['a', 'b', 'c', 'd.a', 'd.b', 'd.c', 'd.d.a', 'e.a']
+        actual = [x for x in d.keys_breadth_first()]
+        actual.sort()
+        self.assertEqual(expected, actual)
+
+    def test_dot_lookup(self):
+        d = DotDict()
+        d.a = 1
+        d.b = 2
+        d.c = 3
+        d.d = DotDict()
+        d.d.a = 4
+        d.d.b = 5
+        d.d.c = 6
+        d.d.d = DotDict()
+        d.d.d.a = 7
+        d.e = DotDict()
+        d.e.a = 8
+
+        self.assertEqual(d['a'], 1)
+        self.assertEqual(d['b'], 2)
+        self.assertEqual(d['c'], 3)
+        self.assertEqual(d['d.a'], 4)
+        self.assertEqual(d['d.b'], 5)
+        self.assertEqual(d['d.c'], 6)
+        self.assertEqual(d['d.d.a'], 7)
+        self.assertEqual(d['e.a'], 8)
+
+        self.assertTrue(isinstance(d['d'], DotDict))
+        self.assertTrue(isinstance(d['d.d'], DotDict))
+
+        self.assertRaises(
+            KeyError,
+            d.__getitem__,
+            'x'
+        )
+        self.assertRaises(
+            KeyError,
+            d.__getitem__,
+            'd.x'
+        )
+        self.assertRaises(
+            KeyError,
+            d.__getitem__,
+            'd.d.x'
+        )
+
+    def test_parent(self):
+        d = DotDict()
+        d.a = 1
+        d.b = 2
+        d.c = 3
+        d.d = DotDict()
+        d.d.a = 4
+        d.d.b = 5
+        d.d.c = 6
+        d.d.d = DotDict()
+        d.d.d.a = 7
+        d.e = DotDict()
+        d.e.a = 8
+
+        self.assertEqual(d.parent('d.d.a'), d['d.d'])
+        self.assertTrue(d.parent('d') is None)
+
+    def test_assign(self):
+        d = DotDict()
+        d.assign('a.b', 10)
+        self.assertEqual(d['a.b'], 10)
+        self.assertTrue(isinstance(d.a, DotDict))
+        self.assertEqual(d.a['b'], 10)
+
+    def test_iteritems_breadth_first(self):
+        d = {'a': {'aa': 13,
+                   'ab': 14,},
+             'b': {'ba': {'baa': 0,
+                          'bab': 1,},
+                   'bb': {'bba': 2,}},
+             'c': 9,
+             'd': {'dd': 2}}
+        e = [('a.aa', 13),
+             ('a.ab', 14),
+             ('b.ba.baa', 0),
+             ('b.ba.bab', 1),
+             ('b.bb.bba', 2),
+             ('c', 9),
+             ('d.dd', 2)]
+        a = [x for x in iteritems_breadth_first(d)]
+        e = sorted(e)
+        a = sorted(a)
+        self.assertEqual(a, e)
+
+        # try a round trip
+        dd = DotDict()
+        for k, v in a:
+            print k, v
+            dd.assign(k, v)
+        ddkv = sorted(iteritems_breadth_first(dd))
+        self.assertEqual(e, ddkv)
+
+    def  test_copy_constructor(self):
+        d = {'a': {'aa': 13,
+                   'ab': 14,},
+             'b': {'ba': {'baa': 0,
+                   'bab': 1,},
+                   'bb': {'bba': 2,}},
+             'c': 9,
+             'd': {'dd': 2}}
+        dd = DotDictWithAcquisition(d)
+        e = [('a.aa', 13),
+             ('a.ab', 14),
+             ('b.ba.baa', 0),
+             ('b.ba.bab', 1),
+             ('b.bb.bba', 2),
+             ('c', 9),
+             ('d.dd', 2)]
+        a = [x for x in iteritems_breadth_first(d)]
+        e = sorted(e)
+        a = sorted(a)
+        self.assertEqual(a, e)
+        self.assertTrue(isinstance(dd.a, DotDictWithAcquisition))
+
+
