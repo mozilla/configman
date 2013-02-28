@@ -43,7 +43,6 @@ import inspect
 import os.path
 import contextlib
 import functools
-import copy
 
 import configman as cm
 import converters as conv
@@ -77,6 +76,7 @@ class ConfigurationManager(object):
                  app_version='',
                  app_description='',
                  config_pathname='.',
+                 config_optional=True,
                  ):
         """create and initialize a configman object.
 
@@ -115,7 +115,12 @@ class ConfigurationManager(object):
           app_description - assigns a description for the app to be used in
                             the help output.
           config_pathname - a hard coded path to the directory of or the full
-                            path and name of the configuration file."""
+                            path and name of the configuration file.
+          config_optional - a boolean indicating if a missing default config
+                            file is optional.  Note: this is only for the
+                            default config file.  If a config file is specified
+                            on the commandline, it _must_ exsist."""
+
         # instead of allowing mutables as default keyword argument values...
         if definition_source is None:
             definition_source_list = []
@@ -130,6 +135,7 @@ class ConfigurationManager(object):
         if options_banned_from_help is None:
             options_banned_from_help = ['application']
         self.config_pathname = config_pathname
+        self.config_optional = config_optional
 
         self.app_name = app_name
         self.app_version = app_version
@@ -175,22 +181,22 @@ class ConfigurationManager(object):
                                           self.option_definitions)
 
         if use_admin_controls:
-            # some admin options need to be loaded from the command line
-            # prior to processing the rest of the command line options.
-            admin_options = value_sources.get_admin_options_from_command_line(
-                                                                          self)
-            # integrate the admin_options with 'option_definitions'
-            self._overlay_value_sources_recurse(source=admin_options,
-                                        ignore_mismatches=True)
+            # the name of the config file needs to be loaded from the command
+            # line prior to processing the rest of the command line options.
+            config_filename = \
+                value_sources.config_filename_from_commandline(self)
+            if (config_filename
+                and cm.ConfigFileFutureProxy in values_source_list
+                ):
+                self.option_definitions.admin.conf.default = config_filename
 
-        self.values_source_list = value_sources.wrap(values_source_list,
-                                                     self)
+        self.values_source_list = value_sources.wrap(
+            values_source_list,
+            self
+        )
 
-        # first pass to get classes & config path - ignore bad options
-        self._overlay_value_sources(ignore_mismatches=True)
-
-        # walk tree expanding class options
-        self._walk_expanding_class_options()
+        known_keys = self._overlay_expand()
+        self._check_for_mismatches(known_keys)
 
         # the app_name, app_version and app_description are to come from
         # if 'application' option if it is present. If it is not present,
@@ -207,14 +213,6 @@ class ConfigurationManager(object):
             # 'app_name' from the parameters passed in, if they exist.
             pass
 
-        # second pass to include config file values - ignore bad options
-        self._overlay_value_sources(ignore_mismatches=True)
-
-        # walk tree expanding class options
-        self._walk_expanding_class_options()
-
-        # third pass to get values - complain about bad options
-        self._overlay_value_sources(ignore_mismatches=False)
 
         if use_auto_help and self._get_option('help').value:
             self.output_summary()
@@ -374,12 +372,68 @@ class ConfigurationManager(object):
         if skip_keys:
             blocked_keys.extend(skip_keys)
 
-        option_iterator = functools.partial(self._walk_config,
-                                       blocked_keys=blocked_keys)
+        if blocked_keys:
+            option_defs = self.option_definitions.safe_copy()
+            for a_blocked_key in blocked_keys:
+                try:
+                    del option_defs[a_blocked_key]
+                except (AttributeError, KeyError):
+                    # okay that key isn't here
+                    pass
+            # remove empty namespaces
+            all_keys = [k for k in
+                        option_defs.keys_breadth_first(include_dicts=True)]
+            for key in all_keys:
+                candidate = option_defs[key]
+                if (isinstance(candidate, Namespace) and not len(candidate)):
+                    del option_defs[key]
+        else:
+            option_defs = self.option_definitions
+
+        self._migrate_options_for_acquisition(option_defs)
 
         value_sources.write(config_file_type,
-                            option_iterator,
+                            option_defs,
                             opener)
+
+    #--------------------------------------------------------------------------
+    @staticmethod
+    def _migrate_options_for_acquisition(option_defs):
+        """sift through the definitions looking for common keys that can be
+        migrated to a lower level in the hierarchy.
+
+        create a mapping with these characteristics:
+            key - composed of the values from Option objects for 'name',
+                  'default' and 'from_string' converstion function.
+            value - a list of the the keys from the currently active option
+                    definition.
+
+        this implements a reverse index of value to keys for the system of
+        Namespaces and Options that make up the configuration manager's
+        option definition mapping.
+
+        the mapping is keyed by the option name, its default value and
+        the from_string_converter function.  If all these things are the
+        same in two options, then it is considered that they are referring
+        to the same option. This means that that option can migrate to a
+        lower level"""
+        migration_candidates = collections.defaultdict(list)
+        # cycle through all the keys
+        for key in option_defs.keys_breadth_first():
+            an_option = option_defs[key]
+            if isinstance(an_option, Option):
+                migration_candidates[(
+                    an_option.name,
+                    str(an_option.default),
+                    str(an_option.from_string_converter)
+                )].append(key)
+        for candidate, original_keys in migration_candidates.iteritems():
+            if len(original_keys) > 1:
+                option_defs[candidate[0]] = \
+                    option_defs[original_keys[0]].copy()
+                option_defs[candidate[0]].not_for_definition = True
+                for a_key in original_keys:
+                    option_defs[a_key].comment_out = True
 
     #--------------------------------------------------------------------------
     def log_config(self, logger):
@@ -392,10 +446,9 @@ class ConfigurationManager(object):
         logger.info("app_name: %s", self.app_name)
         logger.info("app_version: %s", self.app_version)
         logger.info("current configuration:")
-        config = [(qkey, val.value) for qkey, key, val in
-                                    self._walk_config(self.option_definitions)
-                                    if qkey not in self.admin_controls_list
-                                       and not isinstance(val, Namespace)]
+        config = [(key, self.option_definitions[key].value)
+                  for key in self.option_definitions.keys_breadth_first()
+                  if key not in self.admin_controls_list]
         config.sort()
         for key, val in config:
             if 'password' in key.lower():
@@ -408,33 +461,142 @@ class ConfigurationManager(object):
                     logger.info('%s: %s', key, val)
 
     #--------------------------------------------------------------------------
-    def get_option_names(self, source=None, names=None, prefix=''):
+    def get_option_names(self):
         """returns a list of fully qualified option names.
-
-        parameters:
-            source - a sequence of Namespace of Options, usually not specified,
-                     If not specified, the function will default to using the
-                     internal list of Option definitions.
-            names - a list to start with for appending the lsit Option names.
-                    If ommited, the function will start with an empty list.
 
         returns:
             a list of strings representing the Options in the source Namespace
             list.  Each item will be fully qualified with dot delimited
             Namespace names.
         """
-        if source is None:
-            source = self.option_definitions
-        if names is None:
-            names = []
-        for key, val in source.items():
-            if isinstance(val, Namespace):
-                new_prefix = '%s%s.' % (prefix, key)
-                self.get_option_names(val, names, new_prefix)
-            elif isinstance(val, Option):
-                names.append("%s%s" % (prefix, key))
-            # skip aggregations, we want only Options
-        return names
+        return [x for x in self.option_definitions.keys_breadth_first()]
+
+    #--------------------------------------------------------------------------
+    def _overlay_expand(self):
+        """This method overlays each of the value sources onto the default
+        in each of the defined options.  It does so using a breadth first
+        iteration, overlaying and expanding each level of the tree in turn.
+        As soon as no changes were made to any level, the loop breaks and the
+        work is done.  The actual action of the overlay is to take the value
+        from the source and copy into the 'default' member of each Option
+        object.
+
+        "expansion" means converting an option value into its real type from
+        string. The conversion is accomplished by simply calling the
+        'set_value' method of the Option object.  If the resultant type has its
+        own configuration options, bring those into the current namespace and
+        then proceed to overlay/expand those.
+        """
+        new_keys_discovered = True  # loop control, False breaks the loop
+        known_keys = set()  # a set of keys that have been expanded
+
+        while new_keys_discovered:  # loop until nothing more is done
+            # keys holds a list of all keys in the option definitons in
+            # breadth first order using this form: [ 'x', 'y', 'z', 'x.a',
+            # 'x.b', 'z.a', 'z.b', 'x.a.j', 'x.a.k', 'x.b.h']
+            keys = [x for x in self.option_definitions.keys_breadth_first()]
+            new_keys_discovered = False  # setup to break loop
+
+            # overlay process:
+            # fetch all the default values from the value sources before
+            # applying the from string conversions
+            for key in keys:
+                if key not in known_keys:  # skip all keys previously seen
+                    # loop through all the value sources looking for values
+                    # that match this current key.
+                    for a_value_source in self.values_source_list:
+                        try:
+                            # get all the option values from this value source
+                            val_src_dict = a_value_source.get_values(
+                                self,
+                                True
+                            )
+                            # make sure it is in the form of a DotDict
+                            if not isinstance(val_src_dict, DotDict):
+                                val_src_dict = \
+                                    DotDictWithAcquisition(val_src_dict)
+                            # get the Option for this key
+                            opt = self.option_definitions[key]
+                            # overlay the default with the new value from
+                            # the value source.  This assignment may come
+                            # via acquisition, so the key given may not have
+                            # been an exact match for what was returned.
+                            opt.default = val_src_dict[key]
+                        except KeyError, x:
+                            pass  # okay, that source doesn't have this value
+
+            # expansion process:
+            # step through all the keys converting them to their proper
+            # types and bringing in any new keys in the process
+            for key in keys:
+                if key not in known_keys:  # skip all keys previously seen
+                    an_option = self.option_definitions[key]
+                    if isinstance(an_option, Aggregation):
+                        continue  # aggregations are ignored
+                    # apply the from string conversion to make the real value
+                    an_option.set_value(an_option.default)
+                    # mark this key as having been seen an processed
+                    known_keys.add(key)
+                    # new values have been seen, don't let loop break
+                    new_keys_discovered = True
+                    try:
+                        # try to fetch new requirements from this value
+                        new_req = an_option.value.get_required_config()
+                        # get the parent namespace
+                        current_namespace = self.option_definitions.parent(key)
+                        if current_namespace is None:
+                            # we're at the top level, use the base namespace
+                            current_namespace = self.option_definitions
+                        # add the new Options to the namespace
+                        current_namespace.update(new_req.safe_copy())
+                    except AttributeError, x:
+                        # there are apparently no new Options to bring in from
+                        # this option's value
+                        pass
+        return known_keys
+
+    #--------------------------------------------------------------------------
+    def _check_for_mismatches(self, known_keys):
+        """check for bad options from value sources"""
+        for a_value_source in self.values_source_list:
+            try:
+                if a_value_source.always_ignore_mismatches:
+                    continue
+            except AttributeError:
+                # ok, this values source doesn't have the concept
+                # always igoring mismatches, we won't tolerate mismatches
+                pass
+            # make a set of all the keys from a value source in the form
+            # of strings like this: 'x.y.z'
+            value_source_mapping = a_value_source.get_values(self, True)
+            value_source_keys_set = set([
+                k for k in
+                DotDict(value_source_mapping).keys_breadth_first()
+            ])
+            # make a set of the keys that didn't match any of the known
+            # keys in the requirements
+            unmatched_keys = value_source_keys_set.difference(known_keys)
+            # some of the unmatched keys may actually be ok because the were
+            # used during acquisition.
+            # remove keys of the form 'y.z' if they match a known key of the
+            # form 'x.y.z'
+            for key in unmatched_keys.copy():
+                key_is_okay = reduce(
+                    lambda x, y: x or y,
+                    (known_key.endswith(key) for known_key in known_keys)
+                )
+                if key_is_okay:
+                    unmatched_keys.remove(key)
+            # anything left in the unmatched_key set is a badly formed key.
+            # raise hell...
+            if len(unmatched_keys) > 1:
+                raise exc.NotAnOptionError(
+                    "%s are not valid Options" % unmatched_keys
+                )
+            elif len(unmatched_keys) == 1:
+                raise exc.NotAnOptionError(
+                    "%s is not a valid Option" % unmatched_keys.pop()
+                )
 
     #--------------------------------------------------------------------------
     @staticmethod
@@ -455,36 +617,6 @@ class ConfigurationManager(object):
         return config
 
     #--------------------------------------------------------------------------
-    def _walk_expanding_class_options(self, source_namespace=None,
-                                     parent_namespace=None):
-        if source_namespace is None:
-            source_namespace = self.option_definitions
-        expanded_keys = []
-        expansions_were_done = True
-        while expansions_were_done:
-            expansions_were_done = False
-            # can't use iteritems in loop, we're changing the dict
-            for key, val in source_namespace.items():
-                if isinstance(val, Namespace):
-                    self._walk_expanding_class_options(source_namespace=val,
-                                            parent_namespace=source_namespace)
-                elif (key not in expanded_keys and
-                        (inspect.isclass(val.value) or
-                         inspect.ismodule(val.value))):
-                    expanded_keys.append(key)
-                    expansions_were_done = True
-                    try:
-                        for o_key, o_val in \
-                                val.value.get_required_config().iteritems():
-                            source_namespace.__setattr__(o_key,
-                                                         copy.deepcopy(o_val))
-                    except AttributeError:
-                        pass  # there are no required_options for this class
-                else:
-                    pass  # don't need to touch other types of Options
-            self._overlay_value_sources(ignore_mismatches=True)
-
-    #--------------------------------------------------------------------------
     def _setup_auto_help(self):
         help_option = Option(name='help', doc='print this', default=False)
         self.definition_source_list.append({'help': help_option})
@@ -500,8 +632,8 @@ class ConfigurationManager(object):
                                     '%s.ini' % self.app_name)
             else:
                 # there is no app_name yet
-                # we'll punt and use 'config'
-                return os.path.join(self.config_pathname, 'config.ini')
+                # we'll decline to return anything
+                return None
         return self.config_pathname
 
     #--------------------------------------------------------------------------
@@ -528,51 +660,6 @@ class ConfigurationManager(object):
                                  '(path/filename)',
                              )
         return base_namespace
-
-    #--------------------------------------------------------------------------
-    def _overlay_value_sources(self, ignore_mismatches=True):
-        for a_settings_source in self.values_source_list:
-            try:
-                this_source_ignore_mismatches = (ignore_mismatches or
-                                    a_settings_source.always_ignore_mismatches)
-            except AttributeError:
-                # the settings source doesn't have the concept of always
-                # ignoring mismatches, so the original value of
-                # ignore_mismatches stands
-                this_source_ignore_mismatches = ignore_mismatches
-            options = a_settings_source.get_values(self,
-                            ignore_mismatches=this_source_ignore_mismatches)
-            self._overlay_value_sources_recurse(options,
-                            ignore_mismatches=this_source_ignore_mismatches)
-
-    #--------------------------------------------------------------------------
-    def _overlay_value_sources_recurse(self, source, destination=None,
-                                       prefix='', ignore_mismatches=True):
-        if destination is None:
-            destination = self.option_definitions
-        for key, val in source.items():
-            try:
-                sub_destination = destination
-                for subkey in key.split('.'):
-                    sub_destination = sub_destination[subkey]
-            except KeyError:
-                if ignore_mismatches:
-                    continue
-                if key == subkey:
-                    raise exc.NotAnOptionError('%s is not an option' % key)
-                raise exc.NotAnOptionError('%s subpart %s is not an option' %
-                                       (key, subkey))
-            except TypeError:
-                pass
-            if isinstance(sub_destination, Namespace):
-                self._overlay_value_sources_recurse(val, sub_destination,
-                                            prefix=('%s.%s' % (prefix, key)))
-            elif isinstance(sub_destination, Option):
-                sub_destination.set_value(val)
-            elif isinstance(sub_destination, Aggregation):
-                # there is nothing to do for Aggregations at this time
-                # it appears here anyway as a marker for future enhancements
-                pass
 
     #--------------------------------------------------------------------------
     def _walk_config_copy_values(self, source, destination, mapping_class):
@@ -616,57 +703,13 @@ class ConfigurationManager(object):
         return qkey, key, value
 
     #--------------------------------------------------------------------------
-    def _walk_config(self, source=None, prefix='', blocked_keys=(),
-                    block_password=False):
-        if source == None:
-            source = self.option_definitions
-        options_list = source.items()
-        options_list.sort(key=ConfigurationManager._option_sort)
-        for key, val in options_list:
-            qualified_key = '%s%s' % (prefix, key)
-            if qualified_key in blocked_keys:
-                continue
-            if isinstance(val, Option):
-                yield self._block_password(qualified_key, key, val,
-                                          block_password)
-            if isinstance(val, Aggregation):
-                yield qualified_key, key, val
-            elif isinstance(val, Namespace):
-                if qualified_key == 'admin':
-                    continue
-                yield qualified_key, key, val
-                new_prefix = '%s%s.' % (prefix, key)
-                for xqkey, xkey, xval in self._walk_config(val,
-                                                          new_prefix,
-                                                          blocked_keys,
-                                                          block_password):
-                    yield xqkey, xkey, xval
-
-    #--------------------------------------------------------------------------
     def _get_option(self, name):
-        source = self.option_definitions
         try:
-            for sub_name in name.split('.'):
-                candidate = source[sub_name]
-                if isinstance(candidate, Option):
-                    return candidate
-                else:
-                    source = candidate
+            return self.option_definitions[name]
         except KeyError:
-            pass  # we need to raise the exception below in either case
-                  # of a key error or execution falling through the loop
-        raise exc.NotAnOptionError('%s is not a known option name' % name)
+            raise exc.NotAnOptionError('%s is not a known option name' % name)
 
     #--------------------------------------------------------------------------
     def _get_options(self, source=None, options=None, prefix=''):
-        if source is None:
-            source = self.option_definitions
-        if options is None:
-            options = []
-        for key, val in source.items():
-            if isinstance(val, Namespace):
-                new_prefix = '%s%s.' % (prefix, key)
-                self._get_options(val, options, new_prefix)
-            else:
-                options.append(("%s%s" % (prefix, key), val))
-        return options
+        return [(key, self.option_definitions[key])
+                for key in self.option_definitions.keys_breadth_first()]

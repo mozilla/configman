@@ -160,13 +160,17 @@ foo=bar  ; other comment
             if os.path.isfile(tmp_filename):
                 os.remove(tmp_filename)
 
-    def test_write_ini(self):
+    # this test will be used in the future
+    def donttest_write_ini_with_migration(self):
         n = self._some_namespaces()
+        n.namespace('o')
+        n.o.add_option('password', 'secret "message"', 'the password')
+        n.o.namespace('beyond_o')
+        n.o.beyond_o.add_option('password', 'secret "message"', 'the password')
         c = config_manager.ConfigurationManager(
           [n],
           [ConfigParser],
           use_admin_controls=False,
-          #use_config_files=False,
           use_auto_help=False,
           argv_source=[]
         )
@@ -175,49 +179,67 @@ foo=bar  ; other comment
                      opener=stringIO_context_wrapper(out))
         received = out.getvalue()
         out.close()
-        expected = """[top_level]
+        expected = \
+"""[top_level]
+
 # name: aaa
 # doc: the a
 # converter: configman.datetime_util.datetime_from_ISO_string
-aaa=2011-05-04T15:10:00
+aaa='2011-05-04T15:10:00'
 
-[c]
-# c space
-
-# name: c.fred
-# doc: husband from Flintstones
-# converter: str
-fred=stupid
-
-# name: c.wilma
-# doc: wife from Flintstones
-# converter: str
-wilma=waspish
-
-[d]
-# d space
-
-# name: d.ethel
-# doc: female neighbor from I Love Lucy
-# converter: str
-ethel=silly
-
-# name: d.fred
-# doc: male neighbor from I Love Lucy
-# converter: str
-fred=crabby
-
-[x]
-# x space
-
-# name: x.password
+# name: password
 # doc: the password
 # converter: str
-password=secret
+password='secret "message"'
 
-# name: x.size
+[c]
+
+# name: fred
+# doc: husband from Flintstones
+# converter: str
+fred='stupid'
+
+# name: wilma
+# doc: wife from Flintstones
+# converter: str
+wilma=\'waspish\'
+
+[d]
+
+# name: ethel
+# doc: female neighbor from I Love Lucy
+# converter: str
+ethel='silly'
+
+# name: fred
+# doc: male neighbor from I Love Lucy
+# converter: str
+fred='crabby'
+
+[o]
+
+# name: password
+# doc: the password
+# converter: str
+# password='secret "message"'
+
+[o.beyond_o]
+
+# name: password
+# doc: the password
+# converter: str
+# password='secret "message"'
+
+[x]
+
+# name: password
+# doc: the password
+# converter: str
+password='secret'
+
+# name: size
 # doc: how big in tons
 # converter: int
-size=100
+size='100'
 """
         self.assertEqual(expected.strip(), received.strip())

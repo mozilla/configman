@@ -112,7 +112,7 @@ class TestCase(unittest.TestCase):
           u'"short_form": null}}')
         config = config_manager.ConfigurationManager(
           [j],
-          #use_config_files=False,
+          [],
           use_auto_help=False,
           use_admin_controls=True,
           argv_source=[]
@@ -120,9 +120,8 @@ class TestCase(unittest.TestCase):
 
         option = config_manager.Option(
           'bday',
-          default=datetime.date(1979, 12, 13),
+          default="1979-12-13",
         )
-        assert option.value == config.option_definitions.bday.value
         self.assertEqual(
           config.option_definitions.bday.default,
           option.default
@@ -143,8 +142,7 @@ class TestCase(unittest.TestCase):
         n.dest.add_option('c', A, doc='the A class')
         assert n.dest.c.doc == 'the A class'
         c = config_manager.ConfigurationManager([n],
-                                    use_admin_controls=True,
-                                    #use_config_files=False,
+                                    use_admin_controls=False,
                                     use_auto_help=False,
                                     argv_source=[])
         e = config_manager.Namespace()
@@ -166,24 +164,27 @@ class TestCase(unittest.TestCase):
             self.assertEqual(val.doc, expected.doc)
 
         e = [
-          ('dest', 'dest', namespace_test),
-          ('dest.a', 'a', functools.partial(option_test, expected=e.d.a)),
-          ('dest.b', 'b', functools.partial(option_test, expected=e.d.b)),
-          ('dest.c', 'c', functools.partial(option_test, expected=e.d.c)),
-          ('source', 'source', namespace_test),
-          ('source.a', 'a', functools.partial(option_test, expected=e.s.a)),
-          ('source.b', 'b', functools.partial(option_test, expected=e.s.b)),
-          ('source.c', 'c', functools.partial(option_test, expected=e.s.c)),
+          ('dest', namespace_test),
+          ('dest.a', functools.partial(option_test, expected=e.d.a)),
+          ('dest.b', functools.partial(option_test, expected=e.d.b)),
+          ('dest.c', functools.partial(option_test, expected=e.d.c)),
+          ('source', namespace_test),
+          ('source.a', functools.partial(option_test, expected=e.s.a)),
+          ('source.b', functools.partial(option_test, expected=e.s.b)),
+          ('source.c', functools.partial(option_test, expected=e.s.c)),
         ]
 
-        c_contents = [(qkey, key, val) for qkey, key, val in c._walk_config()]
+        #c_contents = [(qkey, key, val) for qkey, key, val in c._walk_config()]
+        c_contents = [(qkey, c.option_definitions[qkey])
+                      for qkey in c.option_definitions.keys_breadth_first(
+                          include_dicts=True
+                      )]
         c_contents.sort()
         e.sort()
         for c_tuple, e_tuple in zip(c_contents, e):
-            qkey, key, val = c_tuple
-            e_qkey, e_key, e_fn = e_tuple
+            qkey, val = c_tuple
+            e_qkey, e_fn = e_tuple
             self.assertEqual(qkey, e_qkey)
-            self.assertEqual(key, e_key)
             e_fn(val)
 
     def test_setting_nested_namespaces(self):
