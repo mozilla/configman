@@ -39,13 +39,12 @@
 import collections
 import inspect
 import os
-import sys
 
 from source_exceptions import (NoHandlerForType, ModuleHandlesNothingException,
                                AllHandlersFailedException,
                                UnknownFileExtensionException,
                                ValueException)
-from ..dotdict import iteritems_breadth_first
+
 from ..config_file_future_proxy import ConfigFileFutureProxy
 
 # replace with dynamic discovery and loading
@@ -125,14 +124,18 @@ for a_handler in for_handlers:
 def wrap(value_source_list, a_config_manager):
     wrapped_sources = []
     for a_source in value_source_list:
+        print a_source
         if a_source is ConfigFileFutureProxy:
-            a_source = a_config_manager._get_option('admin.conf').value
-            # if you have specified an admin.conf value that is different
-            # from the default, the raise hell if the file doesn't exist
-            default = a_config_manager._get_option('admin.conf').default
-            if a_source and a_source != default and not os.path.isfile(a_source):
+            a_source = a_config_manager._get_option('admin.conf').default
+            # raise hell if the config file doesn't exist
+            if not a_config_manager.config_optional and a_source \
+               and not os.path.isfile(a_source):
                 raise IOError(a_source)
 
+        if a_source is None:
+            # this means the source is degenerate - like the case where
+            # the config file name has not been specified
+            continue
         handlers = type_handler_dispatch.get_handlers(a_source)
         wrapped_source = None
         error_history = []
@@ -159,30 +162,43 @@ def wrap(value_source_list, a_config_manager):
 def has_registration_for(config_file_type):
     return config_file_type in file_extension_dispatch
 
-
 def write(config_file_type,
-          option_iterator,
+          options_mapping,
           opener):
+
     if isinstance(config_file_type, basestring):
         try:
             writer_fn = file_extension_dispatch[config_file_type]
         except KeyError:
-            raise UnknownFileExtensionException("%s isn't a registered file"
-                                                   " name extension" %
-                                                   config_file_type)
+            raise UnknownFileExtensionException(
+                "%s isn't a registered file name extension" %
+                config_file_type
+            )
         with opener() as output_stream:
-            writer_fn(option_iterator, output_stream)
+            writer_fn(options_mapping, output_stream=output_stream)
     else:
         # this is the case where we've not gotten a file extension, but a
         # for_handler module.  Use the module's ValueSource's write method
         with opener() as output_stream:
-            config_file_type.ValueSource.write(option_iterator, output_stream)
+            config_file_type.ValueSource.write(
+                options_mapping,
+                output_stream=output_stream
+        )
 
+def config_filename_from_commandline(config_manager):
+    command_line_value_source = for_getopt.ValueSource(
+        for_getopt.getopt,
+        config_manager
+    )
+    values = command_line_value_source.get_values(
+        config_manager,
+        ignore_mismatches=True
+    )
+    try:
+        config_file_name = values['admin.conf']
+    except KeyError:
+        return None
 
-def get_admin_options_from_command_line(config_manager):
-    command_line_value_source = for_getopt.ValueSource(for_getopt.getopt,
-                                                       config_manager)
-    values = command_line_value_source.get_values(config_manager,
-                                                  ignore_mismatches=True)
-    return dict([(key, val) for key, val in iteritems_breadth_first(values)
-                                          if key.startswith('admin.')])
+    if not os.path.isfile(config_file_name):
+        raise IOError(config_file_name)
+    return config_file_name

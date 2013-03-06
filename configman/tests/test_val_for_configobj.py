@@ -44,6 +44,10 @@ import contextlib
 
 import configman.datetime_util as dtu
 import configman.config_manager as config_manager
+
+from configman import Namespace
+from configman.config_exceptions import NotAnOptionError
+
 try:
     #from ..value_sources.for_configobj import ValueSource
     from ..value_sources import for_configobj
@@ -140,6 +144,36 @@ foo=bar  # other comment
                 if os.path.isfile(tmp_filename):
                     os.remove(tmp_filename)
 
+        # this test will be added back in the future
+        def donttest_for_configobj_basics_3(self):
+            n = Namespace()
+            n.add_option("name", default='lars')
+            n.add_option("awesome", default='lars')
+            n.namespace('othersection')
+            n.othersection.add_option('foo', default=23)
+            tmp_filename = os.path.join(tempfile.gettempdir(), 'test.ini')
+            open(tmp_filename, 'w').write("""
+# comment
+name=Peter
+awesome=
+# comment
+[othersection]
+bad_option=bar  # other comment
+        """)
+
+            try:
+
+                self.assertRaises(
+                    NotAnOptionError,
+                    config_manager.ConfigurationManager,
+                    [n],
+                    [tmp_filename],
+                )
+            finally:
+                if os.path.isfile(tmp_filename):
+                    os.remove(tmp_filename)
+
+
         def test_write_ini(self):
             n = self._some_namespaces()
             c = config_manager.ConfigurationManager(
@@ -185,6 +219,77 @@ aaa='2011-05-04T15:10:00'
     # doc: the password
     # converter: str
     password='secret "message"'
+
+    # name: size
+    # doc: how big in tons
+    # converter: int
+    size='100'
+"""
+            out = StringIO()
+            c.write_conf(for_configobj, opener=stringIO_context_wrapper(out))
+            received = out.getvalue()
+            out.close()
+            self.assertEqual(expected.strip(), received.strip())
+
+        # this test will be used in the future...
+        def donttest_write_ini_with_migration(self):
+            n = self._some_namespaces()
+            n.namespace('o')
+            n.o.add_option('password', 'secret "message"', 'the password')
+            c = config_manager.ConfigurationManager(
+              [n],
+              use_admin_controls=True,
+              use_auto_help=False,
+              argv_source=[]
+            )
+            expected = \
+"""# name: aaa
+# doc: the a
+# converter: configman.datetime_util.datetime_from_ISO_string
+aaa='2011-05-04T15:10:00'
+
+# name: password
+# doc: the password
+# converter: str
+password='secret "message"'
+
+[c]
+
+    # name: fred
+    # doc: husband from Flintstones
+    # converter: str
+    fred='stupid, deadly'
+
+    # name: wilma
+    # doc: wife from Flintstones
+    # converter: str
+    wilma="waspish's"
+
+[d]
+
+    # name: ethel
+    # doc: female neighbor from I Love Lucy
+    # converter: str
+    ethel='\"\"\"silly\"\"\"'
+
+    # name: fred
+    # doc: male neighbor from I Love Lucy
+    # converter: str
+    fred="\'\'\'crabby\'\'\'"
+
+[o]
+
+    # name: password
+    # doc: the password
+    # converter: str
+    # password='secret "message"'
+
+[x]
+
+    # name: password
+    # doc: the password
+    # converter: str
+    # password='secret "message"'
 
     # name: size
     # doc: how big in tons

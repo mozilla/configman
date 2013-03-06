@@ -93,7 +93,7 @@ class TestCase(unittest.TestCase):
         self.assertEqual(o.default, 1)
         self.assertEqual(o.doc, "lucy's integer")
         self.assertEqual(o.from_string_converter, int)
-        self.assertEqual(o.value, 1)
+        self.assertEqual(o.value, '1')
 
         data = {
           'name': 'lucy',
@@ -103,10 +103,14 @@ class TestCase(unittest.TestCase):
         }
         o = Option(**data)
         self.assertEqual(o.name, 'lucy')
-        self.assertEqual(o.default, 1)  # converted using `int`
+        self.assertEqual(o.default, '1')
         self.assertEqual(o.doc, "lucy's integer")
         self.assertEqual(o.from_string_converter, int)
+        self.assertEqual(o.value, '1')
+        o.set_value()
+        self.assertEqual(o.default, '1')
         self.assertEqual(o.value, 1)
+
 
         data = {
           'name': 'lucy',
@@ -116,10 +120,10 @@ class TestCase(unittest.TestCase):
         }
         o = Option(**data)
         self.assertEqual(o.name, 'lucy')
-        self.assertEqual(o.default, 1)
+        self.assertEqual(o.default, '1')
         self.assertEqual(o.doc, "lucy's integer")
         self.assertEqual(o.from_string_converter, int)
-        self.assertEqual(o.value, 1)
+        self.assertEqual(o.value, '1')
 
         data = {
           'default': '1',
@@ -128,10 +132,10 @@ class TestCase(unittest.TestCase):
         }
         o = Option('now', **data)
         self.assertEqual(o.name, 'now')
-        self.assertEqual(o.default, 1)
+        self.assertEqual(o.default, '1')
         self.assertEqual(o.doc, "lucy's integer")
         self.assertEqual(o.from_string_converter, int)
-        self.assertEqual(o.value, 1)
+        self.assertEqual(o.value, '1')
 
         d = datetime.datetime.now()
         o = Option('now', default=d)
@@ -149,9 +153,12 @@ class TestCase(unittest.TestCase):
         }
         o = Option('now', **data)
         self.assertEqual(o.name, 'now')
-        self.assertEqual(o.default, 1.0)
+        self.assertEqual(o.default, '1.0')
         self.assertEqual(o.doc, "lucy's height")
         self.assertEqual(o.from_string_converter, float)
+        self.assertEqual(o.value, '1.0')
+        o.set_value()
+        self.assertEqual(o.default, '1.0')
         self.assertEqual(o.value, 1.0)
 
     def test_option_constructor_more_complex_default_converters(self):
@@ -162,9 +169,10 @@ class TestCase(unittest.TestCase):
         }
         o = Option('now', **data)
         self.assertEqual(o.name, 'now')
-        self.assertEqual(o.default, datetime.date(2011, 12, 31))
+        self.assertEqual(o.default, '2011-12-31')
         self.assertEqual(o.doc, "lucy's bday")
         self.assertEqual(o.from_string_converter, dtu.date_from_ISO_string)
+        o.set_value()
         self.assertEqual(o.value, datetime.date(2011, 12, 31))
 
         data = {
@@ -175,9 +183,11 @@ class TestCase(unittest.TestCase):
         }
         o = Option('now', **data)
         self.assertEqual(o.name, 'now')
-        self.assertEqual(o.default, datetime.date(2011, 12, 31))
+        self.assertEqual(o.default, '2011-12-31')
         self.assertEqual(o.doc, "lucy's bday")
         self.assertEqual(o.from_string_converter, dtu.date_from_ISO_string)
+        self.assertEqual(o.value, '2011-12-31')
+        o.set_value()
         self.assertEqual(o.value, datetime.date(2011, 12, 31))
 
     def test_setting_known_from_string_converter_onOption(self):

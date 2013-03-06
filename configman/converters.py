@@ -41,7 +41,6 @@ import re
 import datetime
 import types
 import inspect
-import collections
 import json
 
 from required_config import RequiredConfig
@@ -339,6 +338,8 @@ from_string_converters = {
 def py_obj_to_str(a_thing):
     if a_thing is None:
         return ''
+    if isinstance(a_thing, basestring):
+        return a_thing
     if inspect.ismodule(a_thing):
         return a_thing.__name__
     if a_thing.__module__ == '__builtin__':

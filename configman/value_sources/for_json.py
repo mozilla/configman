@@ -96,9 +96,10 @@ class ValueSource(object):
         return collections.defaultdict(ValueSource.recursive_default_dict)
 
     @staticmethod
-    def write(option_iter, output_stream=sys.stdout):
+    def write(source_dict, output_stream=sys.stdout):
         json_dict = ValueSource.recursive_default_dict()
-        for qkey, key, val in option_iter():
+        for qkey in source_dict.keys_breadth_first(include_dicts=True):
+            val = source_dict[qkey]
             if isinstance(val, Namespace):
                 continue
             d = json_dict
@@ -116,3 +117,5 @@ class ValueSource(object):
                 fn = val.function
                 d['function'] = conv.to_string_converters[type(fn)](fn)
         json.dump(json_dict, output_stream)
+
+
