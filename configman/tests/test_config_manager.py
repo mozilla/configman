@@ -584,9 +584,9 @@ c.string =   from ini
         s = StringIO()
         c.output_summary(output_stream=s)
         r = s.getvalue()
-        self.assertTrue('Options:\n' in r)
+        self.assertTrue('OPTIONS:\n' in r)
 
-        options = r.split('Options:\n')[1]
+        options = r.split('OPTIONS:\n')[1]
         s.close()
 
         padding = '\n' + ' ' * 4
@@ -624,22 +624,22 @@ c.string =   from ini
             return s.getvalue()
 
         output = get_output(c)
-        assert 'Options:' in output
+        assert 'OPTIONS:' in output
         self.assertTrue('Application:' not in output)
 
         c.app_name = 'foobar'
         output = get_output(c)
-        assert 'Options:' in output
+        assert 'OPTIONS:' in output
         self.assertTrue('Application: foobar' in output)
 
         c.app_version = '1.0'
         output = get_output(c)
-        assert 'Options:' in output
+        assert 'OPTIONS:' in output
         self.assertTrue('Application: foobar 1.0' in output)
 
         c.app_description = "This ain't your mama's app"
         output = get_output(c)
-        assert 'Options:' in output
+        assert 'OPTIONS:' in output
         self.assertTrue('Application: foobar 1.0\n' in output)
         self.assertTrue("This ain't your mama's app\n\n" in output)
 
@@ -724,7 +724,7 @@ c.string =   from ini
                 output_stream.close()
                 self.assertTrue('Application: fred 1.0' in r)
                 self.assertTrue('my app\n\n' in r)
-                self.assertTrue('Options:\n' in r)
+                self.assertTrue('OPTIONS:\n' in r)
                 self.assertTrue('  --help' in r and 'print this' in r)
                 self.assertTrue('print this (default: True)' not in r)
                 self.assertTrue('  --password' in r)
@@ -1321,7 +1321,7 @@ c.string =   from ini
         )
         conf = c.get_config()
         self.assertEqual(len(conf), 3)
-        self.assertEqual(conf.keys(), ['admin', 'source', 'destination'])
+        self.assertEqual(conf.keys(), ['source', 'destination', 'admin'])
         self.assertEqual(len(conf.source), 3)
         self.assertEqual(conf.source.c, 33)
         self.assertEqual(conf.source.cls, T3)

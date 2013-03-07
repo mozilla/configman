@@ -48,6 +48,7 @@ from namespace import Namespace
 
 from .datetime_util import datetime_from_ISO_string as datetime_converter
 from .datetime_util import date_from_ISO_string as date_converter
+from .config_exceptions import CannotConvertError
 
 import datetime_util
 
@@ -180,19 +181,21 @@ def class_converter(input_str):
         return eval(input_str)
     parts = [x.strip() for x in input_str.split('.') if x.strip()]
     try:
-        # first try as a complete module
-        package = __import__(input_str)
-    except ImportError:
-        # it must be a class from a module
-        if len(parts) == 1:
-            # since it has only one part, it must be a class from __main__
-            parts = ('__main__', input_str)
-        package = __import__('.'.join(parts[:-1]), globals(), locals(), [])
-    obj = package
-    for name in parts[1:]:
-        obj = getattr(obj, name)
-    return obj
-
+        try:
+            # first try as a complete module
+            package = __import__(input_str)
+        except ImportError:
+            # it must be a class from a module
+            if len(parts) == 1:
+                # since it has only one part, it must be a class from __main__
+                parts = ('__main__', input_str)
+            package = __import__('.'.join(parts[:-1]), globals(), locals(), [])
+        obj = package
+        for name in parts[1:]:
+            obj = getattr(obj, name)
+        return obj
+    except AttributeError, x:
+        raise CannotConvertError("%s cannot be found" % input_str)
 
 #------------------------------------------------------------------------------
 def classes_in_namespaces_converter(template_for_namespace="cls%d",

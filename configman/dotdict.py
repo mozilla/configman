@@ -104,6 +104,7 @@ class DotDict(collections.MutableMapping):
         parameters:
             initializer - a mapping of keys and values to be added to this
                           mapping."""
+        self.__dict__['_key_order'] = []
         if isinstance(initializer, collections.Mapping):
             for key, value in iteritems_breadth_first(initializer):
                 self[key] = value
@@ -112,6 +113,7 @@ class DotDict(collections.MutableMapping):
 
     def __setattr__(self, key, value):
         """this function saves keys into the mapping's __dict__."""
+        self._key_order.append(key)
         self.__dict__[key] = value
 
     def __getattr__(self, key):
@@ -126,6 +128,15 @@ class DotDict(collections.MutableMapping):
         if key.startswith('__') and key.endswith('__'):
             raise AttributeError(key)
         raise KeyError(key)
+
+    def __delattr__(self, key):
+        try:
+            self._key_order.remove(key)
+        except ValueError:
+            # we must be trying to delete something that wasn't a key
+            # the next line will catch the error if it still is one
+            pass
+        super(DotDict, self).__delattr__(key)
 
     def __getitem__(self, key):
         """define the square bracket operator to refer to the object's __dict__
@@ -173,19 +184,18 @@ class DotDict(collections.MutableMapping):
         making sure that it ignores the special '_' keys.  We want those items
         ignored or we risk infinite recursion, not with this function, but
         with the clients of this class deep within configman"""
-        return (key for key in self.__dict__
-                     if not key.startswith('_'))
+        return iter(self._key_order)
 
     def __len__(self):
         """makes the len function also ignore the '_' keys"""
-        return len([x for x in self.__iter__()])
+        return len(self._key_order)
 
     def keys_breadth_first(self, include_dicts=False):
         """a generator that returns all the keys in a set of nested
         DotDict instances.  The keys take the form X.Y.Z"""
         namespaces = []
-        for key, value in self.iteritems():
-            if isinstance(value, DotDict):
+        for key in self._key_order:
+            if isinstance(getattr(self, key), DotDict):
                 namespaces.append(key)
                 if include_dicts:
                     yield key
@@ -286,7 +296,7 @@ class DotDictWithAcquisition(DotDict):
                 if i == last_index:
                     raise
                 temp_dict = DotDictWithAcquisition()
-                temp_dict._parent = weakref.proxy(current)
+                temp_dict.__dict__['_parent'] = weakref.proxy(current)
                 current = temp_dict
         return current
 
@@ -296,8 +306,8 @@ class DotDictWithAcquisition(DotDict):
         proxy object of itself and assigns it to '_parent' in the incoming
         DotDict."""
         if isinstance(value, DotDict) and key != '_parent':
-            value._parent = weakref.proxy(self)
-        self.__dict__[key] = value
+            value.__dict__['_parent'] = weakref.proxy(self)
+        super(DotDictWithAcquisition, self).__setattr__(key, value)
 
     def __getattr__(self, key):
         """if a key is not found in the __dict__ using the regular python
