@@ -54,6 +54,8 @@ class Option(object):
                  short_form=None,
                  exclude_from_print_conf=False,
                  exclude_from_dump_conf=False,
+                 comment_out=False,
+                 not_for_definition=False,
                  ):
         self.name = name
         self.short_form = short_form
@@ -68,14 +70,13 @@ class Option(object):
         self.from_string_converter = from_string_converter
         if value is None:
             value = default
-        self.set_value(value)
-        if (type(self.value) != type(self.default)
-            and self.from_string_converter):
-            # need to convert the default too
-            self.default = self.from_string_converter(self.default)
+        self.value = value
         self.exclude_from_print_conf = exclude_from_print_conf
         self.exclude_from_dump_conf = exclude_from_dump_conf
+        self.comment_out = comment_out
+        self.not_for_definition = not_for_definition
 
+    #--------------------------------------------------------------------------
     def __eq__(self, other):
         if isinstance(other, Option):
             return (self.name == other.name
@@ -89,6 +90,7 @@ class Option(object):
                     self.value == other.value
                     )
 
+    #--------------------------------------------------------------------------
     def __repr__(self):  # pragma: no cover
         if self.default is None:
             return '<Option: %r>' % self.name
@@ -101,7 +103,9 @@ class Option(object):
         return conv.from_string_converters.get(default_type, default_type)
 
     #--------------------------------------------------------------------------
-    def set_value(self, val):
+    def set_value(self, val=None):
+        if val is None:
+            val = self.default
         if isinstance(val, basestring):
             try:
                 self.value = self.from_string_converter(val)
@@ -149,6 +153,22 @@ class Option(object):
             raise OptionError("cannot override existing default without "
                               "using the 'force' option")
 
+    #--------------------------------------------------------------------------
+    def copy(self):
+        """return a copy"""
+        o = Option(
+            name=self.name,
+            default=self.default,
+            doc=self.doc,
+            from_string_converter=self.from_string_converter,
+            value=self.value,
+            short_form=self.short_form,
+            exclude_from_print_conf=self.exclude_from_print_conf,
+            exclude_from_dump_conf=self.exclude_from_dump_conf,
+            comment_out=self.comment_out,
+        )
+        return o
+
 
 #==============================================================================
 class Aggregation(object):
@@ -166,5 +186,13 @@ class Aggregation(object):
     #--------------------------------------------------------------------------
     def aggregate(self, all_options, local_namespace, args):
         self.value = self.function(all_options, local_namespace, args)
+
+    #--------------------------------------------------------------------------
+    def __eq__(self, other):
+        if isinstance(other, Aggregation):
+            return (
+                self.name == other.name
+                and self.function == other.function
+            )
 
 
