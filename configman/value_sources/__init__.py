@@ -124,7 +124,6 @@ for a_handler in for_handlers:
 def wrap(value_source_list, a_config_manager):
     wrapped_sources = []
     for a_source in value_source_list:
-        print a_source
         if a_source is ConfigFileFutureProxy:
             a_source = a_config_manager._get_option('admin.conf').default
             # raise hell if the config file doesn't exist
