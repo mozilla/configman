@@ -54,6 +54,7 @@ class Option(object):
                  short_form=None,
                  exclude_from_print_conf=False,
                  exclude_from_dump_conf=False,
+                 is_argument=False,
                  comment_out=False,
                  not_for_definition=False,
                  ):
@@ -71,6 +72,7 @@ class Option(object):
         if value is None:
             value = default
         self.value = value
+        self.is_argument = is_argument
         self.exclude_from_print_conf = exclude_from_print_conf
         self.exclude_from_dump_conf = exclude_from_dump_conf
         self.comment_out = comment_out
@@ -165,7 +167,9 @@ class Option(object):
             short_form=self.short_form,
             exclude_from_print_conf=self.exclude_from_print_conf,
             exclude_from_dump_conf=self.exclude_from_dump_conf,
+            is_argument=self.is_argument,
             comment_out=self.comment_out,
+            not_for_definition=self.not_for_definition,
         )
         return o
 

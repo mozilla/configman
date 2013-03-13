@@ -121,6 +121,14 @@ class ValueSource(object):
                 command_line_values[name] = not option_.default
             else:
                 command_line_values[name] = opt_val
+        for name, value in zip(
+            self._get_arguments(
+                config_manager.option_definitions,
+                command_line_values
+            ),
+            config_manager.args
+        ):
+            command_line_values[name] = value
         return command_line_values
 
     def getopt_create_opts(self, option_definitions):
@@ -217,3 +225,16 @@ class ValueSource(object):
                 except KeyError:
                     continue
         return None
+
+    #--------------------------------------------------------------------------
+    @staticmethod
+    def _get_arguments(option_definitions, switches_already_used):
+        for key in option_definitions.keys_breadth_first():
+            try:
+                if option_definitions[key].is_argument \
+                   and key not in switches_already_used:
+                   yield key
+            except AttributeError:
+                # this option definition does have the concept of being
+                # an argument - likely an aggregation 
+                pass
