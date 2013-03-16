@@ -47,6 +47,7 @@ from cStringIO import StringIO
 import getopt
 
 import configman.config_manager as config_manager
+from configman.option import Option
 from configman.dotdict import DotDict, DotDictWithAcquisition
 from configman import Namespace, RequiredConfig
 from configman.converters import class_converter
@@ -1511,3 +1512,22 @@ c.string =   from ini
                 self.assertTrue('ConfigObj cannot load' in str(x))
         finally:
             os.remove('x.ini')
+
+    def test_get_option_definitions(self):
+        n = self._common_app_namespace_setup()
+        n.add_option('silly', default=1)
+        n.add_aggregation('strange', lambda x, y: 4)
+        n.add_aggregation('weird', lambda x, y: 11)
+        n.add_option('concrete', default=68)
+
+        cm = config_manager.ConfigurationManager(
+            (n,),
+            argv_source=[]
+        )
+        opts = cm.get_option_names()
+        for an_opt in opts:
+            self.assertTrue(
+                isinstance(cm.option_definitions[an_opt], Option)
+            )
+        self.assertTrue(len(opts) == 8)
+        
