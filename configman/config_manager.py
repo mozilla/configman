@@ -486,7 +486,8 @@ class ConfigurationManager(object):
             list.  Each item will be fully qualified with dot delimited
             Namespace names.
         """
-        return [x for x in self.option_definitions.keys_breadth_first()]
+        return [x for x in self.option_definitions.keys_breadth_first()
+                           if isinstance(self.option_definitions[x], Option)]
 
     #--------------------------------------------------------------------------
     def _overlay_expand(self):
