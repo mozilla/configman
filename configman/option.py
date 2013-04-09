@@ -114,7 +114,12 @@ class Option(object):
             except TypeError:
                 self.value = val
             except ValueError:
-                raise CannotConvertError(val)
+                error_message = "In '%s', '%s' fails to convert '%s'" % (
+                    self.name,
+                    self.from_string_converter,
+                    val
+                )
+                raise CannotConvertError(error_message)
         elif isinstance(val, Option):
             self.value = val.default
         elif isinstance(val, collections.Mapping) and 'default' in val:
