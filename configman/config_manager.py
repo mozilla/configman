@@ -168,6 +168,7 @@ class ConfigurationManager(object):
                                     'admin.conf',
                                     'admin.dump_conf',
                                     'admin.print_conf',
+                                    'admin.migration',
                                     ]
         self.options_banned_from_help = options_banned_from_help
 
@@ -407,7 +408,8 @@ class ConfigurationManager(object):
         else:
             option_defs = self.option_definitions
 
-        self._migrate_options_for_acquisition(option_defs)
+        if self.option_definitions.admin.migration.default:
+            self._migrate_options_for_acquisition(option_defs)
 
         value_sources.write(config_file_type,
                             option_defs,
@@ -564,13 +566,13 @@ class ConfigurationManager(object):
             # types and bringing in any new keys in the process
             for key in keys:
                 if key not in known_keys:  # skip all keys previously seen
+                    # mark this key as having been seen and processed
+                    known_keys.add(key)
                     an_option = self.option_definitions[key]
                     if isinstance(an_option, Aggregation):
                         continue  # aggregations are ignored
                     # apply the from string conversion to make the real value
                     an_option.set_value(an_option.default)
-                    # mark this key as having been seen an processed
-                    known_keys.add(key)
                     # new values have been seen, don't let loop break
                     new_keys_discovered = True
                     try:
@@ -687,6 +689,11 @@ class ConfigurationManager(object):
                          default='',
                          doc='a pathname to which to write the current config',
                          )
+        admin.add_option(name='migration',
+                         default=False,
+                         doc='allow common options to migrate to lower '
+                             'levels'
+                        )
         # only offer the config file admin options if they've been requested in
         # the values source list
         if ConfigFileFutureProxy in values_source_list:
