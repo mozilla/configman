@@ -432,20 +432,36 @@ class ConfigurationManager(object):
         the mapping is keyed by the option name, its default value and
         the from_string_converter function.  If all these things are the
         same in two options, then it is considered that they are referring
-        to the same option. This means that that option can migrate to a
-        lower level"""
+        to the same option. This means that that option may be able migrate to
+        a lower level.  The mitigating factor is the number of Options with
+        the same key name.  If there is more than one with the same name,
+        then the Option cannot migrate to a lower level.
+        """
         migration_candidates = collections.defaultdict(list)
+        option_name_counts = collections.defaultdict(int)
         # cycle through all the keys
-        for key in option_defs.keys_breadth_first():
-            an_option = option_defs[key]
+        for option_name in option_defs.keys_breadth_first():
+            # option_name is a fully qualified key:  x.y.z
+            an_option = option_defs[option_name]
             if isinstance(an_option, Option):
-                migration_candidates[(
+                name_default_converter_key = (
                     an_option.name,
                     str(an_option.default),
                     str(an_option.from_string_converter)
-                )].append(key)
+                )
+                if name_default_converter_key not in migration_candidates:
+                    option_name_counts[an_option.name] += 1
+                migration_candidates[name_default_converter_key].append(
+                    option_name
+                )
         for candidate, original_keys in migration_candidates.iteritems():
-            if len(original_keys) > 1:
+            # candidate is: (option_name, option_default, option_coverter)
+            # remove name qualifications:  x.y.z --> z
+            unqualified_option_name = candidate[0].split('.')[-1]
+            if (
+                option_name_counts[candidate[0]] == 1
+                and len(original_keys) > 1
+            ):
                 option_defs[candidate[0]] = \
                     option_defs[original_keys[0]].copy()
                 option_defs[candidate[0]].not_for_definition = True
