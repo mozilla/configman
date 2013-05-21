@@ -261,6 +261,8 @@ def classes_in_namespaces_converter(template_for_namespace="cls%d",
         generated."""
         if isinstance(class_list_str, basestring):
             class_list = [x.strip() for x in class_list_str.split(',')]
+            if class_list == ['']:
+                class_list = []
         else:
             raise TypeError('must be derivative of a basestring')
 
