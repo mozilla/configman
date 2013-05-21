@@ -816,6 +816,7 @@ c.string =   from ini
              ('admin.print_conf', 'print_conf', None),
              ('admin.dump_conf', 'dump_conf', ''),
              ('admin.conf', 'conf', None),
+             ('admin.migration', 'migration', False),
              ('application', 'application', MyApp),
              ('password', 'password', 'fred'),
              ('sub.name', 'name', 'ethel')])
@@ -1573,4 +1574,4 @@ c.string =   from ini
             self.assertTrue(
                 isinstance(cm.option_definitions[an_opt], Option)
             )
-        self.assertTrue(len(opts) == 8)  # there should be exactly 8 options
+        self.assertTrue(len(opts) == 9)  # there must be exactly 9 options
