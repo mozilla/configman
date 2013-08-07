@@ -113,7 +113,8 @@ class DotDict(collections.MutableMapping):
 
     def __setattr__(self, key, value):
         """this function saves keys into the mapping's __dict__."""
-        self._key_order.append(key)
+        if key not in self._key_order:
+            self._key_order.append(key)
         self.__dict__[key] = value
 
     def __getattr__(self, key):
