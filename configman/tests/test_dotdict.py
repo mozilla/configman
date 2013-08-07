@@ -369,4 +369,17 @@ class TestCase(unittest.TestCase):
         self.assertEqual(a, e)
         self.assertTrue(isinstance(dd.a, DotDictWithAcquisition))
 
+    def test_dot_dupe_fix(self):
+        # a bug caused an interal structure to have duplicates if a key was
+        # changed using two different access methods.  This caused the
+        # 'keys_breadth_first' method to return duplicate keys.  This test
+        # insures that condition doesn't still trouble 'keys_breadth_first'
+        d = DotDict()
+        d.m = DotDict()
+        d.m.m = 17
+        d['m.m'] = 23
+        keys = [x for x in d.keys_breadth_first()]
+        self.assertTrue('m.m' in keys)
+        self.assertEqual(len(keys), 1)
+
 
