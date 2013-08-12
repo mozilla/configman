@@ -127,7 +127,6 @@ class TestCase(unittest.TestCase):
                                     use_admin_controls=True,
                                     use_auto_help=False,
                                     argv_source=[])
-        self.assertEqual(c.option_definitions.a, n.a)
         self.assertTrue(isinstance(c.option_definitions.b,
                                    config_manager.Option))
         self.assertEqual(c.option_definitions.a.value, 2)
@@ -149,7 +148,6 @@ class TestCase(unittest.TestCase):
                                                   '11.0']],
                                                 use_admin_controls=True,
                                                 use_auto_help=False)
-        self.assertEqual(c.option_definitions.a, n.a)
         self.assertEqual(type(c.option_definitions.b), config_manager.Option)
         self.assertEqual(c.option_definitions.a.value, 2)
         self.assertEqual(c.option_definitions.b.value, 17)
@@ -171,7 +169,6 @@ class TestCase(unittest.TestCase):
                                     use_admin_controls=True,
                                     argv_source=['--a', '2', '-e', '11.0'],
                                     use_auto_help=False)
-        self.assertEqual(c.option_definitions.a, n.a)
         self.assertEqual(type(c.option_definitions.b), config_manager.Option)
         self.assertEqual(c.option_definitions.a.value, 2)
         self.assertEqual(c.option_definitions.b.value, 17)

@@ -166,7 +166,6 @@ class TestCase(unittest.TestCase):
                                     #use_config_files=False,
                                     use_auto_help=False,
                                     argv_source=[])
-        self.assertEqual(c.option_definitions.a, n.a)
         self.assertTrue(isinstance(c.option_definitions.b,
                                    config_manager.Option))
         self.assertEqual(c.option_definitions.a.value, 2)
@@ -191,7 +190,6 @@ class TestCase(unittest.TestCase):
                                     #use_config_files=False,
                                     use_auto_help=False,
                                     argv_source=[])
-        self.assertEqual(c.option_definitions.a, n.a)
         self.assertTrue(isinstance(c.option_definitions.b,
                                    config_manager.Option))
         self.assertEqual(c.option_definitions.a.value, 2)
@@ -214,7 +212,6 @@ class TestCase(unittest.TestCase):
                                     #use_config_files=False,
                                     use_auto_help=False,
                                     argv_source=['--a', '2', '--c'])
-        self.assertEqual(c.option_definitions.a, n.a)
         self.assertTrue(isinstance(c.option_definitions.b,
                                    config_manager.Option))
         self.assertEqual(c.option_definitions.a.value, 2)
@@ -237,7 +234,6 @@ class TestCase(unittest.TestCase):
                                     use_auto_help=False,
                                     argv_source=['--a', '2', '--c.extra',
                                                  '11.0'])
-        self.assertEqual(c.option_definitions.a, n.a)
         self.assertEqual(type(c.option_definitions.b), config_manager.Option)
         self.assertEqual(c.option_definitions.a.value, 2)
         self.assertEqual(c.option_definitions.b.value, 17)
@@ -260,7 +256,6 @@ class TestCase(unittest.TestCase):
                                     #use_config_files=False,
                                     use_auto_help=False,
                                     argv_source=['--a', '2', '-e', '11.0'])
-        self.assertEqual(c.option_definitions.a, n.a)
         self.assertEqual(type(c.option_definitions.b), config_manager.Option)
         self.assertEqual(c.option_definitions.a.value, 2)
         self.assertEqual(c.option_definitions.b.value, 17)
@@ -294,7 +289,6 @@ class TestCase(unittest.TestCase):
                                     use_admin_controls=True,
                                     #use_config_files=False,
                                     use_auto_help=False)
-        self.assertEqual(c.option_definitions.a, n.a)
         self.assertEqual(type(c.option_definitions.b), config_manager.Option)
         self.assertEqual(c.option_definitions.a.value, 22)
         self.assertEqual(c.option_definitions.b.value, 33)
@@ -335,7 +329,6 @@ c.string = wilma
                                     use_auto_help=False)
         self.assertEqual(c.option_definitions.other.t.name, 't')
         self.assertEqual(c.option_definitions.other.t.value, 'tea')
-        self.assertEqual(c.option_definitions.d.a, n.d.a)
         self.assertEqual(type(c.option_definitions.d.b), config_manager.Option)
         self.assertEqual(c.option_definitions.d.a.value, 22)
         self.assertEqual(c.option_definitions.d.b.value, 33)
@@ -397,7 +390,6 @@ c.string =   from ini
         #fm.os = saved_os
         self.assertEqual(c.option_definitions.other.t.name, 't')
         self.assertEqual(c.option_definitions.other.t.value, 'TTT')
-        self.assertEqual(c.option_definitions.d.a, n.d.a)
         self.assertEqual(type(c.option_definitions.d.b), config_manager.Option)
         self.assertEqual(c.option_definitions.d.a.value, 22)
         self.assertEqual(c.option_definitions.d.b.value, 17)
@@ -451,7 +443,7 @@ c.string =   from ini
                                     use_auto_help=False)
         self.assertEqual(c.option_definitions.other.t.name, 't')
         self.assertEqual(c.option_definitions.other.t.value, 'tea')
-        self.assertEqual(c.option_definitions.d.a, n.d.a)
+        #self.assertEqual(c.option_definitions.d.a, n.d.a)
         self.assertEqual(type(c.option_definitions.d.b), config_manager.Option)
         self.assertEqual(c.option_definitions.d.a.value, 22)
         self.assertEqual(c.option_definitions.d.b.value, 17)

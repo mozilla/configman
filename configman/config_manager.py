@@ -181,7 +181,19 @@ class ConfigurationManager(object):
         # iterate through the option definitions to create the nested dict
         # hierarchy of all the options called 'option_definitions'
         for a_definition_source in self.definition_source_list:
-            def_sources.setup_definitions(a_definition_source,
+            try:
+                safe_copy_of_def_source = a_definition_source.safe_copy()
+            except AttributeError:
+                # apparently, the definition source was not in the form of a
+                # Namespace object.  This isn't a show stopper, but we don't
+                # know how to make a copy of this object safely: we know from
+                # experience that the stock copy.copy method leads to grief
+                # as many sub-objects within an option definition source can
+                # not be copied that way (classes, for example).
+                # The only action we can take is to trust and continue with the
+                # original copy of the definition source.
+                safe_copy_of_def_source = a_definition_source
+            def_sources.setup_definitions(safe_copy_of_def_source,
                                           self.option_definitions)
 
         if use_admin_controls:
@@ -581,6 +593,15 @@ class ConfigurationManager(object):
                             new_req = an_option.value.get_required_config()
                         except AttributeError:
                             new_req = an_option.value.required_config
+                        # make sure what we got as new_req is actually a
+                        # Mapping of some sort
+                        if not isinstance(new_req, collections.Mapping):
+                            # we didn't get a mapping, perhaps the option value
+                            # was a Mock object - in any case we can't try to
+                            # interpret 'new_req' as a configman requirement
+                            # collection.  We must abandon processing this
+                            # option further
+                            continue
                         # get the parent namespace
                         current_namespace = self.option_definitions.parent(key)
                         if current_namespace is None:
