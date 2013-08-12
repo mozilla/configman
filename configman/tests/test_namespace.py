@@ -74,7 +74,6 @@ class TestCase(unittest.TestCase):
           #use_config_files=False,
           argv_source=[]
         )
-        self.assertEqual(config.option_definitions.a, namespace.a)
         self.assertTrue(isinstance(config.option_definitions.b,
                                    config_manager.Option))
         self.assertEqual(config.option_definitions.b.value, 17)
