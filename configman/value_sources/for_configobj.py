@@ -88,9 +88,9 @@ class ConfigObjWithIncludes(configobj.ConfigObj):
         dbuser=dwight
         dbpassword=secrets
     """
-    _include_re = re.compile(r'^\s*\+include\s+(.*?)\s*$')
+    _include_re = re.compile(r'^(\s*)\+include\s+(.*?)\s*$')
 
-    def _expand_files(self, file_name, original_path):
+    def _expand_files(self, file_name, original_path, indent=""):
         """This recursive function accepts a file name, opens the file and then
         spools the contents of the file into a list, examining each line as it
         does so.  If it detects a line beginning with "+include", it assumes
@@ -102,16 +102,17 @@ class ConfigObjWithIncludes(configobj.ConfigObj):
             for a_line in f:
                 match = ConfigObjWithIncludes._include_re.match(a_line)
                 if match:
-                    include_file = match.group(1)
+                    include_file = match.group(2)
                     if include_file.startswith('.'):
                         include_file = os.path.join(
                           original_path,
                           include_file
                         )
-                    new_lines = self._expand_files(include_file, original_path)
+                    new_lines = self._expand_files(include_file, os.path.dirname(include_file),
+                                                   indent + match.group(1))
                     expanded_file_contents.extend(new_lines)
                 else:
-                    expanded_file_contents.append(a_line.rstrip())
+                    expanded_file_contents.append(indent + a_line.rstrip())
         return expanded_file_contents
 
     def _load(self, infile, configspec):
