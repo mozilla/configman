@@ -102,7 +102,6 @@ class TestCase(unittest.TestCase):
         self.assertEqual(d['x'].y['a'], 'Wilma')
         self.assertEqual(d['x']['y']['a'], 'Wilma')
 
-
     def test_deleting_attributes(self):
         dd = DotDict()
         dd.name = 'peter'
@@ -321,10 +320,10 @@ class TestCase(unittest.TestCase):
 
     def test_iteritems_breadth_first(self):
         d = {'a': {'aa': 13,
-                   'ab': 14,},
+                   'ab': 14},
              'b': {'ba': {'baa': 0,
-                          'bab': 1,},
-                   'bb': {'bba': 2,}},
+                          'bab': 1},
+                   'bb': {'bba': 2}},
              'c': 9,
              'd': {'dd': 2}}
         e = [('a.aa', 13),
@@ -346,7 +345,6 @@ class TestCase(unittest.TestCase):
         ddkv = sorted(iteritems_breadth_first(dd))
         self.assertEqual(e, ddkv)
 
-
     def test_copy_constructor_1(self):
         d = {'d': {'x': 10}}
         dd = DotDict(d)
@@ -355,13 +353,12 @@ class TestCase(unittest.TestCase):
         dd = DotDict(d)
         self.assertTrue('d' in dd)
 
-
-    def  test_copy_constructor_2(self):
+    def test_copy_constructor_2(self):
         d = {'a': {'aa': 13,
-                   'ab': 14,},
+                   'ab': 14},
              'b': {'ba': {'baa': 0,
-                   'bab': 1,},
-                   'bb': {'bba': 2,}},
+                   'bab': 1},
+                   'bb': {'bba': 2}},
              'c': 9,
              'd': {'dd': 2}}
         dd = DotDictWithAcquisition(d)
@@ -390,5 +387,3 @@ class TestCase(unittest.TestCase):
         keys = [x for x in d.keys_breadth_first()]
         self.assertTrue('m.m' in keys)
         self.assertEqual(len(keys), 1)
-
-

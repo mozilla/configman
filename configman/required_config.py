@@ -17,7 +17,6 @@ class RequiredConfig(object):
     #--------------------------------------------------------------------------
     def config_assert(self, config):
         for a_parameter in self.required_config.keys():
-            assert a_parameter in config, \
-                   '%s missing from config' % a_parameter
-
-
+            assert a_parameter in config, (
+                '%s missing from config' % a_parameter
+            )

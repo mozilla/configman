@@ -147,9 +147,9 @@ def timedelta_converter(input_str):
         if len(details) >= 1:
             seconds = int(details[-1])
         return datetime.timedelta(days=days,
-                                      hours=hours,
-                                      minutes=minutes,
-                                      seconds=seconds)
+                                  hours=hours,
+                                  minutes=minutes,
+                                  seconds=seconds)
     raise ValueError(input_str)
 
 
@@ -196,6 +196,7 @@ def class_converter(input_str):
         return obj
     except AttributeError, x:
         raise CannotConvertError("%s cannot be found" % input_str)
+
 
 #------------------------------------------------------------------------------
 def classes_in_namespaces_converter(template_for_namespace="cls%d",
@@ -290,16 +291,17 @@ def classes_in_namespaces_converter(template_for_namespace="cls%d",
                 required_config[namespace_name] = Namespace()
                 # add the option for the class itself
                 required_config[namespace_name].add_option(
-                  name_of_class_option,
-                  #doc=a_class.__doc__  # not helpful if too verbose
-                  default=a_class,
-                  from_string_converter=class_converter
+                    name_of_class_option,
+                    #doc=a_class.__doc__  # not helpful if too verbose
+                    default=a_class,
+                    from_string_converter=class_converter
                 )
                 if instantiate_classes:
                     # add an aggregator to instantiate the class
                     required_config[namespace_name].add_aggregation(
-                      "%s_instance" % name_of_class_option,
-                      lambda c, lc, a: lc[name_of_class_option](lc))
+                        "%s_instance" % name_of_class_option,
+                        lambda c, lc, a: lc[name_of_class_option](lc)
+                    )
 
             @classmethod
             def to_str(cls):
@@ -308,8 +310,9 @@ def classes_in_namespaces_converter(template_for_namespace="cls%d",
                 primarily as for the output of the 'help' option"""
                 return ', '.join(
                     py_obj_to_str(v[name_of_class_option].value)
-                        for v in cls.get_required_config().values()
-                        if isinstance(v, Namespace))
+                    for v in cls.get_required_config().values()
+                    if isinstance(v, Namespace)
+                )
 
         return InnerClassList  # result of class_list_converter
     return class_list_converter  # result of classes_in_namespaces_converter
