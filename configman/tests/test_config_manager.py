@@ -46,6 +46,9 @@ import io
 from cStringIO import StringIO
 import getopt
 
+import mock
+from nose.plugins.skip import SkipTest
+
 import configman.config_manager as config_manager
 from configman.option import Option
 from configman.dotdict import DotDict, DotDictWithAcquisition
@@ -809,6 +812,7 @@ c.string =   from ini
              ('admin.dump_conf', 'dump_conf', ''),
              ('admin.conf', 'conf', None),
              ('admin.migration', 'migration', False),
+             ('admin.strict', 'strict', False),
              ('application', 'application', MyApp),
              ('password', 'password', 'fred'),
              ('sub.name', 'name', 'ethel')])
@@ -1389,7 +1393,8 @@ c.string =   from ini
             NotAnOptionError,
             config_manager.ConfigurationManager,
             rc,
-            [{'source': {'clos': 'configman.tests.test_config_manager.T2'},
+            [{'admin': {'strict': True}},
+             {'source': {'clos': 'configman.tests.test_config_manager.T2'},
               'destination': {'cls': 'configman.tests.test_config_manager.T3'}},
              {'source': {'cls': 'configman.tests.test_config_manager.T1'},
                          'destination': {'cls': 'configman.tests.test_config_manager.T2'}},
@@ -1401,7 +1406,8 @@ c.string =   from ini
             NotAnOptionError,
             config_manager.ConfigurationManager,
             rc,
-            [{'source': {'clos': 'configman.tests.test_config_manager.T2'},
+            [{'admin': {'strict': True}},
+             {'source': {'clos': 'configman.tests.test_config_manager.T2'},
               'destination': {'cls': 'configman.tests.test_config_manager.T3'}},
              {'sourness': {'cls': 'configman.tests.test_config_manager.T1'},
                          'destination': {'cls': 'configman.tests.test_config_manager.T2'}},
@@ -1566,4 +1572,49 @@ c.string =   from ini
             self.assertTrue(
                 isinstance(cm.option_definitions[an_opt], Option)
             )
-        self.assertTrue(len(opts) == 9)  # there must be exactly 9 options
+        self.assertTrue(len(opts) == 10)  # there must be exactly 10 options
+
+    @mock.patch('configman.config_manager.warnings')
+    def test_warn_on_one_excess_options(self, mocked_warnings):
+        if 'configobj' not in sys.modules.keys():
+            raise SkipTest
+
+        n = self._common_app_namespace_setup()
+        n.add_option('foo')
+        open('x.ini', 'w').write(
+            'foo=FOO\n'
+            'bar=BAR\n'
+        )
+        try:
+            config_manager.ConfigurationManager(
+                (n,),
+                argv_source=['--admin.conf=x.ini']
+            )
+            mocked_warnings.warn.assert_called_once_with(
+                'Invalid options: bar'
+            )
+        finally:
+            os.remove('x.ini')
+
+    @mock.patch('configman.config_manager.warnings')
+    def test_warn_on_multiple_excess_options(self, mocked_warnings):
+        if 'configobj' not in sys.modules.keys():
+            raise SkipTest
+
+        n = self._common_app_namespace_setup()
+        n.add_option('foo')
+        open('x.ini', 'w').write(
+            'foo=FOO\n'
+            'bar=BAR\n'
+            'baz=BAZ\n'
+        )
+        try:
+            config_manager.ConfigurationManager(
+                (n,),
+                argv_source=['--admin.conf=x.ini']
+            )
+            mocked_warnings.warn.assert_called_once_with(
+                'Invalid options: bar, baz'
+            )
+        finally:
+            os.remove('x.ini')
