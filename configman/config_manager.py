@@ -201,9 +201,10 @@ class ConfigurationManager(object):
             # line prior to processing the rest of the command line options.
             config_filename = \
                 value_sources.config_filename_from_commandline(self)
-            if (config_filename
+            if (
+                config_filename
                 and cm.ConfigFileFutureProxy in values_source_list
-                ):
+            ):
                 self.option_definitions.admin.conf.default = config_filename
 
         self.values_source_list = value_sources.wrap(
@@ -229,18 +230,15 @@ class ConfigurationManager(object):
             # 'app_name' from the parameters passed in, if they exist.
             pass
 
-
         if use_auto_help and self._get_option('help').value:
             self.output_summary()
             admin_tasks_done = True
 
-        if (use_admin_controls
-            and self._get_option('admin.print_conf').value):
+        if use_admin_controls and self._get_option('admin.print_conf').value:
             self.print_conf()
             admin_tasks_done = True
 
-        if (use_admin_controls
-            and self._get_option('admin.dump_conf').value):
+        if use_admin_controls and self._get_option('admin.dump_conf').value:
             self.dump_conf()
             admin_tasks_done = True
 
@@ -305,7 +303,6 @@ class ConfigurationManager(object):
                     print >> output_stream, "[ %s" % an_option.name,
                     bracket_count += 1
         print >> output_stream, ']' * bracket_count, '\n'
-
 
         names_list.sort()
         if names_list:
@@ -471,7 +468,6 @@ class ConfigurationManager(object):
         for candidate, original_keys in migration_candidates.iteritems():
             # candidate is: (option_name, option_default, option_coverter)
             # remove name qualifications:  x.y.z --> z
-            unqualified_option_name = candidate[0].split('.')[-1]
             if (
                 option_name_counts[candidate[0]] == 1
                 and len(original_keys) > 1
@@ -517,7 +513,7 @@ class ConfigurationManager(object):
             Namespace names.
         """
         return [x for x in self.option_definitions.keys_breadth_first()
-                           if isinstance(self.option_definitions[x], Option)]
+                if isinstance(self.option_definitions[x], Option)]
 
     #--------------------------------------------------------------------------
     def _overlay_expand(self):
@@ -714,7 +710,7 @@ class ConfigurationManager(object):
                          default=False,
                          doc='allow common options to migrate to lower '
                              'levels'
-                        )
+                         )
         # only offer the config file admin options if they've been requested in
         # the values source list
         if ConfigFileFutureProxy in values_source_list:

@@ -342,7 +342,6 @@ class TestCase(unittest.TestCase):
         # try a round trip
         dd = DotDict()
         for k, v in a:
-            print k, v
             dd.assign(k, v)
         ddkv = sorted(iteritems_breadth_first(dd))
         self.assertEqual(e, ddkv)
@@ -381,5 +380,3 @@ class TestCase(unittest.TestCase):
         keys = [x for x in d.keys_breadth_first()]
         self.assertTrue('m.m' in keys)
         self.assertEqual(len(keys), 1)
-
-

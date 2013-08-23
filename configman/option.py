@@ -203,5 +203,3 @@ class Aggregation(object):
                 self.name == other.name
                 and self.function == other.function
             )
-
-

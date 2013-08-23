@@ -40,6 +40,7 @@
 import collections
 import weakref
 
+
 def iteritems_breadth_first(a_mapping, include_dicts=False):
     """a generator that returns all the keys in a set of nested
     Mapping instances.  The keys take the form X.Y.Z"""
@@ -328,4 +329,3 @@ class DotDictWithAcquisition(DotDict):
             if key.startswith('__'):
                 raise
             raise KeyError(key)
-
