@@ -43,6 +43,7 @@ import inspect
 import os.path
 import contextlib
 import functools
+import warnings
 
 import configman as cm
 import converters as conv
@@ -648,15 +649,9 @@ class ConfigurationManager(object):
                 if key_is_okay:
                     unmatched_keys.remove(key)
             # anything left in the unmatched_key set is a badly formed key.
-            # raise hell...
-            if len(unmatched_keys) > 1:
-                raise exc.NotAnOptionError(
-                    "%s are not valid Options" % unmatched_keys
-                )
-            elif len(unmatched_keys) == 1:
-                raise exc.NotAnOptionError(
-                    "%s is not a valid Option" % unmatched_keys.pop()
-                )
+            # issue a warning
+            if unmatched_keys:
+                warnings.warn('Invalid options: %s' % ', '.join(unmatched_keys))
 
     #--------------------------------------------------------------------------
     @staticmethod
