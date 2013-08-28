@@ -62,14 +62,17 @@ def option_value_str(an_option):
     """
     if an_option.value is None:
         return ''
-    try:
-        converter = to_string_converters[type(an_option.value)]
-        s = converter(an_option.value)
-    except KeyError:
-        if not isinstance(an_option.value, basestring):
-            s = unicode(an_option.value)
-        else:
-            s = an_option.value
+    if an_option.to_string_converter:
+        s = an_option.to_string_converter(an_option.value)
+    else:
+        try:
+            converter = to_string_converters[type(an_option.value)]
+            s = converter(an_option.value)
+        except KeyError:
+            if not isinstance(an_option.value, basestring):
+                s = unicode(an_option.value)
+            else:
+                s = an_option.value
     if an_option.from_string_converter in converters_requiring_quotes:
         s = "'''%s'''" % s
     return s

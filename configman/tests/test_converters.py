@@ -101,9 +101,11 @@ class TestCase(unittest.TestCase):
         function = converters.option_value_str
 
         class _Option(object):
-            def __init__(self, value=None, from_string_converter=None):
+            def __init__(self, value=None, from_string_converter=None,
+                         to_string_converter=None):
                 self.value = value
                 self.from_string_converter = from_string_converter
+                self.to_string_converter = to_string_converter
 
         opt = _Option()
         self.assertEqual(function(opt), '')
@@ -113,6 +115,14 @@ class TestCase(unittest.TestCase):
         from decimal import Decimal
         opt = _Option(Decimal('3.14'))
         self.assertEqual(function(opt), '3.14')
+
+        opt = _Option(
+            [['one', 'One'], ['two', 'Two']],
+            to_string_converter=lambda seq: ', '.join(
+                '%s: %s' % (a, b) for (a, b) in seq
+            )
+        )
+        self.assertEqual(function(opt), 'one: One, two: Two')
 
         # FIXME: need a way to test a value whose 'from_string_converter'
         # requires quotes

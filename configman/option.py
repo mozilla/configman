@@ -50,6 +50,7 @@ class Option(object):
                  default=None,
                  doc=None,
                  from_string_converter=None,
+                 to_string_converter=None,
                  value=None,
                  short_form=None,
                  exclude_from_print_conf=False,
@@ -69,6 +70,9 @@ class Option(object):
         if isinstance(from_string_converter, basestring):
             from_string_converter = conv.class_converter(from_string_converter)
         self.from_string_converter = from_string_converter
+        # if this is not set, the type is used in converters.py to attempt
+        # the conversion
+        self.to_string_converter = to_string_converter
         if value is None:
             value = default
         self.value = value
