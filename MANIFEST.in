@@ -2,4 +2,5 @@ include AUTHORS
 include README.md
 include LICENSE
 include configman/version.txt
-recursive-include tests *.py
+recursive-include configman *.py
+prune configman/cover
