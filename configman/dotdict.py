@@ -106,8 +106,14 @@ class DotDict(collections.MutableMapping):
                           mapping."""
         self.__dict__['_key_order'] = []
         if isinstance(initializer, collections.Mapping):
-            for key, value in iteritems_breadth_first(initializer):
-                self[key] = value
+            for key, value in iteritems_breadth_first(
+                initializer,
+                include_dicts=True
+            ):
+                if isinstance(value, collections.Mapping):
+                    self[key] = self.__class__(value)
+                else:
+                    self[key] = value
         elif initializer is not None:
             raise TypeError('can only initialize with a Mapping')
 
