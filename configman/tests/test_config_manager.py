@@ -812,6 +812,7 @@ c.string =   from ini
              ('admin.dump_conf', 'dump_conf', ''),
              ('admin.conf', 'conf', None),
              ('admin.migration', 'migration', False),
+             ('admin.strict', 'strict', False),
              ('application', 'application', MyApp),
              ('password', 'password', 'fred'),
              ('sub.name', 'name', 'ethel')])
@@ -1377,6 +1378,44 @@ c.string =   from ini
         finally:
             os.remove('x.ini')
 
+    def test_bad_options(self):
+        """tests _check_for_mismatches"""
+        rc = Namespace()
+        rc.namespace('source')
+        rc.source.add_option('cls',
+                             default='configman.tests.test_config_manager.T1',
+                             from_string_converter=class_converter)
+        rc.namespace('destination')
+        rc.destination.add_option('cls',
+                                  default='configman.tests.test_config_manager.T2',
+                                  from_string_converter=class_converter)
+        self.assertRaises( #  'classy' is not an option
+            NotAnOptionError,
+            config_manager.ConfigurationManager,
+            rc,
+            [{'admin': {'strict': True}},
+             {'source': {'clos': 'configman.tests.test_config_manager.T2'},
+              'destination': {'cls': 'configman.tests.test_config_manager.T3'}},
+             {'source': {'cls': 'configman.tests.test_config_manager.T1'},
+                         'destination': {'cls': 'configman.tests.test_config_manager.T2'}},
+             {'source': {'classy': 'configman.tests.test_config_manager.T3'},
+                         'destination': {'cls': 'configman.tests.test_config_manager.T1'}},
+            ],
+        )
+        self.assertRaises(  # 'sourness' not a namespace
+            NotAnOptionError,
+            config_manager.ConfigurationManager,
+            rc,
+            [{'admin': {'strict': True}},
+             {'source': {'clos': 'configman.tests.test_config_manager.T2'},
+              'destination': {'cls': 'configman.tests.test_config_manager.T3'}},
+             {'sourness': {'cls': 'configman.tests.test_config_manager.T1'},
+                         'destination': {'cls': 'configman.tests.test_config_manager.T2'}},
+             {'source': {'cls': 'configman.tests.test_config_manager.T3'},
+                         'destination': {'cls': 'configman.tests.test_config_manager.T1'}},
+            ],
+        )
+
     def test_acquisition(self):
         """define a common key in two sub-namespaces.  Then offer only a value
         from the base namespace.  Both sub-namespace Options should have the end
@@ -1533,7 +1572,7 @@ c.string =   from ini
             self.assertTrue(
                 isinstance(cm.option_definitions[an_opt], Option)
             )
-        self.assertTrue(len(opts) == 9)  # there must be exactly 9 options
+        self.assertTrue(len(opts) == 10)  # there must be exactly 10 options
 
     @mock.patch('configman.config_manager.warnings')
     def test_warn_on_one_excess_options(self, mocked_warnings):

@@ -170,6 +170,7 @@ class ConfigurationManager(object):
                                     'admin.dump_conf',
                                     'admin.print_conf',
                                     'admin.migration',
+                                    'admin.strict'
                                     ]
         self.options_banned_from_help = options_banned_from_help
 
@@ -651,7 +652,20 @@ class ConfigurationManager(object):
             # anything left in the unmatched_key set is a badly formed key.
             # issue a warning
             if unmatched_keys:
-                warnings.warn('Invalid options: %s' % ', '.join(unmatched_keys))
+                if self.option_definitions.admin.strict.default:
+                    # raise hell...
+                    if len(unmatched_keys) > 1:
+                        raise exc.NotAnOptionError(
+                            "%s are not valid Options" % unmatched_keys
+                        )
+                    elif len(unmatched_keys) == 1:
+                        raise exc.NotAnOptionError(
+                            "%s is not a valid Option" % unmatched_keys.pop()
+                        )
+                else:
+                    warnings.warn(
+                        'Invalid options: %s' % ', '.join(unmatched_keys)
+                    )
 
     #--------------------------------------------------------------------------
     @staticmethod
@@ -709,6 +723,11 @@ class ConfigurationManager(object):
                          default=False,
                          doc='allow common options to migrate to lower '
                              'levels'
+                        )
+        admin.add_option(name='strict',
+                         default=False,
+                         doc='mismatched options generate exceptions rather'
+                             ' than just warnings'
                         )
         # only offer the config file admin options if they've been requested in
         # the values source list
