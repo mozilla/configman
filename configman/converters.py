@@ -54,28 +54,6 @@ import datetime_util
 
 
 #------------------------------------------------------------------------------
-def option_value_str(an_option):
-    """return an instance of Option's value as a string.
-
-    The option instance doesn't actually have to be from the Option class. All
-    it requires is that the passed option instance has a ``value`` attribute.
-    """
-    if an_option.value is None:
-        return ''
-    try:
-        converter = to_string_converters[type(an_option.value)]
-        s = converter(an_option.value)
-    except KeyError:
-        if not isinstance(an_option.value, basestring):
-            s = unicode(an_option.value)
-        else:
-            s = an_option.value
-    if an_option.from_string_converter in converters_requiring_quotes:
-        s = "'''%s'''" % s
-    return s
-
-
-#------------------------------------------------------------------------------
 def str_dict_keys(a_dict):
     """return a modified dict where all the keys that are anything but str get
     converted to str.

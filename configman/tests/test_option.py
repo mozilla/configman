@@ -36,9 +36,10 @@
 #
 # ***** END LICENSE BLOCK *****
 
+from decimal import Decimal
+import datetime
 import unittest
 import re
-import datetime
 
 import configman.converters as conv
 import configman.datetime_util as dtu
@@ -207,7 +208,6 @@ class TestCase(unittest.TestCase):
         self.assertEqual(opt.default, 100.0)
         self.assertEqual(opt.from_string_converter, float)
 
-        from decimal import Decimal
         opt = Option('name', default=Decimal('100.0'))
         self.assertEqual(opt.default, Decimal('100.0'))
         self.assertEqual(opt.from_string_converter, Decimal)
@@ -392,3 +392,24 @@ class TestCase(unittest.TestCase):
         o2.set_default(68)
         self.assertTrue(o2.value, 68)
         self.assertTrue(o2.default, 68)
+
+    def test__str__(self):
+        opt = Option('name')
+        self.assertEqual(str(opt), '')
+        opt = Option('name', 3.14)
+        self.assertEqual(str(opt), '3.14')
+
+        opt = Option('name', Decimal('3.14'))
+        self.assertEqual(str(opt), '3.14')
+
+        opt = Option(
+            'name',
+            [['one', 'One'], ['two', 'Two']],
+            to_string_converter=lambda seq: ', '.join(
+                '%s: %s' % (a, b) for (a, b) in seq
+            )
+        )
+        self.assertEqual(str(opt), 'one: One, two: Two')
+
+        # FIXME: need a way to test a value whose 'from_string_converter'
+        # requires quotes

@@ -46,7 +46,7 @@ from source_exceptions import (CantHandleTypeException, ValueException,
                                NotEnoughInformationException)
 from ..namespace import Namespace
 from ..option import Option
-from .. import converters as conv
+from .. import converters
 
 file_name_extension = 'ini'
 
@@ -215,11 +215,11 @@ class ValueSource(object):
                                                     an_option.doc)
             print >>output_stream, "%s# converter: %s" % (
               indent_spacer,
-              conv.py_obj_to_str(
+              converters.py_obj_to_str(
                 an_option.from_string_converter
               )
             )
-            option_value = conv.option_value_str(an_option)
+            option_value = str(an_option)
             if isinstance(option_value, unicode):
                 option_value = option_value.encode('utf8')
 

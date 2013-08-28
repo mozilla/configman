@@ -50,6 +50,7 @@ class Option(object):
                  default=None,
                  doc=None,
                  from_string_converter=None,
+                 to_string_converter=None,
                  value=None,
                  short_form=None,
                  exclude_from_print_conf=False,
@@ -69,6 +70,9 @@ class Option(object):
         if isinstance(from_string_converter, basestring):
             from_string_converter = conv.class_converter(from_string_converter)
         self.from_string_converter = from_string_converter
+        # if this is not set, the type is used in converters.py to attempt
+        # the conversion
+        self.to_string_converter = to_string_converter
         if value is None:
             value = default
         self.value = value
@@ -77,6 +81,30 @@ class Option(object):
         self.exclude_from_dump_conf = exclude_from_dump_conf
         self.comment_out = comment_out
         self.not_for_definition = not_for_definition
+
+    #--------------------------------------------------------------------------
+    def __str__(self):
+        """return an instance of Option's value as a string.
+
+        The option instance doesn't actually have to be from the Option class. All
+        it requires is that the passed option instance has a ``value`` attribute.
+        """
+        if self.value is None:
+            return ''
+        if self.to_string_converter:
+            s = self.to_string_converter(self.value)
+        else:
+            try:
+                converter = conv.to_string_converters[type(self.value)]
+                s = converter(self.value)
+            except KeyError:
+                if not isinstance(self.value, basestring):
+                    s = unicode(self.value)
+                else:
+                    s = self.value
+        if self.from_string_converter in conv.converters_requiring_quotes:
+            s = "'''%s'''" % s
+        return s
 
     #--------------------------------------------------------------------------
     def __eq__(self, other):
