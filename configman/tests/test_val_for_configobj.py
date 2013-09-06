@@ -173,7 +173,6 @@ bad_option=bar  # other comment
                 if os.path.isfile(tmp_filename):
                     os.remove(tmp_filename)
 
-
         def test_write_ini(self):
             n = self._some_namespaces()
             c = config_manager.ConfigurationManager(
@@ -322,11 +321,11 @@ password=secret "message"
             self.assertEqual(values.o.password, 'secret "message"')
             self.assertRaises(
                 KeyError,
-                lambda: values.d.password =='secret "message"'
+                lambda: values.d.password == 'secret "message"'
             )
             self.assertRaises(
                 KeyError,
-                lambda: values.password =='secret "message"'
+                lambda: values.password == 'secret "message"'
             )
 
             # try the round trip
@@ -346,16 +345,15 @@ password=secret "message"
                 self.assertEqual(values.o.password, 'secret "message"')
                 self.assertRaises(
                     KeyError,
-                    lambda: values.d.password =='secret "message"'
+                    lambda: values.d.password == 'secret "message"'
                 )
                 self.assertRaises(
                     KeyError,
-                    lambda: values.password =='secret "message"'
+                    lambda: values.password == 'secret "message"'
                 )
             finally:
                 if os.path.isfile(tmp_filename):
                     os.remove(tmp_filename)
-
 
         def test_write_ini_with_migration_turned_off(self):
             n = self._some_namespaces()
@@ -582,6 +580,57 @@ aaa='2011-05-04T15:10:00'
                     'dbuser': 'dwight',
                     'dbpassword': 'secrets',
                   }
+                }
+                self.assertEqual(o.get_values(1, True), expected_dict)
+            finally:
+                if os.path.isfile(include_file_name):
+                    os.remove(include_file_name)
+                if os.path.isfile(ini_file_name):
+                    os.remove(ini_file_name)
+                if os.path.isdir(db_creds_dir):
+                    os.rmdir(db_creds_dir)
+                if os.path.isdir(ini_repo_dir):
+                    os.rmdir(ini_repo_dir)
+
+        def test_configobj_relative_paths(self):
+            include_file_name = ''
+            ini_file_name = ''
+            try:
+                db_creds_dir = tempfile.mkdtemp()
+                ini_repo_dir = tempfile.mkdtemp()
+                with tempfile.NamedTemporaryFile(
+                  'w',
+                  suffix='ini',
+                  dir=db_creds_dir,
+                  delete=False
+                ) as f:
+                    include_file_name = f.name
+                    include_file_basename = os.path.basename(f.name)
+                    contents = (
+                      'dbhostname=myserver\n'
+                      'dbname=some_database\n'
+                      'dbuser=dwight\n'
+                      'dbpassword=secrets\n'
+                    )
+                    f.write(contents)
+                with tempfile.NamedTemporaryFile(
+                  'w',
+                  suffix='ini',
+                  dir=db_creds_dir,
+                  delete=False
+                ) as f:
+                    ini_file_name = f.name
+                    contents = (
+                      '+include %s\n'
+                      % include_file_basename
+                    )
+                    f.write(contents)
+                o = for_configobj.ValueSource(ini_file_name)
+                expected_dict = {
+                  'dbhostname': 'myserver',
+                  'dbname': 'some_database',
+                  'dbuser': 'dwight',
+                  'dbpassword': 'secrets',
                 }
                 self.assertEqual(o.get_values(1, True), expected_dict)
             finally:

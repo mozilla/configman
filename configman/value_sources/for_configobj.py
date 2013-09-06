@@ -103,13 +103,15 @@ class ConfigObjWithIncludes(configobj.ConfigObj):
                 match = ConfigObjWithIncludes._include_re.match(a_line)
                 if match:
                     include_file = match.group(2)
-                    if include_file.startswith('.'):
-                        include_file = os.path.join(
+                    include_file = os.path.join(
                           original_path,
                           include_file
-                        )
-                    new_lines = self._expand_files(include_file, os.path.dirname(include_file),
-                                                   indent + match.group(1))
+                    )
+                    new_lines = self._expand_files(
+                        include_file,
+                        os.path.dirname(include_file),
+                        indent + match.group(1)
+                    )
                     expanded_file_contents.extend(new_lines)
                 else:
                     expanded_file_contents.append(indent + a_line.rstrip())
@@ -224,11 +226,11 @@ class ValueSource(object):
             if an_option.comment_out:
                 option_format = '%s#%s=%s\n'
                 print >>output_stream, "%s# The following value has been " \
-                    "automatically commented out because"  % indent_spacer
+                    "automatically commented out because" % indent_spacer
                 print >>output_stream, "%s#   the option is found in other " \
                     "sections and the defaults are the same." % indent_spacer
                 print >>output_stream, "%s#   The common value can be found " \
-                    "in the lowest level section. Uncomment"  % indent_spacer
+                    "in the lowest level section. Uncomment" % indent_spacer
                 print >>output_stream, "%s#   to override that lower level " \
                     "value" % indent_spacer
             else:
@@ -272,8 +274,7 @@ class ValueSource(object):
             )
             ValueSource._write_ini(
               namespace,
-              level=level+1,
+              level=level + 1,
               indent_size=indent_size,
               output_stream=output_stream
             )
-
