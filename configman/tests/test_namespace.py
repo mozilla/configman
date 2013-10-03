@@ -43,6 +43,8 @@ import functools
 import configman.config_manager as config_manager
 import configman.datetime_util as dtu
 
+from configman.option import Option
+
 
 class TestCase(unittest.TestCase):
 
@@ -248,4 +250,8 @@ class TestCase(unittest.TestCase):
         n4 = deepcopy(n)
         self.assertTrue(n.a is not n4.a)
 
-
+    def test_add_option_with_option(self):
+        o = Option('dwight')
+        n = config_manager.Namespace()
+        n.add_option(o)
+        self.assertTrue(o is n.dwight)

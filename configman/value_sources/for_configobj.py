@@ -191,7 +191,15 @@ class ValueSource(object):
         ValueSource._write_ini(source_mapping, output_stream=output_stream)
 
     @staticmethod
-    def _write_ini(source_dict, level=0, indent_size=4,
+    def _namespace_reference_value_from_sort(key_value_tuple):
+        key, value = key_value_tuple
+        if value._reference_value_from:
+            return 'aaaaaa' + key
+        else:
+            return key
+
+    @staticmethod
+    def _write_ini(source_dict, namespace_name=None, level=0, indent_size=4,
                    output_stream=sys.stdout):
         """this function prints the components of a configobj ini file.  It is
         recursive for outputing the nested sections of the ini file."""
@@ -201,12 +209,6 @@ class ValueSource(object):
               if isinstance(value, Option)
         ]
         options.sort(cmp=lambda x, y: cmp(x.name, y.name))
-        namespaces = [
-          (key, value)
-          for key, value in source_dict.items()
-              if isinstance(value, Namespace)
-        ]
-        namespaces.sort()
         indent_spacer = " " * (level * indent_size)
         for an_option in options:
             print >>output_stream, "%s# name: %s" % (indent_spacer,
@@ -220,13 +222,42 @@ class ValueSource(object):
             if an_option.comment_out:
                 option_format = '%s#%s=%s\n'
                 print >>output_stream, "%s# The following value has been " \
-                    "automatically commented out because" % indent_spacer
-                print >>output_stream, "%s#   the option is found in other " \
-                    "sections and the defaults are the same." % indent_spacer
-                print >>output_stream, "%s#   The common value can be found " \
-                    "in the lowest level section. Uncomment" % indent_spacer
-                print >>output_stream, "%s#   to override that lower level " \
-                    "value" % indent_spacer
+                    "automatically commented out because"  % indent_spacer
+                if an_option.reference_value_from:
+                    print >>output_stream, (
+                        "%s#   it is linked to another "
+                        "option. see:" % indent_spacer
+                    )
+                    if namespace_name:
+                        print >>output_stream, (
+                            "%s#   %s.%s -> %s.%s"  %
+                            (indent_spacer, namespace_name, an_option.name,
+                             an_option.reference_value_from, an_option.name)
+                        )
+                    else:
+                        print >>output_stream, (
+                            "%s#   %s -> %s.%s"  %
+                            (indent_spacer, an_option.name,
+                             an_option.reference_value_from, an_option.name)
+                        )
+
+                else:
+                    print >>output_stream, (
+                        "%s#   the option is found in other "
+                        "sections and the defaults are the same."
+                        % indent_spacer
+                    )
+                    print >>output_stream, (
+                        "%s#   The common value can be found "
+                        "in the lowest level of this file."  % indent_spacer
+                    )
+                print >>output_stream, (
+                    "%s#   You may uncomment this value to override the "
+                    "value from the" % indent_spacer
+                )
+                print >>output_stream, (
+                    "%s#   alternate location" % indent_spacer
+                )
             else:
                 option_format = '%s%s=%s\n'
 
@@ -259,16 +290,63 @@ class ValueSource(object):
               option_value
             )
         next_level = level + 1
+        namespaces = [
+          (key, value)
+          for key, value in source_dict.items()
+              if isinstance(value, Namespace)
+        ]
+        namespaces.sort(key=ValueSource._namespace_reference_value_from_sort)
         for key, namespace in namespaces:
+            next_level_spacer = " " * next_level * indent_size
             print >>output_stream, "%s%s%s%s\n" % (
-              " " * level * indent_size,
+              indent_spacer,
               "[" * next_level,
               key,
               "]" * next_level
             )
-            ValueSource._write_ini(
-              namespace,
-              level=level + 1,
-              indent_size=indent_size,
-              output_stream=output_stream
-            )
+            if namespace._doc:
+                print >>output_stream, (
+                    "%s%s" % (next_level_spacer, namespace._doc)
+                )
+            if namespace._reference_value_from:
+                print >>output_stream, (
+                    "%s# this section contains Options that are common in"
+                    % next_level_spacer
+                )
+                print >>output_stream, (
+                    "%s# other sections of this ini file.  If they are used"
+                    % next_level_spacer
+                )
+                print >>output_stream, (
+                    "%s# in other files too, copy the options to the file"
+                    % next_level_spacer
+                )
+                print >>output_stream, (
+                    "%s# in the +include line below.  Comment out the values"
+                    % next_level_spacer
+                )
+                print >>output_stream, (
+                    "%s# in the Options.  Finally uncomment the +include line."
+                    % next_level_spacer
+                )
+                print >>output_stream, (
+                    "\n%s#+include ./common_%s.ini\n"
+                    % (next_level_spacer, key)
+                )
+
+            if namespace_name:
+                ValueSource._write_ini(
+                  source_dict=namespace,
+                  namespace_name="%s.%s" % (namespace_name, key),
+                  level=level+1,
+                  indent_size=indent_size,
+                  output_stream=output_stream
+                )
+            else:
+                ValueSource._write_ini(
+                  source_dict=namespace,
+                  namespace_name=key,
+                  level=level+1,
+                  indent_size=indent_size,
+                  output_stream=output_stream
+                )

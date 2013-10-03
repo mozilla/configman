@@ -518,6 +518,34 @@ class ConfigurationManager(object):
                 if isinstance(self.option_definitions[x], Option)]
 
     #--------------------------------------------------------------------------
+    def _create_reference_value_from_links(self, keys, known_keys):
+        """this method steps through the option definitions looking for
+        alt paths.  On finding one, it creates the 'reference_value_from' links within the
+        option definitions and populates it with copied options."""
+        set_of_reference_value_from_links = set()  # a set of known reference_value_from_links
+        for key in keys:
+            if key not in known_keys:  # skip all keys previously seen
+                an_option = self.option_definitions[key]
+                #if not isinstance(an_option, Option):  #TODO remove
+                #    continue  # aggregations and other types are ignored
+                if (an_option.reference_value_from
+                    and an_option.reference_value_from not in set_of_reference_value_from_links
+                    and an_option.reference_value_from not in known_keys):
+                    alt_option = an_option.copy()
+                    an_option.comment_out = True
+                    alt_option.reference_value_from = None
+                    alt_option.name = '.'.join(
+                        (an_option.reference_value_from, alt_option.name)
+                    )
+                    set_of_reference_value_from_links.add(alt_option.name)
+                    self.option_definitions.add_option(alt_option)
+        for a_reference_value_from in set_of_reference_value_from_links:
+            for x in range(a_reference_value_from.count('.')):
+                namespace_path = a_reference_value_from.rsplit('.', x + 1)[0]
+                self.option_definitions[namespace_path].tag_as_reference_value_from()
+        return set_of_reference_value_from_links
+
+    #--------------------------------------------------------------------------
     def _overlay_expand(self):
         """This method overlays each of the value sources onto the default
         in each of the defined options.  It does so using a breadth first
@@ -540,16 +568,34 @@ class ConfigurationManager(object):
             # keys holds a list of all keys in the option definitons in
             # breadth first order using this form: [ 'x', 'y', 'z', 'x.a',
             # 'x.b', 'z.a', 'z.b', 'x.a.j', 'x.a.k', 'x.b.h']
-            keys = [x for x in self.option_definitions.keys_breadth_first()]
+            keys = [x for x in self.option_definitions.keys_breadth_first()
+                    if isinstance(self.option_definitions[x], Option)]
             new_keys_discovered = False  # setup to break loop
+
+            # create alternate paths options
+            set_of_reference_value_from_links = \
+                self._create_reference_value_from_links(
+                    keys,
+                    known_keys
+                )
+            all_keys = list(set_of_reference_value_from_links) + keys
 
             # overlay process:
             # fetch all the default values from the value sources before
             # applying the from string conversions
-            for key in keys:
+            #
+
+            for key in all_keys:
                 if key not in known_keys:  # skip all keys previously seen
+                    #if not isinstance(an_option, Option):
+                    #   continue  # aggregations and other types are ignored
                     # loop through all the value sources looking for values
                     # that match this current key.
+                    if self.option_definitions[key].reference_value_from:
+                        reference_value_from = self.option_definitions[key].reference_value_from
+                        top_key = key.split('.')[-1]
+                        self.option_definitions[key].default = \
+                            self.option_definitions[reference_value_from][top_key].default
                     for a_value_source in self.values_source_list:
                         try:
                             # get all the option values from this value source
@@ -574,13 +620,13 @@ class ConfigurationManager(object):
             # expansion process:
             # step through all the keys converting them to their proper
             # types and bringing in any new keys in the process
-            for key in keys:
+            for key in all_keys:
                 if key not in known_keys:  # skip all keys previously seen
                     # mark this key as having been seen and processed
                     known_keys.add(key)
                     an_option = self.option_definitions[key]
-                    if isinstance(an_option, Aggregation):
-                        continue  # aggregations are ignored
+                    #if not isinstance(an_option, Option):
+                    #    continue  # aggregations, namespaces are ignored
                     # apply the from string conversion to make the real value
                     an_option.set_value(an_option.default)
                     # new values have been seen, don't let loop break

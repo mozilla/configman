@@ -413,3 +413,28 @@ class TestCase(unittest.TestCase):
 
         # FIXME: need a way to test a value whose 'from_string_converter'
         # requires quotes
+
+    def test_reference_value_from(self):
+        o1 = Option(
+            name='fred',
+            reference_value_from='external.postgresql'
+        )
+        self.assertEqual(o1.reference_value_from, 'external.postgresql')
+
+    def test_copy(self):
+        o = Option(
+            name='dwight',
+            default=17,
+            doc='the doc',
+            from_string_converter=int,
+            value=0,
+            short_form='d',
+            exclude_from_print_conf=True,
+            exclude_from_dump_conf=True,
+            is_argument=False,
+            comment_out=False,
+            not_for_definition=False,
+            reference_value_from='external.postgresql'
+        )
+        o2 = o.copy()
+        self.assertEqual(o, o2)

@@ -275,8 +275,9 @@ password=secret "message"
     # doc: the password
     # The following value has been automatically commented out because
     #   the option is found in other sections and the defaults are the same.
-    #   The common value can be found in the lowest level section. Uncomment
-    #   to override that lower level value
+    #   The common value can be found in the lowest level of this file.
+    #   You may uncomment this value to override the value from the
+    #   alternate location
     #password=secret "message"
 
 [x]
@@ -285,8 +286,9 @@ password=secret "message"
     # doc: the password
     # The following value has been automatically commented out because
     #   the option is found in other sections and the defaults are the same.
-    #   The common value can be found in the lowest level section. Uncomment
-    #   to override that lower level value
+    #   The common value can be found in the lowest level of this file.
+    #   You may uncomment this value to override the value from the
+    #   alternate location
     #password=secret "message"
 
     # name: size
@@ -339,13 +341,27 @@ password=secret "message"
                 if os.path.isfile(tmp_filename):
                     os.remove(tmp_filename)
 
-        def test_write_ini_with_migration_turned_off(self):
+        def test_write_ini_with_reference_value_froms_and_migration_turned_off(
+            self
+        ):
             n = self._some_namespaces()
-            n.namespace('o')
-            n.o.add_option('password', 'secret "message"', 'the password')
+            n.namespace('x1')
+            n.x1.add_option('password', 'secret "message"', 'the password',
+                           reference_value_from='xxx.yyy')
+            n.namespace('x2')
+            n.x2.add_option('password', 'secret "message"', 'the password',
+                           reference_value_from='xxx.yyy')
+            external_values = {
+                'admin.migration': False,
+                'xxx': {
+                    'yyy': {
+                        'password': 'dwight and wilma'
+                    }
+                }
+            }
             c = config_manager.ConfigurationManager(
               [n],
-              values_source_list=[{'admin.migration': False}],
+              values_source_list=[external_values],
               use_admin_controls=True,
               use_auto_help=False,
               argv_source=[]
@@ -356,6 +372,30 @@ password=secret "message"
 # Inspect the automatically written value below to make sure it is valid
 #   as a Python object for its intended converter function.
 aaa='2011-05-04T15:10:00'
+
+[xxx]
+
+    # this section contains Options that are common in
+    # other sections of this ini file.  If they are used
+    # in other files too, copy the options to the file
+    # in the +include line below.  Comment out the values
+    # in the Options.  Finally uncomment the +include line.
+
+    #+include ./common_xxx.ini
+
+    [[yyy]]
+
+        # this section contains Options that are common in
+        # other sections of this ini file.  If they are used
+        # in other files too, copy the options to the file
+        # in the +include line below.  Comment out the values
+        # in the Options.  Finally uncomment the +include line.
+
+        #+include ./common_yyy.ini
+
+        # name: password
+        # doc: the password
+        password=dwight and wilma
 
 [c]
 
@@ -377,12 +417,6 @@ aaa='2011-05-04T15:10:00'
     # doc: male neighbor from I Love Lucy
     fred=crabby
 
-[o]
-
-    # name: password
-    # doc: the password
-    password=secret "message"
-
 [x]
 
     # name: password
@@ -392,6 +426,29 @@ aaa='2011-05-04T15:10:00'
     # name: size
     # doc: how big in tons
     size=100
+
+[x1]
+
+    # name: password
+    # doc: the password
+    # The following value has been automatically commented out because
+    #   it is linked to another option. see:
+    #   x1.password -> xxx.yyy.password
+    #   You may uncomment this value to override the value from the
+    #   alternate location
+    #password=dwight and wilma
+
+[x2]
+
+    # name: password
+    # doc: the password
+    # The following value has been automatically commented out because
+    #   it is linked to another option. see:
+    #   x2.password -> xxx.yyy.password
+    #   You may uncomment this value to override the value from the
+    #   alternate location
+    #password=dwight and wilma
+
 """
             out = StringIO()
             c.write_conf(for_configobj, opener=stringIO_context_wrapper(out))

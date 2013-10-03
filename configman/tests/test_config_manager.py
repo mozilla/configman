@@ -461,6 +461,47 @@ c.string =   from ini
         self.assertEqual(c.option_definitions.c.string.default, 'from ini')
         self.assertEqual(c.option_definitions.c.string.value, 'from ini')
 
+    def test_overlay_config_11(self):
+        """test overlay dict w/deep source dict and reference value links"""
+        n = config_manager.Namespace()
+        n.add_option('a', 1, doc='the a', reference_value_from='xxx.yyy')
+        n.b = 17
+        n.c = config_manager.Namespace()
+        n.c.add_option(
+            'extra', doc='the x',
+            default=3.14159,
+            reference_value_from='xxx.yyy'
+        )
+        n.c.add_option(
+            'a',
+            doc='the a',
+            reference_value_from='xxx.yyy'
+        )
+        g = {
+            'xxx': {
+                'yyy': {
+                    'a': 2,
+                    'extra': 2.89
+                }
+            }
+         }
+        c = config_manager.ConfigurationManager([n], [g],
+                                    use_admin_controls=True,
+                                    #use_config_files=False,
+                                    use_auto_help=False,
+                                    argv_source=[])
+        self.assertTrue(isinstance(c.option_definitions.b,
+                                   config_manager.Option))
+        self.assertEqual(c.option_definitions.a.value, 2)
+        self.assertEqual(c.option_definitions.b.value, 17)
+        self.assertEqual(c.option_definitions.b.default, 17)
+        self.assertEqual(c.option_definitions.b.name, 'b')
+        self.assertEqual(c.option_definitions.c.extra.name, 'extra')
+        self.assertEqual(c.option_definitions.c.extra.doc, 'the x')
+        self.assertEqual(c.option_definitions.c.extra.default, 2.89)
+        self.assertEqual(c.option_definitions.c.extra.value, 2.89)
+        self.assertEqual(c.option_definitions.c.a.value, 2)
+
     def test_mapping_types_1(self):
         n = config_manager.Namespace()
         n.add_option(
