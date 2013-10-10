@@ -36,7 +36,6 @@
 #
 # ***** END LICENSE BLOCK *****
 
-import os
 import sys
 import ConfigParser
 
@@ -155,7 +154,7 @@ class ValueSource(object):
                 an_option.from_string_converter
               ),
             )
-            option_value = conv.option_value_str(an_option)
+            option_value = str(an_option)
             if isinstance(option_value, unicode):
                 option_value = option_value.encode('utf8')
 

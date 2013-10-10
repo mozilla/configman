@@ -83,6 +83,30 @@ class Option(object):
         self.not_for_definition = not_for_definition
 
     #--------------------------------------------------------------------------
+    def __str__(self):
+        """return an instance of Option's value as a string.
+
+        The option instance doesn't actually have to be from the Option class. All
+        it requires is that the passed option instance has a ``value`` attribute.
+        """
+        if self.value is None:
+            return ''
+        if self.to_string_converter:
+            s = self.to_string_converter(self.value)
+        else:
+            try:
+                converter = conv.to_string_converters[type(self.value)]
+                s = converter(self.value)
+            except KeyError:
+                if not isinstance(self.value, basestring):
+                    s = unicode(self.value)
+                else:
+                    s = self.value
+        if self.from_string_converter in conv.converters_requiring_quotes:
+            s = "'''%s'''" % s
+        return s
+
+    #--------------------------------------------------------------------------
     def __eq__(self, other):
         if isinstance(other, Option):
             return (self.name == other.name
