@@ -10,3 +10,4 @@ demo/demo2.ini
 docs/_build/
 MANIFEST
 *.pyc
+dist/
