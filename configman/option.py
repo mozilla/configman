@@ -86,8 +86,9 @@ class Option(object):
     def __str__(self):
         """return an instance of Option's value as a string.
 
-        The option instance doesn't actually have to be from the Option class. All
-        it requires is that the passed option instance has a ``value`` attribute.
+        The option instance doesn't actually have to be from the Option class.
+        All it requires is that the passed option instance has a ``value``
+        attribute.
         """
         if self.value is None:
             return ''
@@ -196,6 +197,7 @@ class Option(object):
             default=self.default,
             doc=self.doc,
             from_string_converter=self.from_string_converter,
+            to_string_converter=self.to_string_converter,
             value=self.value,
             short_form=self.short_form,
             exclude_from_print_conf=self.exclude_from_print_conf,

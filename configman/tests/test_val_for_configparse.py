@@ -184,62 +184,52 @@ foo=bar  ; other comment
 
 # name: aaa
 # doc: the a
-# converter: configman.datetime_util.datetime_from_ISO_string
 aaa='2011-05-04T15:10:00'
 
 # name: password
 # doc: the password
-# converter: str
 password='secret "message"'
 
 [c]
 
 # name: fred
 # doc: husband from Flintstones
-# converter: str
 fred='stupid'
 
 # name: wilma
 # doc: wife from Flintstones
-# converter: str
 wilma=\'waspish\'
 
 [d]
 
 # name: ethel
 # doc: female neighbor from I Love Lucy
-# converter: str
 ethel='silly'
 
 # name: fred
 # doc: male neighbor from I Love Lucy
-# converter: str
 fred='crabby'
 
 [o]
 
 # name: password
 # doc: the password
-# converter: str
 # password='secret "message"'
 
 [o.beyond_o]
 
 # name: password
 # doc: the password
-# converter: str
 # password='secret "message"'
 
 [x]
 
 # name: password
 # doc: the password
-# converter: str
 password='secret'
 
 # name: size
 # doc: how big in tons
-# converter: int
 size='100'
 """
         self.assertEqual(expected.strip(), received.strip())
