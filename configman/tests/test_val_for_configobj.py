@@ -423,6 +423,43 @@ aaa='2011-05-04T15:10:00'
             out.close()
             self.assertEqual(expected.strip(), received.strip())
 
+        def test_write_ini_with_custom_converters(self):
+
+            def dict_encoder(dict_):
+                return ','.join('%s:%s' % (k, v) for (k, v) in dict_.items())
+
+            def dict_decoder(string):
+                return dict(x.split(':') for x in string.split(','))
+
+            n = config_manager.Namespace(doc='top')
+            n.add_option(
+              'a',
+              default={'one': 'One'},
+              doc='the doc string',
+              to_string_converter=dict_encoder,
+              from_string_converter=dict_decoder,
+            )
+            c = config_manager.ConfigurationManager(
+              [n],
+              use_admin_controls=True,
+              use_auto_help=False,
+              argv_source=[]
+            )
+            expected = ("""# name: a
+# doc: the doc string
+# converter: configman.tests.test_val_for_configobj.dict_decoder
+# tostring: configman.tests.test_val_for_configobj.dict_encoder
+# Inspect the automatically written value below to make sure it is valid
+#   as a Python object for its intended converter function.
+a='one:One'
+            """)
+            out = StringIO()
+            c.write_conf(for_configobj, opener=stringIO_context_wrapper(out))
+            received = out.getvalue()
+            out.close()
+
+            self.assertEqual(expected.strip(), received.strip())
+
         def test_configobj_includes_inside_sections(self):
             include_file_name = ''
             ini_file_name = ''
