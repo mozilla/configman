@@ -132,17 +132,6 @@ class ValueSource(object):
                 option_name = an_option.name
             print >>output_stream, "# name: %s" % option_name
             print >>output_stream, "# doc: %s" % an_option.doc
-            print >>output_stream, "# converter: %s" % (
-              converters.py_obj_to_str(
-                an_option.from_string_converter
-              ),
-            )
-            if an_option.to_string_converter:
-                print >>output_stream, "# tostring: %s" % (
-                  converters.py_obj_to_str(
-                    an_option.to_string_converter
-                  ),
-                )
             option_value = str(an_option)
             if isinstance(option_value, unicode):
                 option_value = option_value.encode('utf8')

@@ -18,7 +18,6 @@ It looks like this::
  [top_level]
  # name: devowel
  # doc: Removes all vowels (including Y)
- # converter: configman.converters.boolean_converter
  devowel=False
 
 As you can see it automatically figured out that the convertor should
@@ -31,7 +30,7 @@ under the hood ``configman`` does something like this::
 
 So, how did it know you wanted a boolean converter? It picked this up
 from the definition's default value's type itself. Reminder; from the
-:ref:`Tutorial <tutorial>`:: 
+:ref:`Tutorial <tutorial>`::
 
  definition = Namespace()
  definition.add_option(
@@ -81,15 +80,15 @@ have one that looks like this::
    '-': 't',
    '.--.': 'r',
  }
- 
- 
+
+
  def morse_load(s):
      o = []
      for e in s.split(','):
          o.append(dictionary.get(e.lower(), '?'))
      return ''.join(o)
-     
-     
+
+
 Another more advanced example is to load a *class* rather than a simple
  value. To do this you'll need to use one of the pre-defined ``configman``
 converters as the ``from_string_converter`` value. To our example
@@ -102,7 +101,7 @@ above we're going to add a configurable class::
    'A Scottish dialect class for the morse code converter',
    from_string_converter=class_converter
  )
- 
+
 That needs to exist as an importable class. So we add it::
 
  # This is morse/__init__.py
@@ -111,8 +110,8 @@ That needs to exist as an importable class. So we add it::
          self.text = text
 
      def render(self):
-         return self.text.replace('e', 'i').replace('E','I') 
- 
+         return self.text.replace('e', 'i').replace('E','I')
+
 
 Now, this means that the class is configurable and you can refer to a
 specific class simply by name and it becomes available in your
@@ -122,12 +121,12 @@ program. For example, in this trivial example we can use it like this::
      config = create_config()
      dialect = config.dialect(config.morsecode)
      print dialect.render()
-     
+
 If you run this like this::
 
  $ python morse-communicator.py --morsecode=.,-,.--.,-,.
  itrti
- 
+
 This is just an example to whet your appetite but a more realistic
 example is that you might have a configurable class for
 sending emails. In production you might have it wired to be to
@@ -151,18 +150,17 @@ something like this::
    'smtp_password',
    doc='password for using the SMTP server'
  )
- 
+
 Then, suppose you have different backends for sending SMTP available
 you might want to run it like this when doing local development::
 
  # name: email_send_class
  # doc: Which backend should send the emails
- # converter: configman.converters.class_converter
  dialect=backends.StdoutLogDumper
- 
+
 So that instead of sending over the network (which was default) it
 uses another class which knows to just print the emails being sent on
-the stdout or some log file or something.  
+the stdout or some log file or something.
 
 Not built-ins
 -------------
@@ -173,8 +171,8 @@ tip calculator for example::
 
  import getopt
  from configman import Namespace, ConfigurationManager
- 
- 
+
+
  def create_config():
      namespace = Namespace()
      namespace.add_option(
@@ -189,14 +187,14 @@ tip calculator for example::
      value_sources = ('tipcalc.ini', getopt, )
      config_manager = ConfigurationManager([namespace], value_sources)
      return config_manager.get_config()
- 
- 
+
+
  if __name__ == '__main__':
      config = create_config()
      tip_amount = config.amount * config.tip / 100
      print "(exact amount: %r)" % tip_amount
      print '$%.2f' % tip_amount
-     
+
 When run it will automatically convert whatever number you give it to
 a python ``Decimal`` type. Note how in the example it prints the
 ``repr`` of the calculated value::
@@ -204,6 +202,3 @@ a python ``Decimal`` type. Note how in the example it prints the
  $ python tipcalc.py --amount 100.59 --tip=25
  (exact amount: Decimal('25.1475'))
  $25.15
- 
-
-

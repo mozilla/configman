@@ -261,12 +261,10 @@ you had used 'json' instead, ``configman`` would have written out a json file::
  [top_level]
  # name: devowel
  # doc: Removes all vowels (including Y)
- # converter: configman.converters.boolean_converter
  devowel=False
 
  # name: file
  # doc: Filename that contains our text
- # converter: str
  file=
 
 Any of the command line switches that you specify along with the
@@ -278,12 +276,10 @@ that is written::
  [top_level]
  # name: devowel
  # doc: Removes all vowels (including Y)
- # converter: configman.converters.boolean_converter
  devowel=False
 
  # name: file
  # doc: Filename that contains our text
- # converter: str
  file=/tmp/foo.txt
 
 Next, let's make our app always read from this file to get its defaults.  To do
@@ -350,4 +346,3 @@ configuration is done entirely by a ``ini`` file. Note: we could have
 chosen ``json`` or ``conf`` instead of ``ini`` and the program would
 be completely unchanged. Only your taste of config file format
 changed.
-

@@ -185,7 +185,6 @@ bad_option=bar  # other comment
             expected = \
 """# name: aaa
 # doc: the a
-# converter: configman.datetime_util.datetime_from_ISO_string
 # Inspect the automatically written value below to make sure it is valid
 #   as a Python object for its intended converter function.
 aaa='2011-05-04T15:10:00'
@@ -194,36 +193,30 @@ aaa='2011-05-04T15:10:00'
 
     # name: fred
     # doc: husband from Flintstones
-    # converter: str
     fred='stupid, deadly'
 
     # name: wilma
     # doc: wife from Flintstones
-    # converter: str
     wilma=waspish's
 
 [d]
 
     # name: ethel
     # doc: female neighbor from I Love Lucy
-    # converter: str
     ethel=silly
 
     # name: fred
     # doc: male neighbor from I Love Lucy
-    # converter: str
     fred=crabby
 
 [x]
 
     # name: password
     # doc: the password
-    # converter: str
     password=secret "message"
 
     # name: size
     # doc: how big in tons
-    # converter: int
     size=100
 """
             out = StringIO()
@@ -246,14 +239,12 @@ aaa='2011-05-04T15:10:00'
             expected = \
 """# name: aaa
 # doc: the a
-# converter: configman.datetime_util.datetime_from_ISO_string
 # Inspect the automatically written value below to make sure it is valid
 #   as a Python object for its intended converter function.
 aaa='2011-05-04T15:10:00'
 
 # name: password
 # doc: the password
-# converter: str
 # The following value is common for more than one section below. Its value
 #   may be set here for all or it can be overridden in its original section
 password=secret "message"
@@ -262,31 +253,26 @@ password=secret "message"
 
     # name: fred
     # doc: husband from Flintstones
-    # converter: str
     fred='stupid, deadly'
 
     # name: wilma
     # doc: wife from Flintstones
-    # converter: str
     wilma=waspish's
 
 [d]
 
     # name: ethel
     # doc: female neighbor from I Love Lucy
-    # converter: str
     ethel=silly
 
     # name: fred
     # doc: male neighbor from I Love Lucy
-    # converter: str
     fred=crabby
 
 [o]
 
     # name: password
     # doc: the password
-    # converter: str
     # The following value has been automatically commented out because
     #   the option is found in other sections and the defaults are the same.
     #   The common value can be found in the lowest level section. Uncomment
@@ -297,7 +283,6 @@ password=secret "message"
 
     # name: password
     # doc: the password
-    # converter: str
     # The following value has been automatically commented out because
     #   the option is found in other sections and the defaults are the same.
     #   The common value can be found in the lowest level section. Uncomment
@@ -306,7 +291,6 @@ password=secret "message"
 
     # name: size
     # doc: how big in tons
-    # converter: int
     size=100
 """
             out = StringIO()
@@ -369,7 +353,6 @@ password=secret "message"
             expected = \
 """# name: aaa
 # doc: the a
-# converter: configman.datetime_util.datetime_from_ISO_string
 # Inspect the automatically written value below to make sure it is valid
 #   as a Python object for its intended converter function.
 aaa='2011-05-04T15:10:00'
@@ -378,43 +361,36 @@ aaa='2011-05-04T15:10:00'
 
     # name: fred
     # doc: husband from Flintstones
-    # converter: str
     fred='stupid, deadly'
 
     # name: wilma
     # doc: wife from Flintstones
-    # converter: str
     wilma=waspish's
 
 [d]
 
     # name: ethel
     # doc: female neighbor from I Love Lucy
-    # converter: str
     ethel=silly
 
     # name: fred
     # doc: male neighbor from I Love Lucy
-    # converter: str
     fred=crabby
 
 [o]
 
     # name: password
     # doc: the password
-    # converter: str
     password=secret "message"
 
 [x]
 
     # name: password
     # doc: the password
-    # converter: str
     password=secret "message"
 
     # name: size
     # doc: how big in tons
-    # converter: int
     size=100
 """
             out = StringIO()
@@ -447,8 +423,6 @@ aaa='2011-05-04T15:10:00'
             )
             expected = ("""# name: a
 # doc: the doc string
-# converter: configman.tests.test_val_for_configobj.dict_decoder
-# tostring: configman.tests.test_val_for_configobj.dict_encoder
 # Inspect the automatically written value below to make sure it is valid
 #   as a Python object for its intended converter function.
 a='one:One'

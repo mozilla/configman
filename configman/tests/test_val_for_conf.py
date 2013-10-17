@@ -111,7 +111,6 @@ class TestCase(unittest.TestCase):
         out.close()
         expected = """# name: aaa
 # doc: the a
-# converter: configman.datetime_util.datetime_from_ISO_string
 aaa=2011-05-04T15:10:00
 
 #-------------------------------------------------------------------------------
@@ -119,17 +118,14 @@ aaa=2011-05-04T15:10:00
 
 # name: c.dwight
 # doc: your uncle
-# converter: int
 c.dwight=98
 
 # name: c.fred
 # doc: husband from Flintstones
-# converter: str
 c.fred=stupid
 
 # name: c.wilma
 # doc: wife from Flintstones
-# converter: str
 c.wilma=waspish
 
 #-------------------------------------------------------------------------------
@@ -137,7 +133,6 @@ c.wilma=waspish
 
 # name: c.e.dwight
 # doc: my uncle
-# converter: int
 c.e.dwight=97
 
 #-------------------------------------------------------------------------------
@@ -145,12 +140,10 @@ c.e.dwight=97
 
 # name: d.ethel
 # doc: female neighbor from I Love Lucy
-# converter: str
 d.ethel=silly
 
 # name: d.fred
 # doc: male neighbor from I Love Lucy
-# converter: str
 d.fred=crabby
 
 #-------------------------------------------------------------------------------
@@ -158,12 +151,10 @@ d.fred=crabby
 
 # name: x.password
 # doc: the password
-# converter: str
 x.password=secret
 
 # name: x.size
 # doc: how big in tons
-# converter: int
 x.size=100"""
         self.assertEqual(received.strip(), expected)
 
@@ -207,17 +198,14 @@ x.size=100"""
         expected = (
             "# name: x\n"
             "# doc: the x\n"
-            "# converter: int\n"
             "# x='13'\n"
             "\n"
             "# name: y\n"
             "# doc: the y\n"
-            "# converter: int\n"
             "y='-1'\n"
             "\n"
             "# name: z\n"
             "# doc: the z\n"
-            "# converter: str\n"
             "z='fred'\n"
             "\n"
             "#-------------------------------------------------------------------------------\n"
@@ -225,7 +213,6 @@ x.size=100"""
             "\n"
             "# name: o.x\n"
             "# doc: the x\n"
-            "# converter: int\n"
             "# o.x='13'\n"
             "\n"
         )
