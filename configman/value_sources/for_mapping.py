@@ -41,7 +41,7 @@ import os
 
 from source_exceptions import CantHandleTypeException
 
-can_handle = (os.environ,
+can_handle = (type(os.environ),
               collections.Mapping,
              )
 
