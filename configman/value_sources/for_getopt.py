@@ -78,6 +78,14 @@ class ValueSource(object):
         else:
             raise CantHandleTypeException()
 
+    # frequently, command line data sources must be treated differently.  For
+    # example, even when the overall option for configman is to allow
+    # non-strict option matching, the command line should not arbitrarily
+    # accept bad command line switches.  The existance of this key will make
+    # sure that a bad command line switch will result in an error without
+    # regard to the overall --admin.strict setting.
+    command_line_value_source = True
+
     def get_values(self, config_manager, ignore_mismatches):
         """This is the black sheep of the crowd of ValueSource implementations.
         It needs to know ahead of time all of the parameters that it will need,
@@ -236,5 +244,5 @@ class ValueSource(object):
                    yield key
             except AttributeError:
                 # this option definition does have the concept of being
-                # an argument - likely an aggregation 
+                # an argument - likely an aggregation
                 pass

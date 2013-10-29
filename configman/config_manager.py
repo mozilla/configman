@@ -624,9 +624,23 @@ class ConfigurationManager(object):
                 # ok, this values source doesn't have the concept
                 # always igoring mismatches, we won't tolerate mismatches
                 pass
+            # we want to fetch the keys from the value sources so that we can
+            # check for mismatches.  Commandline value sources, are different,
+            # we never want to allow unmatched keys from the command line.
+            # By detecting if this value source is a command line source, we
+            # can employ the command line's own mismatch detection.  The
+            # boolean 'allow_mismatches' controls application of the tollerance
+            # for mismatches.
+            if hasattr(a_value_source, 'command_line_value_source'):
+                allow_mismatches = False
+            else:
+                allow_mismatches = True
             # make a set of all the keys from a value source in the form
             # of strings like this: 'x.y.z'
-            value_source_mapping = a_value_source.get_values(self, True)
+            value_source_mapping = a_value_source.get_values(
+                self,
+                allow_mismatches
+            )
             value_source_keys_set = set([
                 k for k in
                 DotDict(value_source_mapping).keys_breadth_first()
