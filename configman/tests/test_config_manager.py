@@ -1394,7 +1394,7 @@ c.string =   from ini
             config_manager.ConfigurationManager,
             rc,
             [{'admin': {'strict': True}},
-             {'source': {'clos': 'configman.tests.test_config_manager.T2'},
+             {'source': {'cls': 'configman.tests.test_config_manager.T2'},
               'destination': {'cls': 'configman.tests.test_config_manager.T3'}},
              {'source': {'cls': 'configman.tests.test_config_manager.T1'},
                          'destination': {'cls': 'configman.tests.test_config_manager.T2'}},
@@ -1407,7 +1407,7 @@ c.string =   from ini
             config_manager.ConfigurationManager,
             rc,
             [{'admin': {'strict': True}},
-             {'source': {'clos': 'configman.tests.test_config_manager.T2'},
+             {'source': {'cls': 'configman.tests.test_config_manager.T2'},
               'destination': {'cls': 'configman.tests.test_config_manager.T3'}},
              {'sourness': {'cls': 'configman.tests.test_config_manager.T1'},
                          'destination': {'cls': 'configman.tests.test_config_manager.T2'}},
@@ -1415,6 +1415,27 @@ c.string =   from ini
                          'destination': {'cls': 'configman.tests.test_config_manager.T1'}},
             ],
         )
+
+        # make sure commandline data sources always behave stictly even when
+        # strict is set to False
+        import getopt
+        self.assertRaises( #  'alpha' is not an option
+            NotAnOptionError,
+            config_manager.ConfigurationManager,
+            rc,
+            [{'admin': {'strict': False}},  # not strict, we allow anything
+             {'source': {'cls': 'configman.tests.test_config_manager.T2'},
+              'destination': {'cls': 'configman.tests.test_config_manager.T3'}},
+             {'source': {'cls': 'configman.tests.test_config_manager.T1'},
+                         'destination': {'cls': 'configman.tests.test_config_manager.T2'}},
+             # commandline sources need to ignore when strict=False and raise
+             # NotAnOptionError anyway - we don't want to allow arbitrary
+             # switches on the command line.
+             getopt,
+            ],
+            argv_source=['--alpha']
+        )
+
 
     def test_acquisition(self):
         """define a common key in two sub-namespaces.  Then offer only a value
