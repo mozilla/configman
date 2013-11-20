@@ -169,7 +169,6 @@ class ConfigurationManager(object):
                                     'admin.conf',
                                     'admin.dump_conf',
                                     'admin.print_conf',
-                                    'admin.migration',
                                     'admin.strict'
                                     ]
         self.options_banned_from_help = options_banned_from_help
@@ -419,66 +418,9 @@ class ConfigurationManager(object):
         else:
             option_defs = self.option_definitions
 
-        if self.option_definitions.admin.migration.default:
-            self._migrate_options_for_acquisition(option_defs)
-
         value_sources.write(config_file_type,
                             option_defs,
                             opener)
-
-    #--------------------------------------------------------------------------
-    @staticmethod
-    def _migrate_options_for_acquisition(option_defs):
-        """sift through the definitions looking for common keys that can be
-        migrated to a lower level in the hierarchy.
-
-        create a mapping with these characteristics:
-            key - composed of the values from Option objects for 'name',
-                  'default' and 'from_string' converstion function.
-            value - a list of the the keys from the currently active option
-                    definition.
-
-        this implements a reverse index of value to keys for the system of
-        Namespaces and Options that make up the configuration manager's
-        option definition mapping.
-
-        the mapping is keyed by the option name, its default value and
-        the from_string_converter function.  If all these things are the
-        same in two options, then it is considered that they are referring
-        to the same option. This means that that option may be able migrate to
-        a lower level.  The mitigating factor is the number of Options with
-        the same key name.  If there is more than one with the same name,
-        then the Option cannot migrate to a lower level.
-        """
-        migration_candidates = collections.defaultdict(list)
-        option_name_counts = collections.defaultdict(int)
-        # cycle through all the keys
-        for option_name in option_defs.keys_breadth_first():
-            # option_name is a fully qualified key:  x.y.z
-            an_option = option_defs[option_name]
-            if isinstance(an_option, Option):
-                name_default_converter_key = (
-                    an_option.name,
-                    str(an_option.default),
-                    str(an_option.from_string_converter)
-                )
-                if name_default_converter_key not in migration_candidates:
-                    option_name_counts[an_option.name] += 1
-                migration_candidates[name_default_converter_key].append(
-                    option_name
-                )
-        for candidate, original_keys in migration_candidates.iteritems():
-            # candidate is: (option_name, option_default, option_coverter)
-            # remove name qualifications:  x.y.z --> z
-            if (
-                option_name_counts[candidate[0]] == 1
-                and len(original_keys) > 1
-            ):
-                option_defs[candidate[0]] = \
-                    option_defs[original_keys[0]].copy()
-                option_defs[candidate[0]].not_for_definition = True
-                for a_key in original_keys:
-                    option_defs[a_key].comment_out = True
 
     #--------------------------------------------------------------------------
     def log_config(self, logger):
@@ -781,11 +723,6 @@ class ConfigurationManager(object):
         admin.add_option(name='dump_conf',
                          default='',
                          doc='a pathname to which to write the current config',
-                        )
-        admin.add_option(name='migration',
-                         default=False,
-                         doc='allow common options to migrate to lower '
-                             'levels'
                         )
         admin.add_option(name='strict',
                          default=False,

@@ -225,123 +225,7 @@ aaa='2011-05-04T15:10:00'
             out.close()
             self.assertEqual(expected.strip(), received.strip())
 
-        def test_write_ini_with_migration(self):
-            n = self._some_namespaces()
-            n.namespace('o')
-            n.o.add_option('password', 'secret "message"', 'the password')
-            c = config_manager.ConfigurationManager(
-              [n],
-              [{'migration': True}],
-              use_admin_controls=True,
-              use_auto_help=False,
-              argv_source=[]
-            )
-            expected = \
-"""# name: aaa
-# doc: the a
-# Inspect the automatically written value below to make sure it is valid
-#   as a Python object for its intended converter function.
-aaa='2011-05-04T15:10:00'
-
-# name: password
-# doc: the password
-# The following value is common for more than one section below. Its value
-#   may be set here for all or it can be overridden in its original section
-password=secret "message"
-
-[c]
-
-    # name: fred
-    # doc: husband from Flintstones
-    fred='stupid, deadly'
-
-    # name: wilma
-    # doc: wife from Flintstones
-    wilma=waspish's
-
-[d]
-
-    # name: ethel
-    # doc: female neighbor from I Love Lucy
-    ethel=silly
-
-    # name: fred
-    # doc: male neighbor from I Love Lucy
-    fred=crabby
-
-[o]
-
-    # name: password
-    # doc: the password
-    # The following value has been automatically commented out because
-    #   the option is found in other sections and the defaults are the same.
-    #   The common value can be found in the lowest level of this file.
-    #   You may uncomment this value to override the value from the
-    #   alternate location
-    #password=secret "message"
-
-[x]
-
-    # name: password
-    # doc: the password
-    # The following value has been automatically commented out because
-    #   the option is found in other sections and the defaults are the same.
-    #   The common value can be found in the lowest level of this file.
-    #   You may uncomment this value to override the value from the
-    #   alternate location
-    #password=secret "message"
-
-    # name: size
-    # doc: how big in tons
-    size=100
-"""
-            out = StringIO()
-            c.write_conf(for_configobj, opener=stringIO_context_wrapper(out))
-            received = out.getvalue()
-            out.close()
-            self.assertEqual(expected.strip(), received.strip())
-
-            values = c.get_config()
-            self.assertEqual(values.x.size, 100)
-            self.assertEqual(values.x.password, 'secret "message"')
-            self.assertEqual(values.o.password, 'secret "message"')
-            self.assertRaises(
-                KeyError,
-                lambda: values.d.password == 'secret "message"'
-            )
-            self.assertRaises(
-                KeyError,
-                lambda: values.password == 'secret "message"'
-            )
-
-            # try the round trip
-            tmp_filename = os.path.join(tempfile.gettempdir(), 'test.ini')
-            open(tmp_filename, 'w').write(received)
-            try:
-                c = config_manager.ConfigurationManager(
-                  [n],
-                  [tmp_filename],
-                  use_admin_controls=True,
-                  use_auto_help=False,
-                  argv_source=[]
-                )
-                values = c.get_config()
-                self.assertEqual(values.x.size, 100)
-                self.assertEqual(values.x.password, 'secret "message"')
-                self.assertEqual(values.o.password, 'secret "message"')
-                self.assertRaises(
-                    KeyError,
-                    lambda: values.d.password == 'secret "message"'
-                )
-                self.assertRaises(
-                    KeyError,
-                    lambda: values.password == 'secret "message"'
-                )
-            finally:
-                if os.path.isfile(tmp_filename):
-                    os.remove(tmp_filename)
-
-        def test_write_ini_with_reference_value_froms_and_migration_turned_off(
+        def test_write_ini_with_reference_value_froms(
             self
         ):
             n = self._some_namespaces()
@@ -352,7 +236,6 @@ password=secret "message"
             n.x2.add_option('password', 'secret "message"', 'the password',
                            reference_value_from='xxx.yyy')
             external_values = {
-                'admin.migration': False,
                 'xxx': {
                     'yyy': {
                         'password': 'dwight and wilma'

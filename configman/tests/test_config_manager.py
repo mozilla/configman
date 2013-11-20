@@ -852,7 +852,6 @@ c.string =   from ini
              ('admin.print_conf', 'print_conf', None),
              ('admin.dump_conf', 'dump_conf', ''),
              ('admin.conf', 'conf', None),
-             ('admin.migration', 'migration', False),
              ('admin.strict', 'strict', False),
              ('application', 'application', MyApp),
              ('password', 'password', 'fred'),
@@ -1501,83 +1500,6 @@ c.string =   from ini
         self.assertEqual(c.source.cls, T2)
         self.assertEqual(c.destination.cls, T2)
 
-
-    def test_migrate_options_for_acquisition_no_conflicts(self):
-        """'host' can migrate because all the definitions are the same"""
-        n = Namespace()
-        n.add_option(
-            'fred',
-            default=11,
-            doc='poodle brains'
-        )
-        n.namespace('source')
-        n.source.add_option(
-            'host',
-            default='localhost',
-            doc='the host',
-            from_string_converter=eval
-        )
-        n.namespace('destination')
-        n.destination.add_option(
-            'host',
-            default='localhost',
-            doc='the host',
-            from_string_converter=eval
-        )
-        config_manager.ConfigurationManager._migrate_options_for_acquisition(n)
-        self.assertTrue('host' in n)
-        self.assertFalse(n.host.comment_out)
-        self.assertTrue(n.host.not_for_definition)
-        self.assertTrue('host' in n.source)
-        self.assertTrue(n.source.host.comment_out)
-        self.assertFalse(n.source.host.not_for_definition)
-        self.assertTrue('host' in n.destination)
-        self.assertTrue(n.destination.host.comment_out)
-        self.assertFalse(n.destination.host.not_for_definition)
-
-    def test_migrate_options_for_acquisition_conflicts(self):
-        """'host' cannot migrate because not all the 'host' entries are the
-        same"""
-        n = Namespace()
-        n.add_option(
-            'fred',
-            default=11,
-            doc='poodle brains'
-        )
-        n.namespace('source')
-        n.source.add_option(
-            'host',
-            default='localhost',
-            doc='the host',
-            from_string_converter=eval
-        )
-        n.namespace('destination')
-        n.destination.add_option(
-            'host',
-            default='localhost',
-            doc='the host',
-            from_string_converter=eval
-        )
-        n.namespace('other')
-        n.other.add_option(
-            'host',
-            default='127.0.0.1',
-            doc='the host',
-            from_string_converter=eval
-        )
-        config_manager.ConfigurationManager._migrate_options_for_acquisition(n)
-        self.assertFalse('host' in n)
-        self.assertTrue('host' in n.source)
-        self.assertFalse(n.source.host.comment_out)
-        self.assertFalse(n.source.host.not_for_definition)
-        self.assertTrue('host' in n.destination)
-        self.assertFalse(n.destination.host.comment_out)
-        self.assertFalse(n.destination.host.not_for_definition)
-        self.assertTrue('host' in n.other)
-        self.assertFalse(n.other.host.comment_out)
-        self.assertFalse(n.other.host.not_for_definition)
-
-
     def test_admin_conf_all_handlers_fail(self):
         """no handler found produces empty message"""
         n = self._common_app_namespace_setup()
@@ -1634,7 +1556,7 @@ c.string =   from ini
             self.assertTrue(
                 isinstance(cm.option_definitions[an_opt], Option)
             )
-        self.assertTrue(len(opts) == 10)  # there must be exactly 10 options
+        self.assertEqual(len(opts), 9)  # there must be exactly 9 options
 
     @mock.patch('configman.config_manager.warnings')
     def test_warn_on_one_excess_options(self, mocked_warnings):
