@@ -598,6 +598,13 @@ class ConfigurationManager(object):
                     if current_namespace is None:
                         # we're at the top level, use the base namespace
                         current_namespace = self.option_definitions
+                    # some new Options to be brought in may have already been
+                    # seen and in the known_keys set.  They must be marked 
+                    # as unseen so that the new default doesn't overwrite any
+                    # of the overlays that have already taken place.
+                    known_keys = known_keys.difference(
+                        known_keys.intersection(new_req.keys())
+                    )
                     # add the new Options to the namespace
                     current_namespace.update(new_req.safe_copy(
                         an_option.reference_value_from
