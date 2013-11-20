@@ -58,6 +58,7 @@ class Option(object):
                  is_argument=False,
                  comment_out=False,
                  not_for_definition=False,
+                 reference_value_from=None,
                  ):
         self.name = name
         self.short_form = short_form
@@ -81,6 +82,7 @@ class Option(object):
         self.exclude_from_dump_conf = exclude_from_dump_conf
         self.comment_out = comment_out
         self.not_for_definition = not_for_definition
+        self.reference_value_from = reference_value_from
 
     #--------------------------------------------------------------------------
     def __str__(self):
@@ -205,6 +207,7 @@ class Option(object):
             is_argument=self.is_argument,
             comment_out=self.comment_out,
             not_for_definition=self.not_for_definition,
+            reference_value_from=self.reference_value_from
         )
         return o
 
