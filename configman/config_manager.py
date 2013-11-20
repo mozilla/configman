@@ -520,29 +520,32 @@ class ConfigurationManager(object):
     #--------------------------------------------------------------------------
     def _create_reference_value_from_links(self, keys, known_keys):
         """this method steps through the option definitions looking for
-        alt paths.  On finding one, it creates the 'reference_value_from' links within the
-        option definitions and populates it with copied options."""
-        set_of_reference_value_from_links = set()  # a set of known reference_value_from_links
-        for key in keys:
-            if key not in known_keys:  # skip all keys previously seen
-                an_option = self.option_definitions[key]
-                #if not isinstance(an_option, Option):  #TODO remove
-                #    continue  # aggregations and other types are ignored
-                if (an_option.reference_value_from
-                    and an_option.reference_value_from not in set_of_reference_value_from_links
-                    and an_option.reference_value_from not in known_keys):
-                    alt_option = an_option.copy()
-                    an_option.comment_out = True
-                    alt_option.reference_value_from = None
-                    alt_option.name = '.'.join(
-                        (an_option.reference_value_from, alt_option.name)
-                    )
-                    set_of_reference_value_from_links.add(alt_option.name)
-                    self.option_definitions.add_option(alt_option)
+        alt paths.  On finding one, it creates the 'reference_value_from' links
+        within the option definitions and populates it with copied options."""
+        # a set of known reference_value_from_links
+        set_of_reference_value_from_links = set()
+        for key in (k for k in keys if k not in known_keys):
+            an_option = self.option_definitions[key]
+            #if not isinstance(an_option, Option):  #TODO remove
+            #    continue  # aggregations and other types are ignored
+            if (
+                an_option.reference_value_from
+                and an_option.reference_value_from not in
+                    set_of_reference_value_from_links
+                and an_option.reference_value_from not in known_keys
+            ):
+                alt_option = an_option.copy()
+                an_option.comment_out = True
+                alt_option.reference_value_from = None
+                alt_option.name = '.'.join(
+                    (an_option.reference_value_from, alt_option.name)
+                )
+                set_of_reference_value_from_links.add(alt_option.name)
+                self.option_definitions.add_option(alt_option)
         for a_reference_value_from in set_of_reference_value_from_links:
             for x in range(a_reference_value_from.count('.')):
                 namespace_path = a_reference_value_from.rsplit('.', x + 1)[0]
-                self.option_definitions[namespace_path].tag_as_reference_value_from()
+                self.option_definitions[namespace_path].ref_value_namespace()
         return set_of_reference_value_from_links
 
     #--------------------------------------------------------------------------
@@ -585,78 +588,82 @@ class ConfigurationManager(object):
             # applying the from string conversions
             #
 
-            for key in all_keys:
-                if key not in known_keys:  # skip all keys previously seen
-                    #if not isinstance(an_option, Option):
-                    #   continue  # aggregations and other types are ignored
-                    # loop through all the value sources looking for values
-                    # that match this current key.
-                    if self.option_definitions[key].reference_value_from:
-                        reference_value_from = self.option_definitions[key].reference_value_from
-                        top_key = key.split('.')[-1]
-                        self.option_definitions[key].default = \
-                            self.option_definitions[reference_value_from][top_key].default
-                    for a_value_source in self.values_source_list:
-                        try:
-                            # get all the option values from this value source
-                            val_src_dict = a_value_source.get_values(
-                                self,
-                                True
-                            )
-                            # make sure it is in the form of a DotDict
-                            if not isinstance(val_src_dict, DotDict):
-                                val_src_dict = \
-                                    DotDictWithAcquisition(val_src_dict)
-                            # get the Option for this key
-                            opt = self.option_definitions[key]
-                            # overlay the default with the new value from
-                            # the value source.  This assignment may come
-                            # via acquisition, so the key given may not have
-                            # been an exact match for what was returned.
-                            opt.default = val_src_dict[key]
-                        except KeyError, x:
-                            pass  # okay, that source doesn't have this value
+            for key in (k for k in all_keys if k not in known_keys):
+                #if not isinstance(an_option, Option):
+                #   continue  # aggregations and other types are ignored
+                # loop through all the value sources looking for values
+                # that match this current key.
+                if self.option_definitions[key].reference_value_from:
+                    reference_value_from = (
+                        self.option_definitions[key].reference_value_from
+                    )
+                    top_key = key.split('.')[-1]
+                    self.option_definitions[key].default = (
+                        self.option_definitions[reference_value_from]
+                        [top_key].default
+                    )
+                for a_value_source in self.values_source_list:
+                    try:
+                        # get all the option values from this value source
+                        val_src_dict = a_value_source.get_values(
+                            self,
+                            True
+                        )
+                        # make sure it is in the form of a DotDict
+                        if not isinstance(val_src_dict, DotDict):
+                            val_src_dict = \
+                                DotDictWithAcquisition(val_src_dict)
+                        # get the Option for this key
+                        opt = self.option_definitions[key]
+                        # overlay the default with the new value from
+                        # the value source.  This assignment may come
+                        # via acquisition, so the key given may not have
+                        # been an exact match for what was returned.
+                        opt.default = val_src_dict[key]
+                    except KeyError, x:
+                        pass  # okay, that source doesn't have this value
 
             # expansion process:
             # step through all the keys converting them to their proper
             # types and bringing in any new keys in the process
-            for key in all_keys:
-                if key not in known_keys:  # skip all keys previously seen
-                    # mark this key as having been seen and processed
-                    known_keys.add(key)
-                    an_option = self.option_definitions[key]
-                    #if not isinstance(an_option, Option):
-                    #    continue  # aggregations, namespaces are ignored
-                    # apply the from string conversion to make the real value
-                    an_option.set_value(an_option.default)
-                    # new values have been seen, don't let loop break
-                    new_keys_discovered = True
+            for key in (k for k in all_keys if k not in known_keys):
+                # mark this key as having been seen and processed
+                known_keys.add(key)
+                an_option = self.option_definitions[key]
+                #if not isinstance(an_option, Option):
+                #    continue  # aggregations, namespaces are ignored
+                # apply the from string conversion to make the real value
+                an_option.set_value(an_option.default)
+                # new values have been seen, don't let loop break
+                new_keys_discovered = True
+                try:
                     try:
-                        try:
-                            # try to fetch new requirements from this value
-                            new_req = an_option.value.get_required_config()
-                        except AttributeError:
-                            new_req = an_option.value.required_config
-                        # make sure what we got as new_req is actually a
-                        # Mapping of some sort
-                        if not isinstance(new_req, collections.Mapping):
-                            # we didn't get a mapping, perhaps the option value
-                            # was a Mock object - in any case we can't try to
-                            # interpret 'new_req' as a configman requirement
-                            # collection.  We must abandon processing this
-                            # option further
-                            continue
-                        # get the parent namespace
-                        current_namespace = self.option_definitions.parent(key)
-                        if current_namespace is None:
-                            # we're at the top level, use the base namespace
-                            current_namespace = self.option_definitions
-                        # add the new Options to the namespace
-                        current_namespace.update(new_req.safe_copy())
-                    except AttributeError, x:
-                        # there are apparently no new Options to bring in from
-                        # this option's value
-                        pass
+                        # try to fetch new requirements from this value
+                        new_req = an_option.value.get_required_config()
+                    except AttributeError:
+                        new_req = an_option.value.required_config
+                    # make sure what we got as new_req is actually a
+                    # Mapping of some sort
+                    if not isinstance(new_req, collections.Mapping):
+                        # we didn't get a mapping, perhaps the option value
+                        # was a Mock object - in any case we can't try to
+                        # interpret 'new_req' as a configman requirement
+                        # collection.  We must abandon processing this
+                        # option further
+                        continue
+                    # get the parent namespace
+                    current_namespace = self.option_definitions.parent(key)
+                    if current_namespace is None:
+                        # we're at the top level, use the base namespace
+                        current_namespace = self.option_definitions
+                    # add the new Options to the namespace
+                    current_namespace.update(new_req.safe_copy(
+                        an_option.reference_value_from
+                    ))
+                except AttributeError, x:
+                    # there are apparently no new Options to bring in from
+                    # this option's value
+                    pass
         return known_keys
 
     #--------------------------------------------------------------------------
@@ -770,11 +777,11 @@ class ConfigurationManager(object):
                          doc='write current config to stdout (%s)'
                              % ', '.join(
                               value_sources.file_extension_dispatch.keys())
-                         )
+                        )
         admin.add_option(name='dump_conf',
                          default='',
                          doc='a pathname to which to write the current config',
-                         )
+                        )
         admin.add_option(name='migration',
                          default=False,
                          doc='allow common options to migrate to lower '

@@ -106,13 +106,17 @@ class Namespace(dotdict.DotDict):
             candidate.set_value(value)
 
     #--------------------------------------------------------------------------
-    def safe_copy(self):
+    def safe_copy(self, reference_value_from=None):
         new_namespace = Namespace()
         if self._reference_value_from:
-            new_namespace.tag_as_reference_value_from()
+            new_namespace.ref_value_namespace()
         for key, opt in self.iteritems():
             if isinstance(opt, Option):
                 new_namespace[key] = opt.copy()
+                # assign a new reference_value if one has not been defined
+                if not new_namespace[key].reference_value_from:
+                    new_namespace[key].reference_value_from = \
+                        reference_value_from
             elif isinstance(opt, Aggregation):
                 new_namespace.add_aggregation(
                     opt.name,
@@ -123,8 +127,11 @@ class Namespace(dotdict.DotDict):
         return new_namespace
 
     #--------------------------------------------------------------------------
-    def tag_as_reference_value_from(self):
-        """tag this namespace as having been created by the reference_value_from
-        system for collecting common resources together."""
-        object.__setattr__(self, '_reference_value_from', True)  # force into attributes
+    def ref_value_namespace(self):
+        """tag this namespace as having been created by the referenced value
+        from system for collecting common resources together."""
+        # awkward syntax - because the base class DotDict hijacks the
+        # the __setattr__ method, this is the only way to actually force a
+        # value to become an attribute rather than member of the dict
+        object.__setattr__(self, '_reference_value_from', True)
 
