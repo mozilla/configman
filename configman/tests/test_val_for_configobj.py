@@ -183,41 +183,32 @@ bad_option=bar  # other comment
               argv_source=[]
             )
             expected = \
-"""# name: aaa
-# doc: the a
-# Inspect the automatically written value below to make sure it is valid
-#   as a Python object for its intended converter function.
-aaa='2011-05-04T15:10:00'
+"""# the a
+#aaa='2011-05-04T15:10:00'
 
 [c]
 
-    # name: fred
-    # doc: husband from Flintstones
-    fred='stupid, deadly'
+    # husband from Flintstones
+    #fred='stupid, deadly'
 
-    # name: wilma
-    # doc: wife from Flintstones
-    wilma=waspish's
+    # wife from Flintstones
+    #wilma=waspish's
 
 [d]
 
-    # name: ethel
-    # doc: female neighbor from I Love Lucy
-    ethel=silly
+    # female neighbor from I Love Lucy
+    #ethel=silly
 
-    # name: fred
-    # doc: male neighbor from I Love Lucy
-    fred=crabby
+    # male neighbor from I Love Lucy
+    #fred=crabby
 
 [x]
 
-    # name: password
-    # doc: the password
-    password=secret "message"
+    # the password
+    #password=secret "message"
 
-    # name: size
-    # doc: how big in tons
-    size=100
+    # how big in tons
+    #size=100
 """
             out = StringIO()
             c.write_conf(for_configobj, opener=stringIO_context_wrapper(out))
@@ -230,11 +221,20 @@ aaa='2011-05-04T15:10:00'
         ):
             n = self._some_namespaces()
             n.namespace('x1')
-            n.x1.add_option('password', 'secret "message"', 'the password',
-                           reference_value_from='xxx.yyy')
+            n.x1.add_option(
+                'password',
+                default='secret "message"',
+                doc='the password',
+                likely_to_be_changed=True,
+                reference_value_from='xxx.yyy'
+            )
             n.namespace('x2')
-            n.x2.add_option('password', 'secret "message"', 'the password',
-                           reference_value_from='xxx.yyy')
+            n.x2.add_option(
+                'password',
+                default='secret "message"',
+                doc='the password',
+                reference_value_from='xxx.yyy'
+            )
             external_values = {
                 'xxx': {
                     'yyy': {
@@ -250,88 +250,55 @@ aaa='2011-05-04T15:10:00'
               argv_source=[]
             )
             expected = \
-"""# name: aaa
-# doc: the a
-# Inspect the automatically written value below to make sure it is valid
-#   as a Python object for its intended converter function.
-aaa='2011-05-04T15:10:00'
+"""# the a
+#aaa='2011-05-04T15:10:00'
 
 [xxx]
-
-    # this section contains Options that are common in
-    # other sections of this ini file.  If they are used
-    # in other files too, copy the options to the file
-    # in the +include line below.  Comment out the values
-    # in the Options.  Finally uncomment the +include line.
 
     #+include ./common_xxx.ini
 
     [[yyy]]
 
-        # this section contains Options that are common in
-        # other sections of this ini file.  If they are used
-        # in other files too, copy the options to the file
-        # in the +include line below.  Comment out the values
-        # in the Options.  Finally uncomment the +include line.
-
         #+include ./common_yyy.ini
 
-        # name: password
-        # doc: the password
-        password=dwight and wilma
+        # the password
+        #password=dwight and wilma
 
 [c]
 
-    # name: fred
-    # doc: husband from Flintstones
-    fred='stupid, deadly'
+    # husband from Flintstones
+    #fred='stupid, deadly'
 
-    # name: wilma
-    # doc: wife from Flintstones
-    wilma=waspish's
+    # wife from Flintstones
+    #wilma=waspish's
 
 [d]
 
-    # name: ethel
-    # doc: female neighbor from I Love Lucy
-    ethel=silly
+    # female neighbor from I Love Lucy
+    #ethel=silly
 
-    # name: fred
-    # doc: male neighbor from I Love Lucy
-    fred=crabby
+    # male neighbor from I Love Lucy
+    #fred=crabby
 
 [x]
 
-    # name: password
-    # doc: the password
-    password=secret "message"
+    # the password
+    #password=secret "message"
 
-    # name: size
-    # doc: how big in tons
-    size=100
+    # how big in tons
+    #size=100
 
 [x1]
 
-    # name: password
-    # doc: the password
-    # The following value has been automatically commented out because
-    #   it is linked to another option. see:
-    #   x1.password -> xxx.yyy.password
-    #   You may uncomment this value to override the value from the
-    #   alternate location
-    #password=dwight and wilma
+    # the password
+    # see "xxx.yyy.password" for the default or override it here
+    password=dwight and wilma
 
 [x2]
 
-    # name: password
-    # doc: the password
-    # The following value has been automatically commented out because
-    #   it is linked to another option. see:
-    #   x2.password -> xxx.yyy.password
-    #   You may uncomment this value to override the value from the
-    #   alternate location
+    # the password
+    # see "xxx.yyy.password" for the default or override it here
     #password=dwight and wilma
-
 """
             out = StringIO()
             c.write_conf(for_configobj, opener=stringIO_context_wrapper(out))
@@ -361,12 +328,7 @@ aaa='2011-05-04T15:10:00'
               use_auto_help=False,
               argv_source=[]
             )
-            expected = ("""# name: a
-# doc: the doc string
-# Inspect the automatically written value below to make sure it is valid
-#   as a Python object for its intended converter function.
-a='one:One'
-            """)
+            expected = "# the doc string\n#a='one:One'\n"
             out = StringIO()
             c.write_conf(for_configobj, opener=stringIO_context_wrapper(out))
             received = out.getvalue()

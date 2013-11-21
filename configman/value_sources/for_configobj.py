@@ -211,55 +211,23 @@ class ValueSource(object):
         options.sort(cmp=lambda x, y: cmp(x.name, y.name))
         indent_spacer = " " * (level * indent_size)
         for an_option in options:
-            print >>output_stream, "%s# name: %s" % (indent_spacer,
-                                                     an_option.name)
-            print >>output_stream, "%s# doc: %s" % (indent_spacer,
-                                                    an_option.doc)
+            print >>output_stream, "%s# %s" % (indent_spacer, an_option.doc)
             option_value = str(an_option)
             if isinstance(option_value, unicode):
                 option_value = option_value.encode('utf8')
 
-            if an_option.comment_out:
-                option_format = '%s#%s=%s\n'
-                print >>output_stream, "%s# The following value has been " \
-                    "automatically commented out because"  % indent_spacer
-                if an_option.reference_value_from:
-                    print >>output_stream, (
-                        "%s#   it is linked to another "
-                        "option. see:" % indent_spacer
-                    )
-                    if namespace_name:
-                        print >>output_stream, (
-                            "%s#   %s.%s -> %s.%s"  %
-                            (indent_spacer, namespace_name, an_option.name,
-                             an_option.reference_value_from, an_option.name)
-                        )
-                    else:
-                        print >>output_stream, (
-                            "%s#   %s -> %s.%s"  %
-                            (indent_spacer, an_option.name,
-                             an_option.reference_value_from, an_option.name)
-                        )
+            if an_option.reference_value_from:
+                print >>output_stream, (
+                    '%s# see "%s.%s" for the default or override it here' %
+                        (indent_spacer, 
+                         an_option.reference_value_from, 
+                         an_option.name)
+                )
 
-                else:
-                    print >>output_stream, (
-                        "%s#   the option is found in other "
-                        "sections and the defaults are the same."
-                        % indent_spacer
-                    )
-                    print >>output_stream, (
-                        "%s#   The common value can be found "
-                        "in the lowest level of this file."  % indent_spacer
-                    )
-                print >>output_stream, (
-                    "%s#   You may uncomment this value to override the "
-                    "value from the" % indent_spacer
-                )
-                print >>output_stream, (
-                    "%s#   alternate location" % indent_spacer
-                )
-            else:
+            if an_option.likely_to_be_changed:
                 option_format = '%s%s=%s\n'
+            else:
+                option_format = '%s#%s=%s\n'
 
             repr_for_converter = repr(an_option.from_string_converter)
             if (
@@ -267,22 +235,9 @@ class ValueSource(object):
                 repr_for_converter.startswith('<built-in')
             ):
                 option_value = repr(option_value)
-                print >>output_stream, "%s# Inspect the automatically " \
-                    "written value below to make sure it is valid" \
-                    % indent_spacer
-                print >>output_stream, "%s#   as a Python object for its " \
-                    "intended converter function." % indent_spacer
             elif an_option.from_string_converter is str:
                 if ',' in option_value or '\n' in option_value:
                     option_value = repr(option_value)
-
-            if an_option.not_for_definition:
-                print >>output_stream, "%s# The following value is common " \
-                    "for more than one section below. Its value" \
-                    % indent_spacer
-                print >>output_stream, "%s#   may be set here for all or " \
-                    "it can be overridden in its original section" \
-                    % indent_spacer
 
             print >>output_stream, option_format % (
               indent_spacer,
@@ -310,27 +265,7 @@ class ValueSource(object):
                 )
             if namespace._reference_value_from:
                 print >>output_stream, (
-                    "%s# this section contains Options that are common in"
-                    % next_level_spacer
-                )
-                print >>output_stream, (
-                    "%s# other sections of this ini file.  If they are used"
-                    % next_level_spacer
-                )
-                print >>output_stream, (
-                    "%s# in other files too, copy the options to the file"
-                    % next_level_spacer
-                )
-                print >>output_stream, (
-                    "%s# in the +include line below.  Comment out the values"
-                    % next_level_spacer
-                )
-                print >>output_stream, (
-                    "%s# in the Options.  Finally uncomment the +include line."
-                    % next_level_spacer
-                )
-                print >>output_stream, (
-                    "\n%s#+include ./common_%s.ini\n"
+                    "%s#+include ./common_%s.ini\n"
                     % (next_level_spacer, key)
                 )
 

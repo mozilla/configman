@@ -432,7 +432,7 @@ class TestCase(unittest.TestCase):
             exclude_from_print_conf=True,
             exclude_from_dump_conf=True,
             is_argument=False,
-            comment_out=False,
+            likely_to_be_changed=False,
             not_for_definition=False,
             reference_value_from='external.postgresql'
         )
