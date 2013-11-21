@@ -477,7 +477,6 @@ class ConfigurationManager(object):
                 and an_option.reference_value_from not in known_keys
             ):
                 alt_option = an_option.copy()
-                an_option.comment_out = True
                 alt_option.reference_value_from = None
                 alt_option.name = '.'.join(
                     (an_option.reference_value_from, alt_option.name)

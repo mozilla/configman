@@ -56,7 +56,7 @@ class Option(object):
                  exclude_from_print_conf=False,
                  exclude_from_dump_conf=False,
                  is_argument=False,
-                 comment_out=False,
+                 likely_to_be_changed=False,
                  not_for_definition=False,
                  reference_value_from=None,
                  ):
@@ -80,7 +80,7 @@ class Option(object):
         self.is_argument = is_argument
         self.exclude_from_print_conf = exclude_from_print_conf
         self.exclude_from_dump_conf = exclude_from_dump_conf
-        self.comment_out = comment_out
+        self.likely_to_be_changed = likely_to_be_changed
         self.not_for_definition = not_for_definition
         self.reference_value_from = reference_value_from
 
@@ -205,7 +205,7 @@ class Option(object):
             exclude_from_print_conf=self.exclude_from_print_conf,
             exclude_from_dump_conf=self.exclude_from_dump_conf,
             is_argument=self.is_argument,
-            comment_out=self.comment_out,
+            likely_to_be_changed=self.likely_to_be_changed,
             not_for_definition=self.not_for_definition,
             reference_value_from=self.reference_value_from
         )

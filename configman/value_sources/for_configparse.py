@@ -153,10 +153,10 @@ class ValueSource(object):
             if isinstance(option_value, unicode):
                 option_value = option_value.encode('utf8')
 
-            if an_option.comment_out:
-                option_format = '# %s=%r\n'
-            else:
+            if an_option.likely_to_be_changed:
                 option_format = '%s=%r\n'
+            else:
+                option_format = '#%s=%r\n'
             print >>output_stream, option_format % (
               an_option.name,
               option_value
