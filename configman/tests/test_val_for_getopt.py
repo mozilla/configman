@@ -44,13 +44,16 @@ from configman.config_exceptions import NotAnOptionError
 from ..value_sources.for_getopt import ValueSource
 
 
+#==============================================================================
 class TestCase(unittest.TestCase):
 
+    #--------------------------------------------------------------------------
     def test_for_getopt_basics(self):
         source = ['a', 'b', 'c']
         o = ValueSource(source)
         self.assertEqual(o.argv_source, source)
 
+    #--------------------------------------------------------------------------
     def test_for_getopt_get_values(self):
         c = config_manager.ConfigurationManager(
           use_admin_controls=True,
@@ -69,6 +72,7 @@ class TestCase(unittest.TestCase):
         self.assertEqual(o.get_values(c, False), {'limit': '10'})
         self.assertEqual(o.get_values(c, True), {'limit': '10'})
 
+    #--------------------------------------------------------------------------
     def test_for_getopt_get_values_with_short_form(self):
         c = config_manager.ConfigurationManager(
           use_admin_controls=True,
@@ -83,12 +87,13 @@ class TestCase(unittest.TestCase):
         self.assertEqual(o.get_values(c, False), {'limit': '10'})
         self.assertEqual(o.get_values(c, True), {'limit': '10'})
 
+    #--------------------------------------------------------------------------
     def test_for_getopt_get_values_with_aggregates(self):
         c = config_manager.ConfigurationManager(
-          use_admin_controls=True,
-          #use_config_files=False,
-          use_auto_help=False,
-          argv_source=[]
+            use_admin_controls=True,
+            #use_config_files=False,
+            use_auto_help=False,
+            argv_source=[]
         )
 
         source = ['-l', '10']
@@ -98,6 +103,7 @@ class TestCase(unittest.TestCase):
         self.assertEqual(o.get_values(c, False), {'limit': '10'})
         self.assertEqual(o.get_values(c, True), {'limit': '10'})
 
+    #--------------------------------------------------------------------------
     def test_for_getopt_with_ignore(self):
         function = ValueSource.getopt_with_ignore
         args = ['a', 'b', 'c']
@@ -117,16 +123,20 @@ class TestCase(unittest.TestCase):
         self.assertEqual(o, [('-a', ''), ('--fred', 'sally')])
         self.assertEqual(a, ['14', 'ethel', 'dwight'])
 
+    #--------------------------------------------------------------------------
     def test_overlay_config_5(self):
         """test namespace definition w/getopt"""
         n = config_manager.Namespace()
         n.add_option('a', 1, doc='the a')
         n.b = 17
         n.add_option('c', False, doc='the c')
-        c = config_manager.ConfigurationManager([n], [['--a', '2', '--c']],
-                                    use_admin_controls=True,
-                                    use_auto_help=False,
-                                    argv_source=[])
+        c = config_manager.ConfigurationManager(
+            [n],
+            [['--a', '2', '--c']],
+            use_admin_controls=True,
+            use_auto_help=False,
+            argv_source=[]
+        )
         self.assertTrue(isinstance(c.option_definitions.b,
                                    config_manager.Option))
         self.assertEqual(c.option_definitions.a.value, 2)
@@ -136,6 +146,7 @@ class TestCase(unittest.TestCase):
         self.assertEqual(c.option_definitions.c.name, 'c')
         self.assertEqual(c.option_definitions.c.value, True)
 
+    #--------------------------------------------------------------------------
     def test_overlay_config_6(self):
         """test namespace definition w/getopt"""
         n = config_manager.Namespace()
@@ -143,11 +154,12 @@ class TestCase(unittest.TestCase):
         n.b = 17
         n.c = config_manager.Namespace()
         n.c.add_option('extra', doc='the x', default=3.14159, short_form='e')
-        c = config_manager.ConfigurationManager([n],
-                                                [['--a', '2', '--c.extra',
-                                                  '11.0']],
-                                                use_admin_controls=True,
-                                                use_auto_help=False)
+        c = config_manager.ConfigurationManager(
+            [n],
+            [['--a', '2', '--c.extra', '11.0']],
+            use_admin_controls=True,
+            use_auto_help=False
+        )
         self.assertEqual(type(c.option_definitions.b), config_manager.Option)
         self.assertEqual(c.option_definitions.a.value, 2)
         self.assertEqual(c.option_definitions.b.value, 17)
@@ -158,6 +170,7 @@ class TestCase(unittest.TestCase):
         self.assertEqual(c.option_definitions.c.extra.default, '11.0')
         self.assertEqual(c.option_definitions.c.extra.value, 11.0)
 
+    #--------------------------------------------------------------------------
     def test_overlay_config_6a(self):
         """test namespace w/getopt w/short form"""
         n = config_manager.Namespace()
@@ -165,10 +178,13 @@ class TestCase(unittest.TestCase):
         n.b = 17
         n.c = config_manager.Namespace()
         n.c.add_option('extra', 3.14159, 'the x', short_form='e')
-        c = config_manager.ConfigurationManager([n], [getopt],
-                                    use_admin_controls=True,
-                                    argv_source=['--a', '2', '-e', '11.0'],
-                                    use_auto_help=False)
+        c = config_manager.ConfigurationManager(
+            [n],
+            [getopt],
+            use_admin_controls=True,
+            argv_source=['--a', '2', '-e', '11.0'],
+            use_auto_help=False
+        )
         self.assertEqual(type(c.option_definitions.b), config_manager.Option)
         self.assertEqual(c.option_definitions.a.value, 2)
         self.assertEqual(c.option_definitions.b.value, 17)

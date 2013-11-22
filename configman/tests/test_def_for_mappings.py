@@ -42,15 +42,19 @@ from configman import option, dotdict, namespace
 from configman.def_sources import for_mappings
 
 
+#==============================================================================
 class TestCase(unittest.TestCase):
 
+    #--------------------------------------------------------------------------
     def test_setup_definitions_1(self):
         s = dotdict.DotDict()
         s.x = option.Option('x', 17, 'the x')
         s.n = {'name': 'n', 'doc': 'the n', 'default': 23}
-        s.__forbidden__ = option.Option('__forbidden__',
-                                        'no, you cannot',
-                                         38)
+        s.__forbidden__ = option.Option(
+            '__forbidden__',
+            'no, you cannot',
+            38
+        )
         s.t = namespace.Namespace()
         s.t.add_option('kk', 999, 'the kk')
         s.w = 89

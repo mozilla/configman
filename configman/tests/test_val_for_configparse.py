@@ -50,6 +50,7 @@ from ..value_sources import for_configparse
 from ..value_sources.for_configparse import ValueSource
 
 
+#------------------------------------------------------------------------------
 def stringIO_context_wrapper(a_stringIO_instance):
     @contextlib.contextmanager
     def stringIS_context_manager():
@@ -57,13 +58,18 @@ def stringIO_context_wrapper(a_stringIO_instance):
     return stringIS_context_manager
 
 
+#==============================================================================
 class TestCase(unittest.TestCase):
+    #--------------------------------------------------------------------------
     def _some_namespaces(self):
         """set up some namespaces"""
         n = config_manager.Namespace(doc='top')
-        n.add_option('aaa', '2011-05-04T15:10:00', 'the a',
-          short_form='a',
-          from_string_converter=dtu.datetime_from_ISO_string
+        n.add_option(
+            'aaa',
+            '2011-05-04T15:10:00',
+            'the a',
+            short_form='a',
+            from_string_converter=dtu.datetime_from_ISO_string
         )
         n.c = config_manager.Namespace(doc='c space')
         n.c.add_option('fred', 'stupid', 'husband from Flintstones')
@@ -76,11 +82,12 @@ class TestCase(unittest.TestCase):
         n.x.add_option('password', 'secret', 'the password')
         return n
 
+    #--------------------------------------------------------------------------
     def test_for_configparse_basics(self):
         """test basic use of for_configparse"""
         tmp_filename = os.path.join(
-          tempfile.gettempdir(),
-          'test.%s' % for_configparse.file_name_extension
+            tempfile.gettempdir(),
+            'test.%s' % for_configparse.file_name_extension
         )
         open(tmp_filename, 'w').write("""
 ; comment
@@ -94,9 +101,11 @@ foo=bar  ; other comment
 
         try:
             o = ValueSource(tmp_filename)
-            r = {'othersection.foo': 'bar',
+            r = {
+                'othersection.foo': 'bar',
                  'name': 'Peter',
-                 'awesome': ''}
+                 'awesome': ''
+            }
             assert o.get_values(None, None) == r
             # in the case of this implementation of a ValueSource,
             # the two parameters to get_values are dummies.  That may
@@ -106,25 +115,11 @@ foo=bar  ; other comment
             self.assertEqual(o.get_values(2, False), r)
             self.assertEqual(o.get_values(3, True), r)
 
-            # XXX (peterbe): commented out because I'm not sure if
-            # OptionsByIniFile get_values() should depend on the configuration
-            # manager it is given as first argument or not.
-            #c = config_manager.ConfigurationManager([],
-                                        #use_admin_controls=True,
-                                        ##use_config_files=False,
-                                        #auto_help=False,
-                                        #argv_source=[])
-            #self.assertEqual(o.get_values(c, True), {})
-            #self.assertRaises(config_manager.NotAnOptionError,
-            #                  o.get_values, c, False)
-
-            #c.option_definitions.add_option('limit', default=0)
-            #self.assertEqual(o.get_values(c, False), {'limit': '20'})
-            #self.assertEqual(o.get_values(c, True), {'limit': '20'})
         finally:
             if os.path.isfile(tmp_filename):
                 os.remove(tmp_filename)
 
+    #--------------------------------------------------------------------------
     def test_for_configparse_basics_2(self):
         tmp_filename = os.path.join(
           tempfile.gettempdir(),
@@ -142,20 +137,29 @@ foo=bar  ; other comment
 
         try:
             o = ValueSource(tmp_filename)
-            c = config_manager.ConfigurationManager([],
-                                        use_admin_controls=True,
-                                        #use_config_files=False,
-                                        use_auto_help=False,
-                                        argv_source=[])
-
-            self.assertEqual(o.get_values(c, False),
-                             {'othersection.foo': 'bar',
-                              'name': 'Peter',
-                              'awesome': ''})
-            self.assertEqual(o.get_values(c, True),
-                             {'othersection.foo': 'bar',
-                              'name': 'Peter',
-                              'awesome': ''})
+            c = config_manager.ConfigurationManager(
+                [],
+                use_admin_controls=True,
+                #use_config_files=False,
+                use_auto_help=False,
+                argv_source=[]
+            )
+            self.assertEqual(
+                o.get_values(c, False),
+                {
+                    'othersection.foo': 'bar',
+                    'name': 'Peter',
+                    'awesome': ''
+                }
+            )
+            self.assertEqual(
+                o.get_values(c, True),
+                {
+                    'othersection.foo': 'bar',
+                    'name': 'Peter',
+                    'awesome': ''
+                }
+            )
         finally:
             if os.path.isfile(tmp_filename):
                 os.remove(tmp_filename)

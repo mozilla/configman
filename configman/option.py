@@ -45,21 +45,22 @@ from config_exceptions import CannotConvertError, OptionError
 #==============================================================================
 class Option(object):
     #--------------------------------------------------------------------------
-    def __init__(self,
-                 name,
-                 default=None,
-                 doc=None,
-                 from_string_converter=None,
-                 to_string_converter=None,
-                 value=None,
-                 short_form=None,
-                 exclude_from_print_conf=False,
-                 exclude_from_dump_conf=False,
-                 is_argument=False,
-                 likely_to_be_changed=False,
-                 not_for_definition=False,
-                 reference_value_from=None,
-                 ):
+    def __init__(
+        self,
+        name,
+        default=None,
+        doc=None,
+        from_string_converter=None,
+        to_string_converter=None,
+        value=None,
+        short_form=None,
+        exclude_from_print_conf=False,
+        exclude_from_dump_conf=False,
+        is_argument=False,
+        likely_to_be_changed=False,
+        not_for_definition=False,
+        reference_value_from=None,
+    ):
         self.name = name
         self.short_form = short_form
         self.default = default
@@ -112,16 +113,17 @@ class Option(object):
     #--------------------------------------------------------------------------
     def __eq__(self, other):
         if isinstance(other, Option):
-            return (self.name == other.name
-                    and
-                    self.default == other.default
-                    and
-                    self.doc == other.doc
-                    and
-                    self.short_form == other.short_form
-                    and
-                    self.value == other.value
-                    )
+            return (
+                self.name == other.name
+                and
+                self.default == other.default
+                and
+                self.doc == other.doc
+                and
+                self.short_form == other.short_form
+                and
+                self.value == other.value
+            )
 
     #--------------------------------------------------------------------------
     def __repr__(self):  # pragma: no cover
@@ -188,8 +190,10 @@ class Option(object):
             self.default = val
             self.set_value(val)
         else:
-            raise OptionError("cannot override existing default without "
-                              "using the 'force' option")
+            raise OptionError(
+                "cannot override existing default without using the 'force' "
+                "option"
+            )
 
     #--------------------------------------------------------------------------
     def copy(self):
@@ -215,9 +219,11 @@ class Option(object):
 #==============================================================================
 class Aggregation(object):
     #--------------------------------------------------------------------------
-    def __init__(self,
-                 name,
-                 function):
+    def __init__(
+        self,
+        name,
+        function
+    ):
         self.name = name
         if isinstance(function, basestring):
             self.function = conv.class_converter(function)

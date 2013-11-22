@@ -47,32 +47,37 @@ from ..option import Option, Aggregation
 from source_exceptions import (ValueException, NotEnoughInformationException,
                                CantHandleTypeException)
 
-can_handle = (basestring,
-              json
-             )
+can_handle = (
+    basestring,
+    json
+)
 
 file_name_extension = 'json'
 
 
+#==============================================================================
 class LoadingJsonFileFailsException(ValueException):
     pass
 
 
+#==============================================================================
 class ValueSource(object):
 
+    #--------------------------------------------------------------------------
     def __init__(self, source, the_config_manager=None):
         self.values = None
         if source is json:
             try:
-                app = the_config_manager._get_option(
-                                                      'admin.application')
+                app = the_config_manager._get_option('admin.application')
                 source = "%s.%s" % (app.value.app_name, file_name_extension)
             except (AttributeError, KeyError):
-                raise NotEnoughInformationException("Can't setup an json "
-                                                    "file without knowing "
-                                                    "the file name")
-        if (isinstance(source, basestring) and
-           source.endswith(file_name_extension)):
+                raise NotEnoughInformationException(
+                    "Can't setup an json file without knowing the file name"
+                )
+        if (
+            isinstance(source, basestring)
+            and source.endswith(file_name_extension)
+        ):
             try:
                 with open(source) as fp:
                     self.values = json.load(fp)
@@ -83,18 +88,22 @@ class ValueSource(object):
                 warnings.warn("%s doesn't exist" % source)
                 self.values = {}
             except ValueError:
-                raise LoadingJsonFileFailsException("Cannot load json: %s" %
-                                                    str(x))
+                raise LoadingJsonFileFailsException(
+                    "Cannot load json: %s" % str(x)
+                )
         else:
             raise CantHandleTypeException()
 
+    #--------------------------------------------------------------------------
     def get_values(self, config_manager, ignore_mismatches):
         return self.values
 
+    #--------------------------------------------------------------------------
     @staticmethod
     def recursive_default_dict():
         return collections.defaultdict(ValueSource.recursive_default_dict)
 
+    #--------------------------------------------------------------------------
     @staticmethod
     def write(source_dict, output_stream=sys.stdout):
         json_dict = ValueSource.recursive_default_dict()

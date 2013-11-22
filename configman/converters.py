@@ -124,10 +124,12 @@ def timedelta_converter(input_str):
             minutes = int(details[-2])
         if len(details) >= 1:
             seconds = int(details[-1])
-        return datetime.timedelta(days=days,
-                                  hours=hours,
-                                  minutes=minutes,
-                                  seconds=seconds)
+        return datetime.timedelta(
+            days=days,
+            hours=hours,
+            minutes=minutes,
+            seconds=seconds
+        )
     raise ValueError(input_str)
 
 
@@ -177,9 +179,11 @@ def class_converter(input_str):
 
 
 #------------------------------------------------------------------------------
-def classes_in_namespaces_converter(template_for_namespace="cls%d",
-                                    name_of_class_option='cls',
-                                    instantiate_classes=False):
+def classes_in_namespaces_converter(
+    template_for_namespace="cls%d",
+    name_of_class_option='cls',
+    instantiate_classes=False
+):
     """take a comma delimited  list of class names, convert each class name
     into an actual class as an option within a numbered namespace.  This
     function creates a closure over a new function.  That new function,
@@ -362,5 +366,4 @@ to_string_converters = {
 
 
 #------------------------------------------------------------------------------
-#converters_requiring_quotes = [eval, eval_to_regex_converter]
 converters_requiring_quotes = [eval, regex_converter]

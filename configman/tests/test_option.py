@@ -47,8 +47,10 @@ from configman.option import Option
 from configman.config_exceptions import CannotConvertError, OptionError
 
 
+#==============================================================================
 class TestCase(unittest.TestCase):
 
+    #--------------------------------------------------------------------------
     def test_option_constructor_basics(self):
         o = Option('name')
         self.assertEqual(o.name, 'name')
@@ -72,9 +74,9 @@ class TestCase(unittest.TestCase):
         self.assertEqual(o.value, None)
 
         data = {
-          'name': 'lucy',
-          'default': 1,
-          'doc': "lucy's integer"
+            'name': 'lucy',
+            'default': 1,
+            'doc': "lucy's integer"
         }
         o = Option(**data)
         self.assertEqual(o.name, 'lucy')
@@ -84,10 +86,10 @@ class TestCase(unittest.TestCase):
         self.assertEqual(o.value, 1)
 
         data = {
-          'name': 'lucy',
-          'default': 1,
-          'doc': "lucy's integer",
-          'value': '1'
+            'name': 'lucy',
+            'default': 1,
+            'doc': "lucy's integer",
+            'value': '1'
         }
         o = Option(**data)
         self.assertEqual(o.name, 'lucy')
@@ -97,10 +99,10 @@ class TestCase(unittest.TestCase):
         self.assertEqual(o.value, '1')
 
         data = {
-          'name': 'lucy',
-          'default': '1',
-          'doc': "lucy's integer",
-          'from_string_converter': int
+            'name': 'lucy',
+            'default': '1',
+            'doc': "lucy's integer",
+            'from_string_converter': int
         }
         o = Option(**data)
         self.assertEqual(o.name, 'lucy')
@@ -114,10 +116,10 @@ class TestCase(unittest.TestCase):
 
 
         data = {
-          'name': 'lucy',
-          'default': '1',
-          'doc': "lucy's integer",
-          'from_string_converter': int,
+            'name': 'lucy',
+            'default': '1',
+            'doc': "lucy's integer",
+            'from_string_converter': int,
         }
         o = Option(**data)
         self.assertEqual(o.name, 'lucy')
@@ -127,9 +129,9 @@ class TestCase(unittest.TestCase):
         self.assertEqual(o.value, '1')
 
         data = {
-          'default': '1',
-          'doc': "lucy's integer",
-          'from_string_converter': int,
+            'default': '1',
+            'doc': "lucy's integer",
+            'from_string_converter': int,
         }
         o = Option('now', **data)
         self.assertEqual(o.name, 'now')
@@ -148,9 +150,9 @@ class TestCase(unittest.TestCase):
         self.assertEqual(o.value, d)
 
         data = {
-          'default': '1.0',
-          'doc': "lucy's height",
-          'from_string_converter': float,
+            'default': '1.0',
+            'doc': "lucy's height",
+            'from_string_converter': float,
         }
         o = Option('now', **data)
         self.assertEqual(o.name, 'now')
@@ -162,11 +164,12 @@ class TestCase(unittest.TestCase):
         self.assertEqual(o.default, '1.0')
         self.assertEqual(o.value, 1.0)
 
+    #--------------------------------------------------------------------------
     def test_option_constructor_more_complex_default_converters(self):
         data = {
-          'default': '2011-12-31',
-          'doc': "lucy's bday",
-          'from_string_converter': dtu.date_from_ISO_string,
+            'default': '2011-12-31',
+            'doc': "lucy's bday",
+            'from_string_converter': dtu.date_from_ISO_string,
         }
         o = Option('now', **data)
         self.assertEqual(o.name, 'now')
@@ -177,9 +180,9 @@ class TestCase(unittest.TestCase):
         self.assertEqual(o.value, datetime.date(2011, 12, 31))
 
         data = {
-          'default': '2011-12-31',
-          'doc': "lucy's bday",
-          'from_string_converter': \
+            'default': '2011-12-31',
+            'doc': "lucy's bday",
+            'from_string_converter': \
             'configman.datetime_util.date_from_ISO_string',
         }
         o = Option('now', **data)
@@ -191,6 +194,7 @@ class TestCase(unittest.TestCase):
         o.set_value()
         self.assertEqual(o.value, datetime.date(2011, 12, 31))
 
+    #--------------------------------------------------------------------------
     def test_setting_known_from_string_converter_onOption(self):
         opt = Option('name', default=u'Peter')
         self.assertEqual(opt.default, u'Peter')
@@ -229,6 +233,7 @@ class TestCase(unittest.TestCase):
         self.assertEqual(opt.from_string_converter,
                          dtu.date_from_ISO_string)
 
+    #--------------------------------------------------------------------------
     def test_boolean_converter_inOption(self):
         opt = Option('name', default=False)
         self.assertEqual(opt.default, False)
@@ -274,6 +279,7 @@ class TestCase(unittest.TestCase):
         opt.set_value(u't')
         self.assertEqual(opt.value, True)
 
+    #--------------------------------------------------------------------------
     def test_list_converter_inOption(self):
         some_list = ['some', 'values', 'here']
         opt = Option('some name', default=some_list)
@@ -284,6 +290,7 @@ class TestCase(unittest.TestCase):
         opt.set_value('list, of, things')
         self.assertEqual(opt.value, ['list', 'of', 'things'])
 
+    #--------------------------------------------------------------------------
     def test_timedelta_converter_inOption(self):
         one_day = datetime.timedelta(days=1)
         opt = Option('some name', default=one_day)
@@ -309,6 +316,7 @@ class TestCase(unittest.TestCase):
         self.assertRaises(CannotConvertError,
                           opt.set_value, '0:x:0:0')
 
+    #--------------------------------------------------------------------------
     def test_regexp_converter_inOption(self):
         regex_str = '\w+'
         sample_regex = re.compile(regex_str)
@@ -320,6 +328,7 @@ class TestCase(unittest.TestCase):
         opt.set_value(regex_str)
         self.assertEqual(opt.value.pattern, sample_regex.pattern)
 
+    #--------------------------------------------------------------------------
     def test_option_comparison(self):
         o1 = Option('name')
         o2 = Option('name')
@@ -350,6 +359,7 @@ class TestCase(unittest.TestCase):
         o2 = Option('name')
         self.assertNotEqual(o1, o2)
 
+    #--------------------------------------------------------------------------
     def test_set_value_from_other_option(self):
         o1 = Option('name')
         o1.set_value('Peter')
@@ -363,6 +373,7 @@ class TestCase(unittest.TestCase):
         o2.set_value(o1)
         self.assertEqual(o2.value, 'Your name here')
 
+    #--------------------------------------------------------------------------
     def test_set_value_from_mapping(self):
         o1 = Option('name')
         val = {'default': u'Peter'}
@@ -373,6 +384,7 @@ class TestCase(unittest.TestCase):
         o1.set_value(val)
         self.assertEqual(o1.value, val)
 
+    #--------------------------------------------------------------------------
     def test_set_default(self):
         o1 = Option(
           'name',
@@ -393,6 +405,7 @@ class TestCase(unittest.TestCase):
         self.assertTrue(o2.value, 68)
         self.assertTrue(o2.default, 68)
 
+    #--------------------------------------------------------------------------
     def test__str__(self):
         opt = Option('name')
         self.assertEqual(str(opt), '')
@@ -414,6 +427,7 @@ class TestCase(unittest.TestCase):
         # FIXME: need a way to test a value whose 'from_string_converter'
         # requires quotes
 
+    #--------------------------------------------------------------------------
     def test_reference_value_from(self):
         o1 = Option(
             name='fred',
@@ -421,6 +435,7 @@ class TestCase(unittest.TestCase):
         )
         self.assertEqual(o1.reference_value_from, 'external.postgresql')
 
+    #--------------------------------------------------------------------------
     def test_copy(self):
         o = Option(
             name='dwight',

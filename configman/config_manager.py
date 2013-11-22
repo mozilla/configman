@@ -56,29 +56,30 @@ import def_sources
 from option import Option, Aggregation
 from dotdict import DotDict, DotDictWithAcquisition
 from namespace import Namespace
-from config_file_future_proxy import ConfigFileFutureProxy
 from required_config import RequiredConfig
+from config_file_future_proxy import ConfigFileFutureProxy
 
 
 #==============================================================================
 class ConfigurationManager(object):
 
     #--------------------------------------------------------------------------
-    def __init__(self,
-                 definition_source=None,
-                 values_source_list=None,
-                 argv_source=None,
-                 #use_config_files=True,
-                 use_auto_help=True,
-                 use_admin_controls=True,
-                 quit_after_admin=True,
-                 options_banned_from_help=None,
-                 app_name='',
-                 app_version='',
-                 app_description='',
-                 config_pathname='.',
-                 config_optional=True,
-                 ):
+    def __init__(
+        self,
+        definition_source=None,
+        values_source_list=None,
+        argv_source=None,
+        #use_config_files=True,
+        use_auto_help=True,
+        use_admin_controls=True,
+        quit_after_admin=True,
+        options_banned_from_help=None,
+        app_name='',
+        app_version='',
+        app_description='',
+        config_pathname='.',
+        config_optional=True,
+    ):
         """create and initialize a configman object.
 
         parameters:
@@ -125,8 +126,10 @@ class ConfigurationManager(object):
         # instead of allowing mutables as default keyword argument values...
         if definition_source is None:
             definition_source_list = []
-        elif (isinstance(definition_source, collections.Sequence) and
-              not isinstance(definition_source, basestring)):
+        elif (
+            isinstance(definition_source, collections.Sequence) and
+            not isinstance(definition_source, basestring)
+        ):
             definition_source_list = list(definition_source)
         else:
             definition_source_list = [definition_source]
@@ -157,20 +160,25 @@ class ConfigurationManager(object):
         if values_source_list is None:
             # nothing set, assume defaults
             if use_admin_controls:
-                values_source_list = (cm.ConfigFileFutureProxy,
-                                      cm.environment,
-                                      cm.command_line)
+                values_source_list = (
+                    cm.ConfigFileFutureProxy,
+                    cm.environment,
+                    cm.command_line
+                )
             else:
-                values_source_list = (cm.environment,
-                                      cm.command_line)
+                values_source_list = (
+                    cm.environment,
+                    cm.command_line
+                )
 
         admin_tasks_done = False
-        self.admin_controls_list = ['help',
-                                    'admin.conf',
-                                    'admin.dump_conf',
-                                    'admin.print_conf',
-                                    'admin.strict'
-                                    ]
+        self.admin_controls_list = [
+            'help',
+            'admin.conf',
+            'admin.dump_conf',
+            'admin.print_conf',
+            'admin.strict'
+        ]
         self.options_banned_from_help = options_banned_from_help
 
         if use_auto_help:
@@ -194,8 +202,10 @@ class ConfigurationManager(object):
                 # The only action we can take is to trust and continue with the
                 # original copy of the definition source.
                 safe_copy_of_def_source = a_definition_source
-            def_sources.setup_definitions(safe_copy_of_def_source,
-                                          self.option_definitions)
+            def_sources.setup_definitions(
+                safe_copy_of_def_source,
+                self.option_definitions
+            )
 
         if use_admin_controls:
             # the name of the config file needs to be loaded from the command
@@ -224,8 +234,11 @@ class ConfigurationManager(object):
             app_option = self._get_option('application')
             self.app_name = getattr(app_option.value, 'app_name', '')
             self.app_version = getattr(app_option.value, 'app_version', '')
-            self.app_description = getattr(app_option.value,
-                                           'app_description', '')
+            self.app_description = getattr(
+                app_option.value,
+                'app_description',
+                ''
+            )
         except exc.NotAnOptionError:
             # there is no 'application' option, continue to use the
             # 'app_name' from the parameters passed in, if they exist.
@@ -292,8 +305,11 @@ class ConfigurationManager(object):
             print >> output_stream, ''
 
         names_list = self.get_option_names()
-        print >> output_stream, "usage:\n", self.app_invocation_name, \
-                                "[OPTIONS]...",
+        print >> output_stream, (
+            "usage:\n",
+            self.app_invocation_name,
+            "[OPTIONS]..."
+        ),
         bracket_count = 0
         for key in names_list:
             an_option = self.option_definitions[key]
@@ -357,9 +373,11 @@ class ConfigurationManager(object):
         def stdout_opener():
             yield sys.stdout
 
-        skip_keys = [k for (k, v)
-                     in self.option_definitions.iteritems()
-                     if isinstance(v, Option) and v.exclude_from_print_conf]
+        skip_keys = [
+            k for (k, v)
+            in self.option_definitions.iteritems()
+            if isinstance(v, Option) and v.exclude_from_print_conf
+        ]
         self.write_conf(config_file_type, stdout_opener, skip_keys=skip_keys)
 
     #--------------------------------------------------------------------------
@@ -378,9 +396,11 @@ class ConfigurationManager(object):
         opener = functools.partial(open, config_pathname, 'w')
         config_file_type = os.path.splitext(config_pathname)[1][1:]
 
-        skip_keys = [k for (k, v)
-                     in self.option_definitions.iteritems()
-                     if isinstance(v, Option) and v.exclude_from_dump_conf]
+        skip_keys = [
+            k for (k, v)
+            in self.option_definitions.iteritems()
+            if isinstance(v, Option) and v.exclude_from_dump_conf
+        ]
 
         self.write_conf(config_file_type, opener, skip_keys=skip_keys)
 
@@ -512,8 +532,11 @@ class ConfigurationManager(object):
             # keys holds a list of all keys in the option definitons in
             # breadth first order using this form: [ 'x', 'y', 'z', 'x.a',
             # 'x.b', 'z.a', 'z.b', 'x.a.j', 'x.a.k', 'x.b.h']
-            keys = [x for x in self.option_definitions.keys_breadth_first()
-                    if isinstance(self.option_definitions[x], Option)]
+            keys = [
+                x for x
+                in self.option_definitions.keys_breadth_first()
+                if isinstance(self.option_definitions[x], Option)
+            ]
             new_keys_discovered = False  # setup to break loop
 
             # create alternate paths options
@@ -552,8 +575,9 @@ class ConfigurationManager(object):
                         )
                         # make sure it is in the form of a DotDict
                         if not isinstance(val_src_dict, DotDict):
-                            val_src_dict = \
+                            val_src_dict = (
                                 DotDictWithAcquisition(val_src_dict)
+                            )
                         # get the Option for this key
                         opt = self.option_definitions[key]
                         # overlay the default with the new value from
@@ -598,7 +622,7 @@ class ConfigurationManager(object):
                         # we're at the top level, use the base namespace
                         current_namespace = self.option_definitions
                     # some new Options to be brought in may have already been
-                    # seen and in the known_keys set.  They must be marked 
+                    # seen and in the known_keys set.  They must be marked
                     # as unseen so that the new default doesn't overwrite any
                     # of the overlays that have already taken place.
                     known_keys = known_keys.difference(
@@ -691,9 +715,11 @@ class ConfigurationManager(object):
     def _generate_config(self, mapping_class):
         """This routine generates a copy of the DotDict based config"""
         config = mapping_class()
-        self._walk_config_copy_values(self.option_definitions,
-                                      config,
-                                      mapping_class)
+        self._walk_config_copy_values(
+            self.option_definitions,
+            config,
+            mapping_class
+        )
         return config
 
     #--------------------------------------------------------------------------
@@ -708,8 +734,10 @@ class ConfigurationManager(object):
             # use the appname as the file name and default to an 'ini'
             # config file type
             if self.app_name:
-                return os.path.join(self.config_pathname,
-                                    '%s.ini' % self.app_name)
+                return os.path.join(
+                    self.config_pathname,
+                    '%s.ini' % self.app_name
+                )
             else:
                 # there is no app_name yet
                 # we'll decline to return anything
@@ -720,30 +748,32 @@ class ConfigurationManager(object):
     def _setup_admin_options(self, values_source_list):
         base_namespace = Namespace()
         base_namespace.admin = admin = Namespace()
-        admin.add_option(name='print_conf',
-                         default=None,
-                         doc='write current config to stdout (%s)'
-                             % ', '.join(
-                              value_sources.file_extension_dispatch.keys())
-                        )
-        admin.add_option(name='dump_conf',
-                         default='',
-                         doc='a pathname to which to write the current config',
-                        )
-        admin.add_option(name='strict',
-                         default=False,
-                         doc='mismatched options generate exceptions rather'
-                             ' than just warnings'
-                        )
+        admin.add_option(
+            name='print_conf',
+            default=None,
+            doc='write current config to stdout (%s)'
+                % ', '.join(value_sources.file_extension_dispatch.keys())
+        )
+        admin.add_option(
+            name='dump_conf',
+            default='',
+            doc='a pathname to which to write the current config',
+        )
+        admin.add_option(
+            name='strict',
+            default=False,
+            doc='mismatched options generate exceptions rather'
+                ' than just warnings'
+        )
         # only offer the config file admin options if they've been requested in
         # the values source list
         if ConfigFileFutureProxy in values_source_list:
             default_config_pathname = self._get_config_pathname()
-            admin.add_option(name='conf',
-                             default=default_config_pathname,
-                             doc='the pathname of the config file '
-                                 '(path/filename)',
-                             )
+            admin.add_option(
+                name='conf',
+                default=default_config_pathname,
+                doc='the pathname of the config file (path/filename)',
+            )
         return base_namespace
 
     #--------------------------------------------------------------------------
@@ -761,9 +791,11 @@ class ConfigurationManager(object):
         aggregates_found = False
         for key, val in source.items():
             if isinstance(val, Namespace):
-                new_aggregates_found = self._aggregate(val,
-                                                       base_namespace,
-                                                       local_namespace[key])
+                new_aggregates_found = self._aggregate(
+                    val,
+                    base_namespace,
+                    local_namespace[key]
+                )
                 aggregates_found = new_aggregates_found or aggregates_found
             elif isinstance(val, Aggregation):
                 val.aggregate(base_namespace, local_namespace, self.args)
@@ -796,5 +828,7 @@ class ConfigurationManager(object):
 
     #--------------------------------------------------------------------------
     def _get_options(self, source=None, options=None, prefix=''):
-        return [(key, self.option_definitions[key])
-                for key in self.option_definitions.keys_breadth_first()]
+        return [
+            (key, self.option_definitions[key])
+            for key in self.option_definitions.keys_breadth_first()
+        ]

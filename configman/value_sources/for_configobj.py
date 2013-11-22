@@ -46,16 +46,17 @@ from source_exceptions import (CantHandleTypeException, ValueException,
                                NotEnoughInformationException)
 from ..namespace import Namespace
 from ..option import Option
-from .. import converters
 
 file_name_extension = 'ini'
 
-can_handle = (configobj,
-              configobj.ConfigObj,
-              basestring,
-             )
+can_handle = (
+    configobj,
+    configobj.ConfigObj,
+    basestring,
+)
 
 
+#==============================================================================
 class ConfigObjWithIncludes(configobj.ConfigObj):
     """This derived class is an extention to ConfigObj that adds nested
     includes to ini files.  Here's an example:
@@ -90,6 +91,7 @@ class ConfigObjWithIncludes(configobj.ConfigObj):
     """
     _include_re = re.compile(r'^(\s*)\+include\s+(.*?)\s*$')
 
+    #--------------------------------------------------------------------------
     def _expand_files(self, file_name, original_path, indent=""):
         """This recursive function accepts a file name, opens the file and then
         spools the contents of the file into a list, examining each line as it
@@ -104,8 +106,8 @@ class ConfigObjWithIncludes(configobj.ConfigObj):
                 if match:
                     include_file = match.group(2)
                     include_file = os.path.join(
-                          original_path,
-                          include_file
+                        original_path,
+                        include_file
                     )
                     new_lines = self._expand_files(
                         include_file,
@@ -117,6 +119,7 @@ class ConfigObjWithIncludes(configobj.ConfigObj):
                     expanded_file_contents.append(indent + a_line.rstrip())
         return expanded_file_contents
 
+    #--------------------------------------------------------------------------
     def _load(self, infile, configspec):
         """this overrides the original ConfigObj method of the same name.  It
         runs through the input file collecting lines into a list.  When
@@ -127,22 +130,27 @@ class ConfigObjWithIncludes(configobj.ConfigObj):
             original_path = os.path.dirname(infile)
             expanded_file_contents = self._expand_files(infile, original_path)
             super(ConfigObjWithIncludes, self)._load(
-              expanded_file_contents,
-              configspec
+                expanded_file_contents,
+                configspec
             )
         else:
             super(ConfigObjWithIncludes, self)._load(infile, configspec)
 
 
+#==============================================================================
 class LoadingIniFileFailsException(ValueException):
     pass
 
 
+#==============================================================================
 class ValueSource(object):
 
-    def __init__(self, source,
-                 config_manager=None,
-                 top_level_section_name=''):
+    #--------------------------------------------------------------------------
+    def __init__(
+        self, source,
+        config_manager=None,
+        top_level_section_name=''
+    ):
         self.delayed_parser_instantiation = False
         self.top_level_section_name = top_level_section_name
         if source is configobj.ConfigObj:
@@ -154,22 +162,25 @@ class ValueSource(object):
                 # we need to delay the instantiation of the ConfigParser
                 # until later.
                 if source is None:
-                    raise NotEnoughInformationException("Can't setup an ini "
-                                                        "file without knowing "
-                                                        "the file name")
+                    raise NotEnoughInformationException(
+                        "Can't setup an ini file without knowing the file name"
+                    )
                 self.delayed_parser_instantiation = True
                 return
-        if (isinstance(source, basestring) and
-            source.endswith(file_name_extension)):
+        if (
+            isinstance(source, basestring) and
+            source.endswith(file_name_extension)
+        ):
             try:
-                #self.config_obj = configobj.ConfigObj(source)
                 self.config_obj = ConfigObjWithIncludes(source)
             except Exception, x:
                 raise LoadingIniFileFailsException(
-                  "ConfigObj cannot load ini: %s" % str(x))
+                    "ConfigObj cannot load ini: %s" % str(x)
+                )
         else:
             raise CantHandleTypeException()
 
+    #--------------------------------------------------------------------------
     def get_values(self, config_manager, ignore_mismatches):
         """Return a nested dictionary representing the values in the ini file.
         In the case of this ValueSource implementation, both parameters are
@@ -186,10 +197,12 @@ class ValueSource(object):
                 return {}
         return self.config_obj
 
+    #--------------------------------------------------------------------------
     @staticmethod
     def write(source_mapping, output_stream=sys.stdout):
         ValueSource._write_ini(source_mapping, output_stream=output_stream)
 
+    #--------------------------------------------------------------------------
     @staticmethod
     def _namespace_reference_value_from_sort(key_value_tuple):
         key, value = key_value_tuple
@@ -198,15 +211,16 @@ class ValueSource(object):
         else:
             return key
 
+    #--------------------------------------------------------------------------
     @staticmethod
     def _write_ini(source_dict, namespace_name=None, level=0, indent_size=4,
                    output_stream=sys.stdout):
         """this function prints the components of a configobj ini file.  It is
         recursive for outputing the nested sections of the ini file."""
         options = [
-          value
-          for value in source_dict.values()
-              if isinstance(value, Option)
+            value
+            for value in source_dict.values()
+            if isinstance(value, Option)
         ]
         options.sort(cmp=lambda x, y: cmp(x.name, y.name))
         indent_spacer = " " * (level * indent_size)
@@ -218,10 +232,11 @@ class ValueSource(object):
 
             if an_option.reference_value_from:
                 print >>output_stream, (
-                    '%s# see "%s.%s" for the default or override it here' %
-                        (indent_spacer, 
-                         an_option.reference_value_from, 
-                         an_option.name)
+                    '%s# see "%s.%s" for the default or override it here' % (
+                        indent_spacer,
+                        an_option.reference_value_from,
+                        an_option.name
+                    )
                 )
 
             if an_option.likely_to_be_changed:
@@ -240,24 +255,24 @@ class ValueSource(object):
                     option_value = repr(option_value)
 
             print >>output_stream, option_format % (
-              indent_spacer,
-              an_option.name,
-              option_value
+                indent_spacer,
+                an_option.name,
+                option_value
             )
         next_level = level + 1
         namespaces = [
-          (key, value)
-          for key, value in source_dict.items()
-              if isinstance(value, Namespace)
+            (key, value)
+            for key, value in source_dict.items()
+            if isinstance(value, Namespace)
         ]
         namespaces.sort(key=ValueSource._namespace_reference_value_from_sort)
         for key, namespace in namespaces:
             next_level_spacer = " " * next_level * indent_size
             print >>output_stream, "%s%s%s%s\n" % (
-              indent_spacer,
-              "[" * next_level,
-              key,
-              "]" * next_level
+                indent_spacer,
+                "[" * next_level,
+                key,
+                "]" * next_level
             )
             if namespace._doc:
                 print >>output_stream, (
@@ -271,17 +286,17 @@ class ValueSource(object):
 
             if namespace_name:
                 ValueSource._write_ini(
-                  source_dict=namespace,
-                  namespace_name="%s.%s" % (namespace_name, key),
-                  level=level+1,
-                  indent_size=indent_size,
-                  output_stream=output_stream
+                    source_dict=namespace,
+                    namespace_name="%s.%s" % (namespace_name, key),
+                    level=level+1,
+                    indent_size=indent_size,
+                    output_stream=output_stream
                 )
             else:
                 ValueSource._write_ini(
-                  source_dict=namespace,
-                  namespace_name=key,
-                  level=level+1,
-                  indent_size=indent_size,
-                  output_stream=output_stream
+                    source_dict=namespace,
+                    namespace_name=key,
+                    level=level+1,
+                    indent_size=indent_size,
+                    output_stream=output_stream
                 )

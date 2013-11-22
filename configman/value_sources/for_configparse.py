@@ -45,23 +45,26 @@ from ..config_exceptions import NotAnOptionError
 
 from .. import namespace
 from .. import option
-from .. import converters as conv
 
 file_name_extension = 'ini'
 
-can_handle = (ConfigParser,
-              ConfigParser.RawConfigParser,  # just the base class, subclasses
-                                             # will be detected too
-              basestring,
-             )
+can_handle = (
+    ConfigParser,
+    ConfigParser.RawConfigParser,  # just the base class, subclasses
+                                   # will be detected too
+    basestring,
+)
 
 
+#==============================================================================
 class LoadingIniFileFailsException(ValueException):
     pass
 
 
+#==============================================================================
 class ValueSource(object):
 
+    #--------------------------------------------------------------------------
     def __init__(self, source,
                  config_manager=None,
                  top_level_section_name='top_level'):
@@ -77,12 +80,15 @@ class ValueSource(object):
                 # until later.
                 if source is None:
                     raise NotEnoughInformationException(
-                      "Can't setup an %s file without knowing the file name"
-                          % file_name_extension)
+                        "Can't setup an %s file without knowing the file name"
+                        % file_name_extension
+                    )
                 self.delayed_parser_instantiation = True
                 return
-        if (isinstance(source, basestring) and
-            source.endswith(file_name_extension)):
+        if (
+            isinstance(source, basestring) and
+            source.endswith(file_name_extension)
+        ):
             try:
                 self.configparser = self._create_parser(source)
             except Exception, x:
@@ -90,12 +96,14 @@ class ValueSource(object):
                 #  Was it because the file didn't exist (IOError) or because it
                 #  was badly formatted??
                 raise LoadingIniFileFailsException(
-                  "ConfigParser cannot load file: %s" % str(x))
+                    "ConfigParser cannot load file: %s" % str(x)
+                )
         elif isinstance(source, ConfigParser.RawConfigParser):
             self.configparser = source
         else:
             raise CantHandleTypeException()
 
+    #--------------------------------------------------------------------------
     @staticmethod
     def _create_parser(source):
         parser = ConfigParser.ConfigParser()
@@ -103,6 +111,7 @@ class ValueSource(object):
         parser.read(source)
         return parser
 
+    #--------------------------------------------------------------------------
     def get_values(self, config_manager, ignore_mismatches):
         """Return a nested dictionary representing the values in the ini file.
         In the case of this ValueSource implementation, both parameters are
@@ -128,23 +137,25 @@ class ValueSource(object):
                 options[name] = self.configparser.get(a_section, an_option)
         return options
 
+    #--------------------------------------------------------------------------
     @staticmethod
     def write(source_mapping, output_stream=sys.stdout):
         print >> output_stream, '[top_level]\n'
         ValueSource._write_ini(source_mapping, output_stream=output_stream)
 
+    #--------------------------------------------------------------------------
     @staticmethod
     def _write_ini(source_dict, namespace_name=None, output_stream=sys.stdout):
         options = [
-          value
-          for value in source_dict.values()
-              if isinstance(value, option.Option)
+            value
+            for value in source_dict.values()
+            if isinstance(value, option.Option)
         ]
         options.sort(key=lambda x: x.name)
         namespaces = [
-          (key, value)
-          for key, value in source_dict.items()
-              if isinstance(value, namespace.Namespace)
+            (key, value)
+            for key, value in source_dict.items()
+            if isinstance(value, namespace.Namespace)
         ]
         for an_option in options:
             print >>output_stream, "# name: %s" % an_option.name
@@ -158,8 +169,8 @@ class ValueSource(object):
             else:
                 option_format = '#%s=%r\n'
             print >>output_stream, option_format % (
-              an_option.name,
-              option_value
+                an_option.name,
+                option_value
             )
         for key, a_namespace in namespaces:
             if namespace_name:
@@ -168,7 +179,7 @@ class ValueSource(object):
                 namespace_label = key
             print >>output_stream, "[%s]\n" % namespace_label
             ValueSource._write_ini(
-              a_namespace,
-              namespace_name=namespace_label,
-              output_stream=output_stream
+                a_namespace,
+                namespace_name=namespace_label,
+                output_stream=output_stream
             )

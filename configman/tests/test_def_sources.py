@@ -44,8 +44,10 @@ import configman.dotdict as dd
 import configman.def_sources as defsrc
 
 
+#==============================================================================
 class TestCase(unittest.TestCase):
 
+    #--------------------------------------------------------------------------
     def test_setup_definitions_1(self):
         d = dd.DotDict()
 
@@ -64,6 +66,7 @@ class TestCase(unittest.TestCase):
         finally:
             defsrc.definition_dispatch = saved_original
 
+    #--------------------------------------------------------------------------
     def test_setup_definitions_2(self):
         d = dd.DotDict()
 
@@ -78,6 +81,7 @@ class TestCase(unittest.TestCase):
         finally:
             defsrc.definition_dispatch = saved_original
 
+    #--------------------------------------------------------------------------
     def test_setup_definitions_3(self):
         d = dd.DotDict()
 
