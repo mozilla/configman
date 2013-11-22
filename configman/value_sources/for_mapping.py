@@ -41,12 +41,15 @@ import os
 
 from source_exceptions import CantHandleTypeException
 
-can_handle = (os.environ,
-              collections.Mapping,
-             )
+can_handle = (
+    os.environ,
+    collections.Mapping,
+)
 
 
+#==============================================================================
 class ValueSource(object):
+    #--------------------------------------------------------------------------
     def __init__(self, source, the_config_manager=None):
         if source is os.environ:
             self.always_ignore_mismatches = True
@@ -56,5 +59,6 @@ class ValueSource(object):
             raise CantHandleTypeException()
         self.source = source
 
+    #--------------------------------------------------------------------------
     def get_values(self, config_manager, ignore_mismatches):
         return self.source

@@ -41,6 +41,7 @@ import collections
 import weakref
 
 
+#------------------------------------------------------------------------------
 def iteritems_breadth_first(a_mapping, include_dicts=False):
     """a generator that returns all the keys in a set of nested
     Mapping instances.  The keys take the form X.Y.Z"""
@@ -57,6 +58,7 @@ def iteritems_breadth_first(a_mapping, include_dicts=False):
             yield '%s.%s' % (key, sub_key), value
 
 
+#==============================================================================
 class DotDict(collections.MutableMapping):
     """This class is a mapping that stores its items within the __dict__
     of a regular class.  This means that items can be access with either
@@ -99,6 +101,7 @@ class DotDict(collections.MutableMapping):
             print 'nope, this will never happen'
     """
 
+    #--------------------------------------------------------------------------
     def __init__(self, initializer=None):
         """the constructor allows for initialization from another mapping.
 
@@ -118,12 +121,14 @@ class DotDict(collections.MutableMapping):
         elif initializer is not None:
             raise TypeError('can only initialize with a Mapping')
 
+    #--------------------------------------------------------------------------
     def __setattr__(self, key, value):
         """this function saves keys into the mapping's __dict__."""
         if key not in self._key_order:
             self._key_order.append(key)
         self.__dict__[key] = value
 
+    #--------------------------------------------------------------------------
     def __getattr__(self, key):
         """this function is called when the key wasn't found in self.__dict__.
         all that is left to do is raise the KeyError."""
@@ -137,6 +142,7 @@ class DotDict(collections.MutableMapping):
             raise AttributeError(key)
         raise KeyError(key)
 
+    #--------------------------------------------------------------------------
     def __delattr__(self, key):
         try:
             self._key_order.remove(key)
@@ -146,6 +152,7 @@ class DotDict(collections.MutableMapping):
             pass
         super(DotDict, self).__delattr__(key)
 
+    #--------------------------------------------------------------------------
     def __getitem__(self, key):
         """define the square bracket operator to refer to the object's __dict__
         for fetching values.  It accepts keys in the form X.Y.Z"""
@@ -155,6 +162,7 @@ class DotDict(collections.MutableMapping):
             current = getattr(current, k)
         return current
 
+    #--------------------------------------------------------------------------
     def __setitem__(self, key, value):
         """define the square bracket operator to refer to the object's __dict__
         for setting values."""
@@ -163,6 +171,7 @@ class DotDict(collections.MutableMapping):
         else:
             setattr(self, key, value)
 
+    #--------------------------------------------------------------------------
     def __delitem__(self, key):
         """define the square bracket operator to refer to the object's __dict__
         for deleting values.
@@ -187,6 +196,7 @@ class DotDict(collections.MutableMapping):
             current = getattr(current, k)
         current.__delattr__(key_split[-1])
 
+    #--------------------------------------------------------------------------
     def __iter__(self):
         """redirect the default iterator to iterate over the object's __dict__
         making sure that it ignores the special '_' keys.  We want those items
@@ -194,10 +204,12 @@ class DotDict(collections.MutableMapping):
         with the clients of this class deep within configman"""
         return iter(self._key_order)
 
+    #--------------------------------------------------------------------------
     def __len__(self):
         """makes the len function also ignore the '_' keys"""
         return len(self._key_order)
 
+    #--------------------------------------------------------------------------
     def keys_breadth_first(self, include_dicts=False):
         """a generator that returns all the keys in a set of nested
         DotDict instances.  The keys take the form X.Y.Z"""
@@ -213,6 +225,7 @@ class DotDict(collections.MutableMapping):
             for key in self[a_namespace].keys_breadth_first(include_dicts):
                 yield '%s.%s' % (a_namespace, key)
 
+    #--------------------------------------------------------------------------
     def assign(self, key, value):
         """an alternative method for assigning values to nested DotDict
         instances.  It accepts keys in the form of X.Y.Z.  If any nested
@@ -228,6 +241,7 @@ class DotDict(collections.MutableMapping):
                 cur_dict = cur_dict[k]
         cur_dict[key_split[-1]] = value
 
+    #--------------------------------------------------------------------------
     def parent(self, key):
         """when given a key of the form X.Y.Z, this method will return the
         parent DotDict of the 'Z' key."""
@@ -238,6 +252,7 @@ class DotDict(collections.MutableMapping):
             return self[parent_key]
 
 
+#==============================================================================
 class DotDictWithAcquisition(DotDict):
     """This mapping, a derivative of DotDict, has special semantics when
     nested with mappings of the same type.
@@ -291,6 +306,7 @@ class DotDictWithAcquisition(DotDict):
     and 'a' is defined in the base, it is perfectly allowable.
     """
 
+    #--------------------------------------------------------------------------
     def __getitem__(self, key):
         """define the square bracket operator to refer to the object's __dict__
         for fetching values.  It accepts keys in the form 'x.y.z'"""
@@ -308,6 +324,7 @@ class DotDictWithAcquisition(DotDict):
                 current = temp_dict
         return current
 
+    #--------------------------------------------------------------------------
     def __setattr__(self, key, value):
         """this function saves keys into the mapping's __dict__.  If the
         item being added is another instance of DotDict, it makes a weakref
@@ -317,6 +334,7 @@ class DotDictWithAcquisition(DotDict):
             value.__dict__['_parent'] = weakref.proxy(self)
         super(DotDictWithAcquisition, self).__setattr__(key, value)
 
+    #--------------------------------------------------------------------------
     def __getattr__(self, key):
         """if a key is not found in the __dict__ using the regular python
         attribute reference algorithm, this function will try to get it from

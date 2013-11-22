@@ -44,8 +44,10 @@ from configman.dotdict import (
 )
 
 
+#==============================================================================
 class TestCase(unittest.TestCase):
 
+    #--------------------------------------------------------------------------
     def test_setting_and_getting(self):
         dd = DotDict()
         dd.name = u'Peter'
@@ -61,6 +63,7 @@ class TestCase(unittest.TestCase):
         self.assertEqual(dd.get('junk'), None)
         self.assertEqual(dd.get('junk', 'trash'), 'trash')
 
+    #--------------------------------------------------------------------------
     def test_getting_and_setting_2(self):
         d = DotDict()
         d['a'] = 17
@@ -72,6 +75,7 @@ class TestCase(unittest.TestCase):
         self.assertEqual(d.b['d'], 23)
         self.assertEqual(d.b.d, 23)
 
+    #--------------------------------------------------------------------------
     def test_access_combos(self):
         d = DotDictWithAcquisition()
         d.x = DotDictWithAcquisition()
@@ -88,6 +92,7 @@ class TestCase(unittest.TestCase):
         self.assertTrue(isinstance(d.x, DotDictWithAcquisition))
         self.assertTrue(isinstance(d.x.y, DotDictWithAcquisition))
 
+    #--------------------------------------------------------------------------
     def test_access_combos_2(self):
         d = DotDict()
         d.x = DotDict()
@@ -102,6 +107,7 @@ class TestCase(unittest.TestCase):
         self.assertEqual(d['x'].y['a'], 'Wilma')
         self.assertEqual(d['x']['y']['a'], 'Wilma')
 
+    #--------------------------------------------------------------------------
     def test_deleting_attributes(self):
         dd = DotDict()
         dd.name = 'peter'
@@ -110,6 +116,7 @@ class TestCase(unittest.TestCase):
         del dd.age
         self.assertEqual(dict(dd), {})
 
+    #--------------------------------------------------------------------------
     def test_key_errors(self):
         dd = DotDict()
 
@@ -122,6 +129,7 @@ class TestCase(unittest.TestCase):
         self.assertEqual(dd.get('age'), None)
         self.assertEqual(dd.get('age', 0), 0)
 
+    #--------------------------------------------------------------------------
     def test_nesting(self):
         d = DotDictWithAcquisition()
         d.e = 1
@@ -187,6 +195,7 @@ class TestCase(unittest.TestCase):
         self.assertEqual(d['dd']['ddd'].a, 17)
         self.assertEqual(d['dd']['ddd']['dd'].a, 17)
 
+    #--------------------------------------------------------------------------
     def test_key_errors__with_dunder(self):
         dd = DotDict()
         try:
@@ -210,6 +219,7 @@ class TestCase(unittest.TestCase):
         self.assertEqual(dd.get('__something'), None)
         self.assertEqual(dd.get('__something', 0), 0)
 
+    #--------------------------------------------------------------------------
     def test_attribute_errors__with_dunders(self):
         dd = DotDict()
         try:
@@ -234,6 +244,7 @@ class TestCase(unittest.TestCase):
         # on these Python special keys
         self.assertRaises(AttributeError, dd.get, '__something__')
 
+    #--------------------------------------------------------------------------
     def test_keys_breadth_first(self):
         d = DotDict()
         d.a = 1
@@ -252,6 +263,7 @@ class TestCase(unittest.TestCase):
         actual.sort()
         self.assertEqual(expected, actual)
 
+    #--------------------------------------------------------------------------
     def test_dot_lookup(self):
         d = DotDict()
         d.a = 1
@@ -294,6 +306,7 @@ class TestCase(unittest.TestCase):
             'd.d.x'
         )
 
+    #--------------------------------------------------------------------------
     def test_parent(self):
         d = DotDict()
         d.a = 1
@@ -311,6 +324,7 @@ class TestCase(unittest.TestCase):
         self.assertEqual(d.parent('d.d.a'), d['d.d'])
         self.assertTrue(d.parent('d') is None)
 
+    #--------------------------------------------------------------------------
     def test_assign(self):
         d = DotDict()
         d.assign('a.b', 10)
@@ -318,21 +332,23 @@ class TestCase(unittest.TestCase):
         self.assertTrue(isinstance(d.a, DotDict))
         self.assertEqual(d.a['b'], 10)
 
+    #--------------------------------------------------------------------------
     def test_iteritems_breadth_first(self):
-        d = {'a': {'aa': 13,
-                   'ab': 14},
-             'b': {'ba': {'baa': 0,
-                          'bab': 1},
-                   'bb': {'bba': 2}},
-             'c': 9,
-             'd': {'dd': 2}}
-        e = [('a.aa', 13),
-             ('a.ab', 14),
-             ('b.ba.baa', 0),
-             ('b.ba.bab', 1),
-             ('b.bb.bba', 2),
-             ('c', 9),
-             ('d.dd', 2)]
+        d = {
+            'a': {'aa': 13, 'ab': 14},
+            'b': {'ba': {'baa': 0, 'bab': 1}, 'bb': {'bba': 2}},
+            'c': 9,
+            'd': {'dd': 2}
+        }
+        e = [
+            ('a.aa', 13),
+            ('a.ab', 14),
+            ('b.ba.baa', 0),
+            ('b.ba.bab', 1),
+            ('b.bb.bba', 2),
+            ('c', 9),
+            ('d.dd', 2)
+        ]
         a = [x for x in iteritems_breadth_first(d)]
         e = sorted(e)
         a = sorted(a)
@@ -345,6 +361,7 @@ class TestCase(unittest.TestCase):
         ddkv = sorted(iteritems_breadth_first(dd))
         self.assertEqual(e, ddkv)
 
+    #--------------------------------------------------------------------------
     def test_copy_constructor_1(self):
         d = {'d': {'x': 10}}
         dd = DotDict(d)
@@ -353,28 +370,31 @@ class TestCase(unittest.TestCase):
         dd = DotDict(d)
         self.assertTrue('d' in dd)
 
+    #--------------------------------------------------------------------------
     def test_copy_constructor_2(self):
-        d = {'a': {'aa': 13,
-                   'ab': 14},
-             'b': {'ba': {'baa': 0,
-                   'bab': 1},
-                   'bb': {'bba': 2}},
-             'c': 9,
-             'd': {'dd': 2}}
+        d = {
+            'a': {'aa': 13, 'ab': 14},
+            'b': {'ba': {'baa': 0, 'bab': 1}, 'bb': {'bba': 2}},
+            'c': 9,
+            'd': {'dd': 2}
+        }
         dd = DotDictWithAcquisition(d)
-        e = [('a.aa', 13),
-             ('a.ab', 14),
-             ('b.ba.baa', 0),
-             ('b.ba.bab', 1),
-             ('b.bb.bba', 2),
-             ('c', 9),
-             ('d.dd', 2)]
+        e = [
+            ('a.aa', 13),
+            ('a.ab', 14),
+            ('b.ba.baa', 0),
+            ('b.ba.bab', 1),
+            ('b.bb.bba', 2),
+            ('c', 9),
+            ('d.dd', 2)
+        ]
         a = [x for x in iteritems_breadth_first(d)]
         e = sorted(e)
         a = sorted(a)
         self.assertEqual(a, e)
         self.assertTrue(isinstance(dd.a, DotDictWithAcquisition))
 
+    #--------------------------------------------------------------------------
     def test_dot_dupe_fix(self):
         # a bug caused an interal structure to have duplicates if a key was
         # changed using two different access methods.  This caused the

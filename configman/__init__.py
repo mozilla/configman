@@ -47,7 +47,8 @@ with open(os.path.join(os.path.dirname(__file__), 'version.txt')) as f:
 #    from configman import Namespace, ConfigurationManager
 #
 
-from .config_manager import ConfigurationManager, RequiredConfig
+from .config_manager import ConfigurationManager
+from .required_config import RequiredConfig
 from .namespace import Namespace
 
 from .converters import class_converter, regex_converter, timedelta_converter

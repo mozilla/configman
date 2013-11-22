@@ -58,24 +58,30 @@ function_type = type(lambda x: x)  # TODO: just how do you express the Fuction
                                    # (peter: why not use inspect.isfunction()?)
 
 # the list of types that the contstuctor can handle.
-can_handle = (basestring,
-              function_type  # this is to say that this ValueSource is willing
-                             # to try a function that will return a
-                             # context manager
-             )
+can_handle = (
+    basestring,
+    function_type  # this is to say that this ValueSource is willing
+                   # to try a function that will return a
+                   # context manager
+)
 
 file_name_extension = 'conf'
 
 
+#==============================================================================
 class NotAConfigFileError(ValueException):
     pass
 
 
+#==============================================================================
 class ValueSource(object):
 
+    #--------------------------------------------------------------------------
     def __init__(self, candidate, the_config_manager=None):
-        if (isinstance(candidate, basestring) and
-            candidate.endswith(file_name_extension)):
+        if (
+            isinstance(candidate, basestring) and
+            candidate.endswith(file_name_extension)
+        ):
             # we're trusting the string represents a filename
             opener = functools.partial(open, candidate)
         elif isinstance(candidate, function_type):
@@ -93,9 +99,9 @@ class ValueSource(object):
                         continue
                     if line[0] in ' \t' and previous_key:
                         line = line[1:]
-                        self.values[previous_key] = '%s%s' % \
-                                            (self.values[previous_key],
-                                             line.rstrip())
+                        self.values[previous_key] = (
+                            '%s%s' % (self.values[previous_key],line.rstrip())
+                        )
                         continue
                     try:
                         key, value = line.split("=", 1)
@@ -104,26 +110,30 @@ class ValueSource(object):
                     except ValueError:
                         self.values[line] = ''
         except Exception, x:
-            raise NotAConfigFileError("Conf couldn't interpret %s as a config "
-                                          "file: %s" % (candidate, str(x)))
+            raise NotAConfigFileError(
+                "Conf couldn't interpret %s as a config file: %s"
+                % (candidate, str(x))
+            )
 
+    #--------------------------------------------------------------------------
     def get_values(self, config_manager, ignore_mismatches):
         """the 'config_manager' and 'ignore_mismatches' are dummy values for
         this implementation of a ValueSource."""
         return self.values
 
+    #--------------------------------------------------------------------------
     @staticmethod
     def write(source_dict, namespace_name=None, output_stream=sys.stdout):
         options = [
-          value
-          for value in source_dict.values()
-              if isinstance(value, opt.Option)
+            value
+            for value in source_dict.values()
+            if isinstance(value, opt.Option)
         ]
         options.sort(cmp=lambda x, y: cmp(x.name, y.name))
         namespaces = [
-          (key, value)
-          for key, value in source_dict.items()
-              if isinstance(value, namespace.Namespace)
+            (key, value)
+            for key, value in source_dict.items()
+            if isinstance(value, namespace.Namespace)
         ]
         for an_option in options:
             if namespace_name:

@@ -57,12 +57,13 @@ import for_mapping
 import for_configparse
 
 # please replace with dynamic discovery
-for_handlers = [for_mapping,
-                for_getopt,
-                for_json,
-                for_conf,
-                for_configparse,
-               ]
+for_handlers = [
+    for_mapping,
+    for_getopt,
+    for_json,
+    for_conf,
+    for_configparse,
+]
 try:
     import for_configobj
     for_handlers.append(for_configobj)
@@ -71,9 +72,11 @@ except ImportError:
     pass
 
 
+#==============================================================================
 # create a dispatch table of types/objects to modules.  Each type should have
 # a list of modules that can handle that type.
 class DispatchByType(collections.defaultdict):
+    #--------------------------------------------------------------------------
     def get_handlers(self, candidate):
         handlers_set = set()
         for key, handler_list in self.iteritems():
@@ -85,6 +88,7 @@ class DispatchByType(collections.defaultdict):
                                    candidate)
         return handlers_set
 
+    #--------------------------------------------------------------------------
     @staticmethod
     def _is_instance_of(candidate, some_type):
         try:
@@ -93,6 +97,7 @@ class DispatchByType(collections.defaultdict):
             return False
 
 
+#------------------------------------------------------------------------------
 type_handler_dispatch = DispatchByType(list)
 for a_handler in for_handlers:
     try:
@@ -107,20 +112,22 @@ for a_handler in for_handlers:
         # this module has no can_handle attribute, therefore cannot really
         # be a handler and an error should be raised
         raise ModuleHandlesNothingException(
-                                        "%s has no 'can_handle' attribute"
-                                        % str(a_handler))
+            "%s has no 'can_handle' attribute" % str(a_handler)
+        )
 
 file_extension_dispatch = {}
 for a_handler in for_handlers:
     try:
-        file_extension_dispatch[a_handler.file_name_extension] = \
-                                                    a_handler.ValueSource.write
+        file_extension_dispatch[a_handler.file_name_extension] = (
+            a_handler.ValueSource.write
+        )
     except AttributeError:
         # this handler doesn't have a 'file_name_extension' or ValueSource
         # therefore it is not eligible for the write file dispatcher
         pass
 
 
+#------------------------------------------------------------------------------
 def wrap(value_source_list, a_config_manager):
     wrapped_sources = []
     for a_source in value_source_list:
@@ -158,9 +165,13 @@ def wrap(value_source_list, a_config_manager):
         wrapped_sources.append(wrapped_source)
     return wrapped_sources
 
+
+#------------------------------------------------------------------------------
 def has_registration_for(config_file_type):
     return config_file_type in file_extension_dispatch
 
+
+#------------------------------------------------------------------------------
 def write(config_file_type,
           options_mapping,
           opener):
@@ -182,8 +193,10 @@ def write(config_file_type,
             config_file_type.ValueSource.write(
                 options_mapping,
                 output_stream=output_stream
-        )
+            )
 
+
+#------------------------------------------------------------------------------
 def config_filename_from_commandline(config_manager):
     command_line_value_source = for_getopt.ValueSource(
         for_getopt.getopt,

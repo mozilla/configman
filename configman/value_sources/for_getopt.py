@@ -59,17 +59,21 @@ from .. import converters as conv
 from source_exceptions import ValueException, CantHandleTypeException
 
 
+#==============================================================================
 class GetOptFailureException(ValueException):
     pass
 
-can_handle = (getopt,
-              list,   # a list of options to serve as the argv source
-             )
+can_handle = (
+    getopt,
+    list,   # a list of options to serve as the argv source
+)
 
 
+#==============================================================================
 class ValueSource(object):
     """The ValueSource implementation for the getopt module.  This class will
     interpret an argv list of commandline arguments using getopt."""
+    #--------------------------------------------------------------------------
     def __init__(self, source, the_config_manager=None):
         if source is getopt:
             self.argv_source = the_config_manager.argv_source
@@ -86,6 +90,7 @@ class ValueSource(object):
     # regard to the overall --admin.strict setting.
     command_line_value_source = True
 
+    #--------------------------------------------------------------------------
     def get_values(self, config_manager, ignore_mismatches):
         """This is the black sheep of the crowd of ValueSource implementations.
         It needs to know ahead of time all of the parameters that it will need,
@@ -96,9 +101,9 @@ class ValueSource(object):
         implementation if it can or cannot ignore extraneous commandline
         options.  The last time this function is called, it will be required
         to test for illegal commandline options and respond accordingly."""
-        short_options_str, \
-        long_options_list = self.getopt_create_opts(
-                             config_manager.option_definitions)
+        short_options_str, long_options_list = self.getopt_create_opts(
+            config_manager.option_definitions
+        )
         try:
             if ignore_mismatches:
                 fn = ValueSource.getopt_with_ignore
@@ -118,12 +123,15 @@ class ValueSource(object):
             if opt_name.startswith('--'):
                 name = opt_name[2:]
             else:
-                name = self.find_name_with_short_form(opt_name[1:],
-                                            config_manager.option_definitions,
-                                            '')
+                name = self.find_name_with_short_form(
+                    opt_name[1:],
+                    config_manager.option_definitions,
+                    ''
+                )
                 if not name:
-                    raise NotAnOptionError('%s is not a valid short'
-                                              ' form option' % opt_name[1:])
+                    raise NotAnOptionError(
+                        '%s is not a valid short form option' % opt_name[1:]
+                    )
             option_ = config_manager._get_option(name)
             if option_.from_string_converter == conv.boolean_converter:
                 command_line_values[name] = not option_.default
@@ -139,6 +147,7 @@ class ValueSource(object):
             command_line_values[name] = value
         return command_line_values
 
+    #--------------------------------------------------------------------------
     def getopt_create_opts(self, option_definitions):
         short_options_list = []
         long_options_list = []
@@ -149,6 +158,7 @@ class ValueSource(object):
         short_options_str = ''.join(short_options_list)
         return short_options_str, long_options_list
 
+    #--------------------------------------------------------------------------
     def getopt_create_opts_recursive(self, source,
                                      prefix,
                                      short_options_list,
@@ -239,9 +249,11 @@ class ValueSource(object):
     def _get_arguments(option_definitions, switches_already_used):
         for key in option_definitions.keys_breadth_first():
             try:
-                if option_definitions[key].is_argument \
-                   and key not in switches_already_used:
-                   yield key
+                if (
+                    option_definitions[key].is_argument
+                    and key not in switches_already_used
+                ):
+                    yield key
             except AttributeError:
                 # this option definition does have the concept of being
                 # an argument - likely an aggregation
