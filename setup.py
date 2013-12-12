@@ -22,7 +22,7 @@ setup(
     version=read('configman/version.txt'),
     description='Flexible reading and writing of namespaced configuration options',
     long_description=read('README.md'),
-    author='Lars Lohn, Peter Bengtsson',
+    author='K Lars Lohn, Peter Bengtsson',
     author_email='lars@mozilla.com, peterbe@mozilla.com',
     url='https://github.com/mozilla/configman',
     classifiers=[
