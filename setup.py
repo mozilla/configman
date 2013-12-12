@@ -27,7 +27,7 @@ setup(
     url='https://github.com/mozilla/configman',
     classifiers=[
         'Development Status :: 5 - Production/Stable',
-        'License :: OSI Approved :: Mozilla Public License 1.1 (MPL 1.1)',
+        'License :: OSI Approved :: Mozilla Public License 2.0 (MPL 2.0)',
         'Programming Language :: Python',
         'Intended Audience :: Developers',
         'Environment :: Console',
