@@ -1,9 +1,19 @@
+import codecs
 import os
-from distutils.core import setup
+from setuptools import setup
+
+
+# Prevent spurious errors during `python setup.py test`, a la
+# http://www.eby-sarna.com/pipermail/peak/2010-May/003357.html:
+try:
+    import multiprocessing
+except ImportError:
+    pass
 
 
 def read(fname):
-    with open(os.path.join(os.path.dirname(__file__), fname)) as f:
+    fpath = os.path.join(os.path.dirname(__file__), fname)
+    with codecs.open(fpath, 'r', 'utf8') as f:
         return f.read().strip()
 
 
@@ -14,7 +24,7 @@ setup(
     long_description=read('README.md'),
     author='Lars Lohn, Peter Bengtsson',
     author_email='lars@mozilla.com, peterbe@mozilla.com',
-    url='https://github.com/twobraids/configman',
+    url='https://github.com/mozilla/configman',
     classifiers=[
         'Development Status :: 5 - Production/Stable',
         'License :: OSI Approved :: Mozilla Public License 1.1 (MPL 1.1)',
@@ -24,6 +34,7 @@ setup(
     ],
     packages=['configman'],
     package_data={'configman': ['*/*', 'version.txt']},
-    scripts=[],
+    tests_required=['nose'],
+    test_suite='nose.collector',
     zip_safe=False,
 ),
