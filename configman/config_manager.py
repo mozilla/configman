@@ -487,26 +487,33 @@ class ConfigurationManager(object):
         # a set of known reference_value_from_links
         set_of_reference_value_from_links = set()
         for key in (k for k in keys if k not in known_keys):
+
             an_option = self.option_definitions[key]
-            #if not isinstance(an_option, Option):  #TODO remove
-            #    continue  # aggregations and other types are ignored
-            if (
-                an_option.reference_value_from
-                and an_option.reference_value_from not in
-                    set_of_reference_value_from_links
-                and an_option.reference_value_from not in known_keys
-            ):
-                alt_option = an_option.copy()
-                alt_option.reference_value_from = None
-                alt_option.name = '.'.join(
-                    (an_option.reference_value_from, alt_option.name)
-                )
-                set_of_reference_value_from_links.add(alt_option.name)
-                self.option_definitions.add_option(alt_option)
+            if an_option.reference_value_from:
+
+                reference_name = '.'.join((
+                    an_option.reference_value_from,
+                    an_option.name
+                ))
+                if reference_name in self.option_definitions:
+                    continue  # this referenced value has already been defined
+                              # no need to repeat it - skip on to the next key
+                reference_option = an_option.copy()
+                reference_option.reference_value_from = None
+                reference_option.name = reference_name
+                # wait, aren't we setting a fully qualified dotted name into
+                # the name field?  Yes, 'add_option' below sees that
+                # full pathname and does the right thing with it to ensure
+                # that the reference_option is created within the
+                # correct namespace
+                set_of_reference_value_from_links.add(reference_option.name)
+                self.option_definitions.add_option(reference_option)
+
         for a_reference_value_from in set_of_reference_value_from_links:
             for x in range(a_reference_value_from.count('.')):
                 namespace_path = a_reference_value_from.rsplit('.', x + 1)[0]
                 self.option_definitions[namespace_path].ref_value_namespace()
+
         return set_of_reference_value_from_links
 
     #--------------------------------------------------------------------------
