@@ -287,7 +287,7 @@ bad_option=bar  # other comment
         #+include ./common_yyy.ini
 
         # the password
-        #password=dwight and wilma
+        password=dwight and wilma
 
 [c]
 

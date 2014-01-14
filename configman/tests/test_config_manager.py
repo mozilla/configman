@@ -1865,3 +1865,37 @@ c.string =   from ini
         )
         cn = cm.get_config()
         self.assertEqual(cn.fred, 99)
+
+    #--------------------------------------------------------------------------
+    def test_overlay_reference_value_from_bug(self):
+        # for Options that already exist and have been seen by the overlay
+        # process, make sure that expanding a class doesn't just overwrite
+        # the values back to their original defaults
+
+        r = Namespace()
+        r.add_option('fred', default=0, reference_value_from='a')
+        r.add_option(
+            'class',
+            default=int,
+            from_string_converter=class_converter
+        )
+
+        # this class will bring in an Option that already exists called "fred".
+        # Since overlay is done before expansion, "fred" should get set to 99.
+        # Then expansion will bring in A's "fred" with a value of 77.  We need
+        # make sure that the overlay process then puts its back to 99.
+        class A(RequiredConfig):
+            required_config = Namespace()
+            required_config.add_option(
+                'fred',
+                default='77',
+                reference_value_from='a'
+            )
+
+        cm = config_manager.ConfigurationManager(
+            [r],
+            [{'a.fred': 21}, {'class': A}, {'a.fred': 99}]
+        )
+        cn = cm.get_config()
+        self.assertEqual(cn.fred, 99)
+
