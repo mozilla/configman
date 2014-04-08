@@ -54,7 +54,7 @@ import for_getopt
 import for_json
 import for_conf
 import for_mapping
-import for_configparse
+import for_configobj
 
 # please replace with dynamic discovery
 for_handlers = [
@@ -62,14 +62,8 @@ for_handlers = [
     for_getopt,
     for_json,
     for_conf,
-    for_configparse,
+    for_configobj,
 ]
-try:
-    import for_configobj
-    for_handlers.append(for_configobj)
-except ImportError:
-    # the module configobj is not present
-    pass
 
 
 #==============================================================================

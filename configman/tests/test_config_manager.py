@@ -46,7 +46,6 @@ from cStringIO import StringIO
 import getopt
 
 import mock
-from nose.plugins.skip import SkipTest
 
 import configman.config_manager as config_manager
 from configman.option import Option
@@ -60,7 +59,7 @@ from configman.value_sources.source_exceptions import (
     UnknownFileExtensionException,
     NoHandlerForType
 )
-from configman import RequiredConfig
+
 
 #==============================================================================
 class T1(RequiredConfig):
@@ -1765,9 +1764,7 @@ c.string =   from ini
             )
             assert False, "where's the missing exception?"
         except AllHandlersFailedException, x:
-            self.assertTrue('ConfigParser cannot load' in str(x))
-            if 'configobj' in sys.modules.keys():
-                self.assertTrue('ConfigObj cannot load' in str(x))
+            self.assertTrue('ConfigObj cannot load' in str(x))
         finally:
             os.remove('x.ini')
 
@@ -1793,8 +1790,7 @@ c.string =   from ini
     #--------------------------------------------------------------------------
     @mock.patch('configman.config_manager.warnings')
     def test_warn_on_one_excess_options(self, mocked_warnings):
-        if 'configobj' not in sys.modules.keys():
-            raise SkipTest
+        assert 'configobj' in sys.modules.keys()
 
         n = self._common_app_namespace_setup()
         n.add_option('foo')
@@ -1816,8 +1812,7 @@ c.string =   from ini
     #--------------------------------------------------------------------------
     @mock.patch('configman.config_manager.warnings')
     def test_warn_on_multiple_excess_options(self, mocked_warnings):
-        if 'configobj' not in sys.modules.keys():
-            raise SkipTest
+        assert 'configobj' in sys.modules.keys()
 
         n = self._common_app_namespace_setup()
         n.add_option('foo')
@@ -1898,4 +1893,3 @@ c.string =   from ini
         )
         cn = cm.get_config()
         self.assertEqual(cn.fred, 99)
-

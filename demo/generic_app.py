@@ -37,7 +37,6 @@
 #
 # ***** END LICENSE BLOCK *****
 
-import ConfigParser
 import getopt
 import os.path
 import inspect

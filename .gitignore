@@ -11,3 +11,6 @@ docs/_build/
 MANIFEST
 *.pyc
 dist/
+configman.egg-info/
+configobj-5.*.*-py2.6.egg
+six-1.*.*-py2.6.egg/

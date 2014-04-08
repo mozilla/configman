@@ -17,10 +17,24 @@ def read(fname):
         return f.read().strip()
 
 
+def find_install_requires():
+    return [x.strip() for x in
+            read('requirements.txt').splitlines()
+            if x.strip() and not x.startswith('#')]
+
+
+def find_tests_require():
+    return [x.strip() for x in
+            read('test-requirements.txt').splitlines()
+            if x.strip() and not x.startswith('#')]
+
+
 setup(
     name='configman',
     version=read('configman/version.txt'),
-    description='Flexible reading and writing of namespaced configuration options',
+    description=(
+        'Flexible reading and writing of namespaced configuration options'
+    ),
     long_description=read('README.md'),
     author='K Lars Lohn, Peter Bengtsson',
     author_email='lars@mozilla.com, peterbe@mozilla.com',
@@ -29,12 +43,15 @@ setup(
         'Development Status :: 5 - Production/Stable',
         'License :: OSI Approved :: Mozilla Public License 2.0 (MPL 2.0)',
         'Programming Language :: Python',
+        'Programming Language :: Python :: 2.6',
+        'Programming Language :: Python :: 2.7',
         'Intended Audience :: Developers',
         'Environment :: Console',
     ],
     packages=['configman'],
     package_data={'configman': ['*/*', 'version.txt']},
-    tests_required=['nose'],
+    install_requires=find_install_requires(),
+    tests_required=find_tests_require(),
     test_suite='nose.collector',
     zip_safe=False,
 ),
