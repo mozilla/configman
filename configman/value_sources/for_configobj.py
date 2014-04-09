@@ -159,7 +159,7 @@ class ValueSource(object):
                 source = "%s.%s" % (app.value.app_name, file_name_extension)
             except AttributeError:
                 # we likely don't have the admin.application object set up yet.
-                # we need to delay the instantiation of the ConfigParser
+                # we need to delay the instantiation of the config parser
                 # until later.
                 if source is None:
                     raise NotEnoughInformationException(
