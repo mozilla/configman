@@ -1266,33 +1266,6 @@ c.string =   from ini
                 os.remove('foo.conf')
 
     #--------------------------------------------------------------------------
-    def test_config_pathname_set(self):
-
-        class MyConfigManager(config_manager.ConfigurationManager):
-            def __init__(inner_self, *args, **kwargs):
-                inner_self.write_called = False
-                super(MyConfigManager, inner_self).__init__(*args, **kwargs)
-
-            def get_config_pathname(self):
-                temp_fn = os.path.isdir
-                os.path.isdir = lambda x: False
-                try:
-                    r = super(MyConfigManager, self)._get_config_pathname()
-                finally:
-                    os.path.isdir = temp_fn
-                return r
-
-        self.assertRaises(NoHandlerForType,
-                          MyConfigManager,
-                          use_admin_controls=True,
-                          use_auto_help=False,
-                          quit_after_admin=False,
-                          argv_source=['argument 1',
-                                       'argument 2',
-                                       'argument 3'],
-                          config_pathname='fred')
-
-    #--------------------------------------------------------------------------
     def test_ConfigurationManager_block_password(self):
         function = config_manager.ConfigurationManager._block_password
         self.assertEqual(function('foo', 'bar', 'peter', block_password=False),

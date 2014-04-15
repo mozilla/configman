@@ -167,6 +167,8 @@ class ValueSource(object):
                     )
                 self.delayed_parser_instantiation = True
                 return
+            if not os.path.exists(source) and config_manager.config_optional:
+                return
         if (
             isinstance(source, basestring) and
             source.endswith(file_name_extension)

@@ -128,9 +128,17 @@ def wrap(value_source_list, a_config_manager):
         if a_source is ConfigFileFutureProxy:
             a_source = a_config_manager._get_option('admin.conf').default
             # raise hell if the config file doesn't exist
-            if not a_config_manager.config_optional and a_source \
-               and not os.path.isfile(a_source):
-                raise IOError(a_source)
+            if a_source:
+                config_file_doesnt_exist = not os.path.isfile(a_source)
+                if config_file_doesnt_exist:
+                    if a_config_manager.config_optional:
+                        continue  # no file, it's optional, ignore it
+                    raise IOError(a_source)  # no file, it's required, raise
+                if a_source == a_config_manager.config_pathname:
+                    # the config file has not been set to anything other than the
+                    # the default value.  Force this into be the degenerate case
+                    # and skip the wrapping process.  We'll read the file later.
+                    continue
 
         if a_source is None:
             # this means the source is degenerate - like the case where
