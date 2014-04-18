@@ -1866,3 +1866,46 @@ c.string =   from ini
         )
         cn = cm.get_config()
         self.assertEqual(cn.fred, 99)
+
+    #--------------------------------------------------------------------------
+    def test_overlay_reference_value_from_bug_2(self):
+        # for Options that already exist and have been seen by the overlay
+        # process, make sure that expanding a class doesn't just overwrite
+        # the values back to their original defaults
+        class A(RequiredConfig):
+            required_config = Namespace()
+            required_config.add_option(
+                'fred',
+                default='77',
+                reference_value_from='a'
+            )
+
+        class B(RequiredConfig):
+            required_config = Namespace()
+            required_config.add_option(
+                'a_class',
+                default=A,
+                from_string_converter=class_converter,
+                reference_value_from='a'
+            )
+
+        r = Namespace()
+        r.add_option(
+            'some_class',
+            default=A,
+            from_string_converter=class_converter,
+            reference_value_from='a'
+        )
+        r.add_option(
+            'other_class',
+            default=A,
+            from_string_converter=class_converter,
+            reference_value_from='a'
+        )
+
+        cm = config_manager.ConfigurationManager(
+            [r],
+            [{'a.fred': 21}, {'other_class': B}]
+        )
+        cn = cm.get_config()
+        self.assertEqual(cn.fred, 21)

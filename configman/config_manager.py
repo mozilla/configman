@@ -636,9 +636,12 @@ class ConfigurationManager(object):
                         known_keys.intersection(new_req.keys())
                     )
                     # add the new Options to the namespace
-                    current_namespace.update(new_req.safe_copy(
+                    new_namespace = new_req.safe_copy(
                         an_option.reference_value_from
-                    ))
+                    )
+                    for new_key in new_namespace.keys_breadth_first():
+                        if new_key not in current_namespace:
+                            current_namespace[new_key] = new_namespace[new_key]
                 except AttributeError, x:
                     # there are apparently no new Options to bring in from
                     # this option's value
