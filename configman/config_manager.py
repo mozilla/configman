@@ -487,7 +487,6 @@ class ConfigurationManager(object):
         # a set of known reference_value_from_links
         set_of_reference_value_from_links = set()
         for key in (k for k in keys if k not in known_keys):
-
             an_option = self.option_definitions[key]
             if an_option.reference_value_from:
 
@@ -534,6 +533,7 @@ class ConfigurationManager(object):
         """
         new_keys_discovered = True  # loop control, False breaks the loop
         known_keys = set()  # a set of keys that have been expanded
+        all_reference_values = {}
 
         while new_keys_discovered:  # loop until nothing more is done
             # keys holds a list of all keys in the option definitons in
@@ -552,6 +552,9 @@ class ConfigurationManager(object):
                     keys,
                     known_keys
                 )
+            for a_ref_value_key in set_of_reference_value_from_links:
+                if a_ref_value_key not in all_reference_values:
+                    all_reference_values[a_ref_value_key] = []
             all_keys = list(set_of_reference_value_from_links) + keys
 
             # overlay process:
@@ -573,6 +576,12 @@ class ConfigurationManager(object):
                         self.option_definitions[reference_value_from]
                         [top_key].default
                     )
+                    all_reference_values[
+                        '.'.join((reference_value_from, top_key))
+                    ].append(
+                        key
+                    )
+
                 for a_value_source in self.values_source_list:
                     try:
                         # get all the option values from this value source
@@ -581,9 +590,11 @@ class ConfigurationManager(object):
                             True
                         )
                         # make sure it is in the form of a DotDict
+                        # if acquisition is desired, make sure that the
+                        # value source is a DotDictWithAcquisition
                         if not isinstance(val_src_dict, DotDict):
                             val_src_dict = (
-                                DotDictWithAcquisition(val_src_dict)
+                                DotDict(val_src_dict)
                             )
                         # get the Option for this key
                         opt = self.option_definitions[key]
@@ -592,6 +603,10 @@ class ConfigurationManager(object):
                         # via acquisition, so the key given may not have
                         # been an exact match for what was returned.
                         opt.default = val_src_dict[key]
+                        if key in all_reference_values:
+                            # make sure that this value gets propagated to keys
+                            # even if the keys have already been overlaid
+                            known_keys -= set(all_reference_values[key])
                     except KeyError, x:
                         pass  # okay, that source doesn't have this value
 
@@ -628,6 +643,11 @@ class ConfigurationManager(object):
                     if current_namespace is None:
                         # we're at the top level, use the base namespace
                         current_namespace = self.option_definitions
+                    if current_namespace._reference_value_from:
+                        # don't expand things that are in reference value
+                        # namespaces, they will be populated by expanding the
+                        # targets
+                        continue
                     # some new Options to be brought in may have already been
                     # seen and in the known_keys set.  They must be marked
                     # as unseen so that the new default doesn't overwrite any

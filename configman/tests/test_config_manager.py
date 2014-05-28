@@ -80,6 +80,34 @@ class T3(RequiredConfig):
     required_config.namespace('ccc')
     required_config.ccc.add_option('x', default=99)
 
+#==============================================================================
+class AClass(RequiredConfig):
+    required_config = Namespace()
+    required_config.namespace('zzz')
+    required_config.zzz.namespace('fff')
+    required_config.zzz.fff.add_option(
+        'a',
+        doc='another a',
+        default=3888,
+        reference_value_from='xxx.yyy'
+    )
+    required_config.zzz.fff.add_option(
+        'bclass',
+        default='configman.tests.test_config_manager.BClass',
+        from_string_converter=class_converter
+    )
+#==============================================================================
+class BClass(RequiredConfig):
+    required_config = Namespace()
+    required_config.namespace('ooo')
+    required_config.ooo.add_option(
+        'a',
+        doc='another a',
+        default=9988,
+        reference_value_from='xxx.yyy'
+    )
+
+
 
 #==============================================================================
 class TestCase(unittest.TestCase):
@@ -534,6 +562,69 @@ c.string =   from ini
         self.assertEqual(c.option_definitions.c.extra.default, 2.89)
         self.assertEqual(c.option_definitions.c.extra.value, 2.89)
         self.assertEqual(c.option_definitions.c.a.value, 2)
+
+    #--------------------------------------------------------------------------
+    def test_overlay_config_12(self):
+        """test overlay dict w/deep source dict and reference value links
+        with dynamic class loading"""
+        n = config_manager.Namespace()
+        n.add_option('a', 1, doc='the a', reference_value_from='xxx.yyy')
+        n.b = 17
+        n.c = config_manager.Namespace()
+        n.c.add_option(
+            'extra', doc='the x',
+            default=3.14159,
+            reference_value_from='xxx.yyy'
+        )
+        n.c.add_option(
+            'a',
+            doc='the a',
+            reference_value_from='xxx.yyy'
+        )
+        n.c.add_option(
+            'thingy',
+            default='configman.tests.test_config_manager.AClass',
+            from_string_converter=class_converter
+        )
+        value_source = {
+            'xxx': {
+                'yyy': {
+                    'a': 2,
+                    'extra': 2.89
+                }
+            }
+        }
+        c = config_manager.ConfigurationManager(
+            [n],
+            [
+                {'b': 21},
+                {'c.a': 399},
+                value_source,
+            ],
+            use_admin_controls=True,
+            use_auto_help=False,
+            argv_source=[]
+        )
+        self.assertTrue(isinstance(
+            c.option_definitions.b,
+            config_manager.Option
+        ))
+        self.assertEqual(c.option_definitions.a.value, 2)
+        self.assertEqual(c.option_definitions.b.value, 21)
+        self.assertEqual(c.option_definitions.b.default, 21)
+        self.assertEqual(c.option_definitions.b.name, 'b')
+        self.assertEqual(c.option_definitions.c.extra.name, 'extra')
+        self.assertEqual(c.option_definitions.c.extra.doc, 'the x')
+        self.assertEqual(c.option_definitions.c.extra.default, 2.89)
+        self.assertEqual(c.option_definitions.c.extra.value, 2.89)
+        self.assertEqual(c.option_definitions.c.a.default, 399)
+        self.assertEqual(c.option_definitions.c.a.value, 399)
+        self.assertEqual(c.option_definitions.c.zzz.fff.a.value, 2)
+        self.assertEqual(c.option_definitions.c.zzz.fff.a.default, 2)
+        self.assertEqual(c.option_definitions.c.zzz.fff.ooo.a.default, 2)
+        self.assertEqual(c.option_definitions.c.zzz.fff.ooo.a.value, 2)
+
+
 
     #--------------------------------------------------------------------------
     def test_mapping_types_1(self):
@@ -1682,9 +1773,11 @@ c.string =   from ini
         end value from the base value namespace."""
         rc = Namespace()
         rc.namespace('source')
-        rc.source.add_option('cls',
-                             default='configman.tests.test_config_manager.T1',
-                             from_string_converter=class_converter)
+        rc.source.add_option(
+            'cls',
+            default='configman.tests.test_config_manager.T1',
+            from_string_converter=class_converter
+        )
         rc.namespace('destination')
         rc.destination.add_option(
             'cls',
@@ -1694,7 +1787,9 @@ c.string =   from ini
         cm = config_manager.ConfigurationManager(
             rc,
             [
-                {'cls': 'configman.tests.test_config_manager.T2'},
+                DotDictWithAcquisition(
+                    {'cls': 'configman.tests.test_config_manager.T2'}
+                ),
             ],
         )
         c = cm.get_config()
@@ -1905,7 +2000,11 @@ c.string =   from ini
 
         cm = config_manager.ConfigurationManager(
             [r],
-            [{'a.fred': 21}, {'other_class': B}]
+            [
+                {'a.fred': 21},
+                {'other_class': B}
+            ]
         )
         cn = cm.get_config()
         self.assertEqual(cn.fred, 21)
+        self.assertEqual(cn.a.fred, 21)
