@@ -40,6 +40,7 @@ import collections
 import os
 
 from source_exceptions import CantHandleTypeException
+from configman.dotdict import DotDictWithAcquisition
 
 can_handle = (
     os.environ,
@@ -53,6 +54,7 @@ class ValueSource(object):
     def __init__(self, source, the_config_manager=None):
         if source is os.environ:
             self.always_ignore_mismatches = True
+            source = DotDictWithAcquisition(os.environ)
         elif isinstance(source, collections.Mapping):
             self.always_ignore_mismatches = False
         else:
