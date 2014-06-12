@@ -36,33 +36,44 @@
 #
 # ***** END LICENSE BLOCK *****
 
-import collections
+import unittest
 import os
 
-from source_exceptions import CantHandleTypeException
-
-can_handle = (
-    os.environ,
-    collections.Mapping,
-)
-
+from configman.value_sources.for_mapping import ValueSource
 
 #==============================================================================
-class ValueSource(object):
-    #--------------------------------------------------------------------------
-    def __init__(self, source, the_config_manager=None):
-        if source is os.environ:
-            self.always_ignore_mismatches = True
-        elif isinstance(source, collections.Mapping):
-            if "always_ignore_mismatches" in source:
-                self.always_ignore_mismatches = \
-                    bool(source["always_ignore_mismatches"])
-            else:
-                self.always_ignore_mismatches = False
-        else:
-            raise CantHandleTypeException()
-        self.source = source
+class TestCase(unittest.TestCase):
 
-    #--------------------------------------------------------------------------
-    def get_values(self, config_manager, ignore_mismatches):
-        return self.source
+    def test_environ_ignores_mismatches(self):
+        vs = ValueSource(os.environ)
+        self.assertTrue(vs.always_ignore_mismatches)
+        self.assertTrue(vs.source is os.environ)
+
+    def test_mapping(self):
+        m = {
+            'a': '1',
+            'b': 2
+        }
+        vs = ValueSource(m)
+        self.assertFalse(vs.always_ignore_mismatches)
+        self.assertTrue(vs.source is m)
+
+        m = {
+            'a': '1',
+            'b': 2,
+            'always_ignore_mismatches': False
+        }
+        vs = ValueSource(m)
+        self.assertFalse(vs.always_ignore_mismatches)
+        self.assertTrue(vs.source is m)
+
+        m = {
+            'a': '1',
+            'b': 2,
+            'always_ignore_mismatches': True
+        }
+        vs = ValueSource(m)
+        self.assertTrue(vs.always_ignore_mismatches)
+        self.assertTrue(vs.source is m)
+
+
