@@ -57,7 +57,7 @@ basic python types. The complete list is this:
 * **types.FunctionType** (see below)
 * **compiled_regexp_type**
 
-The **type** amd **types.FunctionType** built-ins are simpler than
+The **type** and **types.FunctionType** built-ins are simpler than
 they might seem. It's basically the same example pseudo code above.
 This example should demostrate how it might work::
 
