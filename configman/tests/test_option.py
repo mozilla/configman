@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
 #
@@ -56,21 +57,21 @@ class TestCase(unittest.TestCase):
         self.assertEqual(o.name, 'name')
         self.assertEqual(o.default, None)
         self.assertEqual(o.doc, None)
-        self.assertEqual(o.from_string_converter, None)
+        self.assertEqual(o.from_string_converter, conv.str_quote_stripper)
         self.assertEqual(o.value, None)
 
         o = Option('lucy')
         self.assertEqual(o.name, 'lucy')
         self.assertEqual(o.default, None)
         self.assertEqual(o.doc, None)
-        self.assertEqual(o.from_string_converter, None)
+        self.assertEqual(o.from_string_converter, conv.str_quote_stripper)
         self.assertEqual(o.value, None)
 
         o = Option(u'spa\xa0e')
         self.assertEqual(o.name, u'spa\xa0e')
         self.assertEqual(o.default, None)
         self.assertEqual(o.doc, None)
-        self.assertEqual(o.from_string_converter, None)
+        self.assertEqual(o.from_string_converter, conv.str_quote_stripper)
         self.assertEqual(o.value, None)
 
         data = {
@@ -113,7 +114,6 @@ class TestCase(unittest.TestCase):
         o.set_value()
         self.assertEqual(o.default, '1')
         self.assertEqual(o.value, 1)
-
 
         data = {
             'name': 'lucy',
@@ -182,7 +182,7 @@ class TestCase(unittest.TestCase):
         data = {
             'default': '2011-12-31',
             'doc': "lucy's bday",
-            'from_string_converter': \
+            'from_string_converter':
             'configman.datetime_util.date_from_ISO_string',
         }
         o = Option('now', **data)
@@ -196,9 +196,9 @@ class TestCase(unittest.TestCase):
 
     #--------------------------------------------------------------------------
     def test_setting_known_from_string_converter_onOption(self):
-        opt = Option('name', default=u'Peter')
-        self.assertEqual(opt.default, u'Peter')
-        self.assertEqual(opt.from_string_converter, unicode)
+        opt = Option('name', default=u'Lärs')
+        self.assertEqual(opt.default, u'Lärs')
+        self.assertEqual(opt.from_string_converter, conv.utf8_converter)
 
         opt = Option('name', default=100)
         self.assertEqual(opt.default, 100)
@@ -234,7 +234,7 @@ class TestCase(unittest.TestCase):
                          dtu.date_from_ISO_string)
 
     #--------------------------------------------------------------------------
-    def test_boolean_converter_inOption(self):
+    def test_boolean_converter_in_option(self):
         opt = Option('name', default=False)
         self.assertEqual(opt.default, False)
         self.assertEqual(opt.from_string_converter,
@@ -280,7 +280,7 @@ class TestCase(unittest.TestCase):
         self.assertEqual(opt.value, True)
 
     #--------------------------------------------------------------------------
-    def test_list_converter_inOption(self):
+    def test_list_converter_in_option(self):
         some_list = ['some', 'values', 'here']
         opt = Option('some name', default=some_list)
         self.assertEqual(opt.default, some_list)
@@ -291,7 +291,7 @@ class TestCase(unittest.TestCase):
         self.assertEqual(opt.value, ['list', 'of', 'things'])
 
     #--------------------------------------------------------------------------
-    def test_timedelta_converter_inOption(self):
+    def test_timedelta_converter_in_option(self):
         one_day = datetime.timedelta(days=1)
         opt = Option('some name', default=one_day)
         self.assertEqual(opt.default, one_day)
@@ -304,7 +304,9 @@ class TestCase(unittest.TestCase):
         opt.set_value(timedelta_as_string)
         self.assertEqual(opt.value, two_days)
 
-        opt.set_value(unicode(timedelta_as_string))
+        new_value = unicode(timedelta_as_string)
+        opt.set_value(new_value)
+
         self.assertEqual(opt.value, two_days)
 
         opt.set_value(two_days)
@@ -317,7 +319,7 @@ class TestCase(unittest.TestCase):
                           opt.set_value, '0:x:0:0')
 
     #--------------------------------------------------------------------------
-    def test_regexp_converter_inOption(self):
+    def test_regexp_converter_in_option(self):
         regex_str = '\w+'
         sample_regex = re.compile(regex_str)
         opt = Option('name', default=sample_regex)
@@ -378,7 +380,7 @@ class TestCase(unittest.TestCase):
         o1 = Option('name')
         val = {'default': u'Peter'}
         o1.set_value(val)
-        self.assertEqual(o1.value, 'Peter')
+        self.assertEqual(o1.value, u'Peter')
 
         val = {'justanother': 'dict!'}
         o1.set_value(val)
@@ -387,8 +389,8 @@ class TestCase(unittest.TestCase):
     #--------------------------------------------------------------------------
     def test_set_default(self):
         o1 = Option(
-          'name',
-          default=23
+            'name',
+            default=23
         )
         self.assertEqual(o1.value, 23)
         self.assertRaises(OptionError, o1.set_default, 68)
@@ -397,8 +399,8 @@ class TestCase(unittest.TestCase):
         self.assertTrue(o1.default, 68)
 
         o2 = Option(
-          'name',
-          default=None
+            'name',
+            default=None
         )
         self.assertTrue(o2.value is None)
         o2.set_default(68)
@@ -453,3 +455,20 @@ class TestCase(unittest.TestCase):
         )
         o2 = o.copy()
         self.assertEqual(o, o2)
+
+    #--------------------------------------------------------------------------
+    def test_converter(self):
+        o = Option(
+            name='dwight',
+            default=17,
+            from_string_converter=int,
+        )
+        c = conv.ConverterService()
+        c.register_converter(
+            conv.AnyInstanceOf(str),
+            lambda s: int(s) * 10,
+            converter_function_key='int'
+        )
+        o.current_converter = c
+        o.set_value('667')
+        self.assertEqual(o.value, 6670)

@@ -40,6 +40,10 @@ import unittest
 import datetime
 import functools
 
+from configman import (
+    RequiredConfig,
+    Namespace,
+)
 import configman.config_manager as config_manager
 import configman.datetime_util as dtu
 
@@ -51,7 +55,7 @@ class TestCase(unittest.TestCase):
 
     #--------------------------------------------------------------------------
     def test_Namespace_basics(self):
-        namespace = config_manager.Namespace('doc string')
+        namespace = Namespace('doc string')
         namespace.alpha = 1
         my_birthday = datetime.datetime(1960, 5, 4, 15, 10)
         namespace.beta = my_birthday
@@ -71,7 +75,7 @@ class TestCase(unittest.TestCase):
 
     #--------------------------------------------------------------------------
     def test_configuration_with_namespace(self):
-        namespace = config_manager.Namespace()
+        namespace = Namespace()
         namespace.add_option('a')
         namespace.a.default = 1
         namespace.a.doc = 'the a'
@@ -139,17 +143,17 @@ class TestCase(unittest.TestCase):
 
     #--------------------------------------------------------------------------
     def test_walk_expanding_class_options(self):
-        class A(config_manager.RequiredConfig):
+        class A(RequiredConfig):
             required_config = {
                 'a': config_manager.Option('a', 1, 'the a'),
                 'b': 17,
             }
-        n = config_manager.Namespace()
-        n.source = config_manager.Namespace()
+        n = Namespace()
+        n.source = Namespace()
         n.source.add_option('c', A, 'the A class')
         assert n.source.c.doc == 'the A class'
 
-        n.dest = config_manager.Namespace()
+        n.dest = Namespace()
         n.dest.add_option('c', A, doc='the A class')
         assert n.dest.c.doc == 'the A class'
         c = config_manager.ConfigurationManager(
@@ -158,19 +162,19 @@ class TestCase(unittest.TestCase):
             use_auto_help=False,
             argv_source=[]
         )
-        e = config_manager.Namespace()
-        e.s = config_manager.Namespace()
+        e = Namespace()
+        e.s = Namespace()
         e.s.add_option('c', A, doc='the A class')
         e.s.add_option('a', 1, 'the a')
         e.s.add_option('b', default=17)
-        e.d = config_manager.Namespace()
+        e.d = Namespace()
         e.d.add_option('c', A, doc='the A class')
         e.d.add_option('a', 1, 'the a')
         e.d.add_option('b', default=17)
 
     #--------------------------------------------------------------------------
         def namespace_test(val):
-            self.assertEqual(type(val), config_manager.Namespace)
+            self.assertEqual(type(val), Namespace)
 
     #--------------------------------------------------------------------------
         def option_test(val, expected=None):
@@ -204,7 +208,7 @@ class TestCase(unittest.TestCase):
 
     #--------------------------------------------------------------------------
     def test_setting_nested_namespaces(self):
-        n = config_manager.Namespace()
+        n = Namespace()
         n.namespace('sub')
         sub_n = n.sub
         sub_n.add_option('name')
@@ -213,7 +217,7 @@ class TestCase(unittest.TestCase):
 
     #--------------------------------------------------------------------------
     def test_editing_values_on_namespace(self):
-        n = config_manager.Namespace()
+        n = Namespace()
         self.assertRaises(KeyError, n.set_value, 'name', 'Peter')
         n.add_option('name', 'Lars')
         n.set_value('name', 'Peter')
@@ -231,11 +235,11 @@ class TestCase(unittest.TestCase):
 
     #--------------------------------------------------------------------------
     def test_comparing_namespace_instances(self):
-        n = config_manager.Namespace()
-        n2 = config_manager.Namespace()
+        n = Namespace()
+        n2 = Namespace()
         self.assertEqual(n, n2)
 
-        n3 = config_manager.Namespace()
+        n3 = Namespace()
         n3.add_option('name', 'Peter')
         self.assertNotEqual(n, n3)
 
@@ -243,7 +247,7 @@ class TestCase(unittest.TestCase):
         self.assertNotEqual(n, n2)
         self.assertNotEqual(n2, n3)
 
-        n4 = config_manager.Namespace()
+        n4 = Namespace()
         n4.add_option('name', 'Peter')
         self.assertEqual(n4, n3)
 
@@ -251,11 +255,11 @@ class TestCase(unittest.TestCase):
     def test_deep_copy(self):
         from copy import deepcopy
 
-        n = config_manager.Namespace()
+        n = Namespace()
         n2 = deepcopy(n)
         self.assertTrue(n is not n2)
 
-        n = config_manager.Namespace()
+        n = Namespace()
         n.add_option('name', 'Peter')
         n3 = deepcopy(n)
         self.assertEqual(n, n3)
@@ -263,7 +267,7 @@ class TestCase(unittest.TestCase):
 
         def foo(all, local, args):
             return 17
-        n = config_manager.Namespace()
+        n = Namespace()
         n.add_aggregation('a', foo)
         n4 = deepcopy(n)
         self.assertTrue(n.a is not n4.a)
@@ -271,6 +275,6 @@ class TestCase(unittest.TestCase):
     #--------------------------------------------------------------------------
     def test_add_option_with_option(self):
         o = Option('dwight')
-        n = config_manager.Namespace()
+        n = Namespace()
         n.add_option(o)
         self.assertTrue(o is n.dwight)

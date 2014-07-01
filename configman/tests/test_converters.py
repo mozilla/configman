@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
 #
@@ -37,7 +38,8 @@
 # ***** END LICENSE BLOCK *****
 
 import unittest
-import tempfile
+import datetime
+
 from configman import converters
 from configman import RequiredConfig, Namespace, ConfigurationManager
 
@@ -93,36 +95,28 @@ class TestCase(unittest.TestCase):
     #--------------------------------------------------------------------------
     def test_str_dict_keys(self):
         function = converters.str_dict_keys
-        result = function({u'name': u'Peter', 'age': 99, 10: 11})
-        self.assertEqual(result, {'name': u'Peter', 'age': 99, 10: 11})
+        result = function({u'name': u'Lärs', 'age': 99, 10: 11})
+        self.assertEqual(result, {'name': u'Lärs', 'age': 99, '10': 11})
 
         for key in result.keys():
-            if key in ('name', 'age'):
-                self.assertTrue(not isinstance(key, unicode))
-                self.assertTrue(isinstance(key, str))
-            else:
-                self.assertTrue(isinstance(key, int))
+            self.assertTrue(not isinstance(key, unicode))
+            self.assertTrue(isinstance(key, str))
 
     #--------------------------------------------------------------------------
-    def test_io_converter(self):
-        function = converters.io_converter
-        import sys
-        import os
-        self.assertEqual(function(100.0), 100.0)
-        self.assertEqual(function('stdout'), sys.stdout)
-        self.assertEqual(function('STDOut'), sys.stdout)
-        self.assertEqual(function('Stderr'), sys.stderr)
-        tmp_filename = os.path.join(tempfile.gettempdir(), 'test.anything')
-        try:
-            r = function(tmp_filename)
-            self.assertTrue(hasattr(r, 'write'))
-            self.assertTrue(hasattr(r, 'close'))
-            r.write('stuff\n')
-            r.close()
-            self.assertEqual(open(tmp_filename).read(), 'stuff\n')
-        finally:
-            if os.path.isfile(tmp_filename):
-                os.remove(tmp_filename)
+    def test_some_unicode_stuff(self):
+        fn = converters.utf8_converter
+        self.assertEqual(fn('Lärs'), u'L\xe4rs')
+        self.assertEqual(fn('"""Lärs"""'), u'L\xe4rs')
+        fn = converters.str_quote_stripper
+        self.assertEqual(fn(u'Lärs'), u'Lärs')
+        self.assertEqual(fn(u'"""你好, says Lärs"""'), u'你好, says Lärs')
+        self.assertEqual(
+            converters.converter_service.convert('Lars', 'unicode'),
+            u'Lars'
+        )
+        self.assertEqual(
+            converters.converter_service.convert(u"'你好'", 'str'),
+            "\xe4\xbd\xa0\xe5\xa5\xbd")
 
     #--------------------------------------------------------------------------
     def test_timedelta_converter(self):
@@ -140,6 +134,34 @@ class TestCase(unittest.TestCase):
         )
         self.assertRaises(ValueError, function, 'xxx')
         self.assertRaises(ValueError, function, 10.1)
+        self.assertEqual(
+            converters.converter_service.convert(
+                '1',
+                'datetime.timedelta'
+            ),
+            timedelta(seconds=1)
+        )
+        self.assertEqual(
+            converters.converter_service.convert(
+                '2:1',
+                'datetime.timedelta'
+            ),
+            timedelta(minutes=2, seconds=1)
+        )
+        self.assertEqual(
+            converters.converter_service.convert(
+                '3:2:1',
+                'datetime.timedelta'
+            ),
+            timedelta(hours=3, minutes=2, seconds=1)
+        )
+        self.assertEqual(
+            converters.converter_service.convert(
+                '4:3:2:1',
+                'datetime.timedelta'
+            ),
+            timedelta(days=4, hours=3, minutes=2, seconds=1)
+        )
 
     #--------------------------------------------------------------------------
     def test_class_converter_nothing(self):
@@ -156,18 +178,82 @@ class TestCase(unittest.TestCase):
          configman.tests.test_converters.Foo
 
         """),
-            Foo)
+            Foo
+        )
+
+    #--------------------------------------------------------------------------
+    def test_class_converter_with_builtin(self):
+        function = converters.class_converter
+        self.assertEqual(function('int'), int)
+        self.assertEqual(function('float'), float)
+        self.assertEqual(function('range'), range)
+        self.assertEqual(function('hex'), hex)
+
+    #--------------------------------------------------------------------------
+    def test_class_converter_with_modules(self):
+        function = converters.class_converter
+        self.assertEqual(function('unittest'), unittest)
+        self.assertEqual(function('datetime'), datetime)
+        self.assertEqual(function('configman.converters'), converters)
+
+    #--------------------------------------------------------------------------
+    def test_class_converter_with_classes_from_modules(self):
+        function = converters.class_converter
+        self.assertEqual(function('unittest.TestCase'), unittest.TestCase)
+        self.assertEqual(function('configman.RequiredConfig'), RequiredConfig)
+        self.assertEqual(function('configman.Namespace'), Namespace)
+
+    #--------------------------------------------------------------------------
+    def test_class_converter_with_functions_from_modules(self):
+        function = converters.class_converter(
+            'configman.dotdict.iteritems_breadth_first'
+        )
+        self.assertEqual(function.__name__, 'iteritems_breadth_first')
+
+    #--------------------------------------------------------------------------
+    def test_boolean_converter(self):
+        self.assertTrue(converters.boolean_converter('TRUE'))
+        self.assertTrue(converters.boolean_converter('"""TRUE"""'))
+        self.assertTrue(converters.boolean_converter('true'))
+        self.assertTrue(converters.boolean_converter('t'))
+        self.assertTrue(converters.boolean_converter('1'))
+        self.assertTrue(converters.boolean_converter('T'))
+        self.assertTrue(converters.boolean_converter('yes'))
+        self.assertTrue(converters.boolean_converter("'yes'"))
+        self.assertTrue(converters.boolean_converter('y'))
+
+        self.assertFalse(converters.boolean_converter('FALSE'))
+        self.assertFalse(converters.boolean_converter('false'))
+        self.assertFalse(converters.boolean_converter('f'))
+        self.assertFalse(converters.boolean_converter('F'))
+        self.assertFalse(converters.boolean_converter('no'))
+        self.assertFalse(converters.boolean_converter('NO'))
+        self.assertFalse(converters.boolean_converter(''))
+        self.assertFalse(converters.boolean_converter(
+            '你好, says Lärs'
+        ))
+        self.assertRaises(ValueError, converters.boolean_converter, 99)
+
+    #--------------------------------------------------------------------------
+    def test_regex_converter(self):
+        self.assertRaises(ValueError, converters.regex_converter, 99)
+        self.assertTrue(
+            converters.regex_converter("'''.*'''").match('anything')
+        )
+        self.assertTrue(
+            converters.regex_converter("asdf").match("asdf")
+        )
 
     #--------------------------------------------------------------------------
     def test_py_obj_to_str(self):
-        function = converters.py_obj_to_str
+        function = converters._arbitrary_object_to_string
         self.assertEqual(function(None), '')
         from configman import tests as tests_module
         self.assertEqual(function(tests_module), 'configman.tests')
         self.assertEqual(function(int), 'int')
 
     #--------------------------------------------------------------------------
-    def test_str_to_list(self):
+    def test_str_to_list_of_strings(self):
         function = converters.list_converter
         self.assertEqual(function(''), [])
 
@@ -180,13 +266,34 @@ class TestCase(unittest.TestCase):
             ['configman.tests', 'configman']
         )
         self.assertEqual(
-            function('int, str, 123, hello'),
-            ['int', 'str', '123', 'hello']
+            function('int, str, 123, 你好'),
+            ['int', 'str', '123', '你好']
         )
 
     #--------------------------------------------------------------------------
-    def test_list_to_str(self):
-        function = converters.list_to_str
+    def test_str_to_list_of_ints(self):
+        function = converters.list_comma_separated_ints
+        self.assertEqual(function(''), [])
+
+        self.assertEqual(
+            function('1, 2, 3'),
+            [1, 2, 3]
+        )
+
+    #--------------------------------------------------------------------------
+    def test_str_to_list_of_strs(self):
+        function = converters.list_space_separated_strings
+        self.assertEqual(function(''), [])
+
+        result = function("""'你好' this "is" silly""")
+        self.assertEqual(
+            result,
+            ["你好", 'this', 'is', 'silly']
+        )
+
+    #--------------------------------------------------------------------------
+    def test_sequence_to_string(self):
+        function = converters.sequence_to_string
         self.assertEqual(function([]), '')
         self.assertEqual(function(tuple()), '')
 
@@ -200,20 +307,8 @@ class TestCase(unittest.TestCase):
             'configman.tests, configman'
         )
         self.assertEqual(
-            function([int, str, 123, "hello"]),
-            'int, str, 123, hello'
-        )
-        self.assertEqual(
-            function((configman.tests.test_converters.TestCase,)),
-            'configman.tests.test_converters.TestCase'
-        )
-        self.assertEqual(
-            function((configman.tests, configman)),
-            'configman.tests, configman'
-        )
-        self.assertEqual(
-            function((int, str, 123, "hello")),
-            'int, str, 123, hello'
+            function([int, str, 123, "你好"]),
+            'int, str, 123, 你好'
         )
 
     #--------------------------------------------------------------------------
@@ -223,12 +318,10 @@ class TestCase(unittest.TestCase):
             'b': 'fred',
             'c': 3.1415
         }
-        converter_fn = converters.to_string_converters[type(d)]
-        s = converter_fn(d)
+        s = converters.to_str(d)
 
         # round  trip
-        converter_fn = converters.from_string_converters[type(d)]
-        dd = converter_fn(s)
+        dd = converters.converter_service.convert(s, 'dict')
         self.assertEqual(dd, d)
 
     #--------------------------------------------------------------------------
@@ -249,11 +342,8 @@ class TestCase(unittest.TestCase):
         self.assertEqual(len(req.HH1), 1)
         self.assertTrue('cls' in req.HH1)
         self.assertEqual(
-            sorted([x.strip() for x in class_list_str.split(',')]),
-            sorted([
-                x.strip() for x in
-                converters.py_obj_to_str(result).split(',')
-            ])
+            class_list_str,
+            converters.to_str(result)
         )
 
     #--------------------------------------------------------------------------
@@ -323,3 +413,153 @@ class TestCase(unittest.TestCase):
                 isinstance(config[x].kls_instance,
                            config[x].kls)
             )
+
+    #--------------------------------------------------------------------------
+    def test_to_str(self):
+        to_str = converters.to_str
+        self.assertEqual(to_str(int), 'int')
+        self.assertEqual(to_str(float), 'float')
+        self.assertEqual(to_str(str), 'str')
+        self.assertEqual(to_str(unicode), 'unicode')
+        self.assertEqual(to_str(bool), 'bool')
+        self.assertEqual(to_str(dict), 'dict')
+        self.assertEqual(to_str(list), 'list')
+        self.assertEqual(to_str(datetime.datetime), 'datetime.datetime')
+        self.assertEqual(to_str(datetime.date), 'datetime.date')
+        self.assertEqual(to_str(datetime.timedelta), 'datetime.timedelta')
+        self.assertEqual(to_str(type), 'type')
+        self.assertEqual(
+            to_str(converters._compiled_regexp_type),
+            '_sre.SRE_Pattern'
+        )
+        self.assertEqual(to_str(1), '1')
+        self.assertEqual(to_str(3.1415), '3.1415')
+        self.assertEqual(
+            to_str(datetime.datetime(
+                1960,
+                5,
+                4,
+                15,
+                10
+            )),
+            '1960-05-04T15:10:00'
+        )
+        self.assertEqual(to_str(True), 'True')
+        self.assertEqual(to_str(False), 'False')
+        self.assertEqual(to_str((2, False, int, max)), '2, False, int, max')
+        self.assertEqual(to_str(None), '')
+
+    #--------------------------------------------------------------------------
+    def test_str_quote_stripper(self):
+        a = """'"single and double quoted"'"""
+        self.assertEqual(
+            converters.str_quote_stripper(a),
+            'single and double quoted'
+        )
+
+        a = """'single quoted'"""
+        self.assertEqual(converters.str_quote_stripper(a), 'single quoted')
+
+        a = '''"double quoted"'''
+        self.assertEqual(converters.str_quote_stripper(a), 'double quoted')
+
+        a = '"""triple quoted"""'
+        self.assertEqual(converters.str_quote_stripper(a), 'triple quoted')
+
+        a = "'''triple quoted'''"
+        self.assertEqual(converters.str_quote_stripper(a), 'triple quoted')
+
+        a = '''"trailing apostrophy'"'''
+        self.assertEqual(
+            converters.str_quote_stripper(a),
+            "trailing apostrophy'"
+        )
+
+    #--------------------------------------------------------------------------
+    def test_make_sure_some_basic_converters_exist(self):
+        self.assertTrue(converters.get_from_string_converter(str))
+        self.assertTrue(converters.get_from_string_converter(unicode))
+        self.assertTrue(converters.get_from_string_converter(list))
+        self.assertTrue(converters.get_from_string_converter(dict))
+        self.assertTrue(converters.get_from_string_converter(int))
+        self.assertTrue(converters.get_from_string_converter(float))
+
+    #--------------------------------------------------------------------------
+    def test_lookup_by_function(self):
+        c = converters.ConverterService()
+        c.register_converter(
+            9,  # use the following function for the value 9 only
+            lambda i: str(-i),
+            converter_function_key='str',
+        )
+        c.register_converter(
+            converters.AnyInstanceOf(int),
+            lambda i: str(i + 17),
+            converter_function_key='str',
+        )
+        self.assertEqual(
+            c.convert(
+                1,
+                converter_function_key='str'
+            ),
+            '18'
+        )
+        self.assertEqual(
+            c.convert(
+                9,
+                converter_function_key='str'
+            ),
+            '-9'
+        )
+
+    #--------------------------------------------------------------------------
+    def test_inherited_dont_care(self):
+        types_n_values = [
+            (22, int, 'int'),
+            (3.1415, float, 'float'),
+            ('string', str, 'str'),
+            ([1, 2, 3], list, 'list'),
+            ((1, 2, 3), tuple, 'tuple'),
+            ({'a': 1}, dict, 'dict'),
+        ]
+        for value, base_type, type_key in types_n_values:
+            dc_instance = converters.dont_care(value)
+            self.assertEqual(
+                dc_instance.__class__.__name__,
+                'DontCareAbout_%s' % type_key
+            )
+            self.assertTrue(dc_instance.dont_care())
+            self.assertEqual(dc_instance.as_bare_value(), value)
+            self.assertTrue(isinstance(dc_instance, base_type))
+            self.assertEqual(dc_instance.original_type, base_type)
+            self.assertFalse(dc_instance.modified__)
+            self.assertEqual(
+                hash(dc_instance.__class__.__name__),
+                dc_instance.__hash__()
+            )
+            if hasattr(base_type, 'append'):
+                dc_instance.append(99)
+                self.assertFalse(dc_instance.dont_care())
+
+    #--------------------------------------------------------------------------
+    def test_encapsulated_dont_care(self):
+        types_n_values = [
+            (None, type(None), "NoneType"),
+            (lambda: 17, type(lambda: 17), 'function'),
+            (type, type(type), 'typetype'),
+        ]
+        for value, base_type, type_key in types_n_values:
+            dc_instance = converters.dont_care(value)
+            self.assertEqual(
+                dc_instance.__class__.__name__,
+                'DontCare'
+            )
+            self.assertTrue(dc_instance.dont_care())
+            self.assertEqual(dc_instance.as_bare_value(), value)
+            self.assertEqual(dc_instance.original_type, base_type)
+            self.assertFalse(dc_instance.modified__)
+            self.assertEqual(
+                hash(dc_instance.__class__.__name__),
+                dc_instance.__hash__()
+            )
+

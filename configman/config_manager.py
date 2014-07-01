@@ -52,12 +52,15 @@ import value_sources
 import def_sources
 
 #==============================================================================
-# for convenience define some external symbols here
+# for convenience define some external symbols here - some client modules may
+# import these symbols from here rather than their origin definition location.
+# PyFlakes may erroneously flag some of these as unused
 from option import Option, Aggregation
-from dotdict import DotDict, DotDictWithAcquisition
+from dotdict import DotDict, DotDictWithAcquisition, iteritems_breadth_first
 from namespace import Namespace
-from required_config import RequiredConfig
+from required_config import RequiredConfig  # used elsewhere - do not remove
 from config_file_future_proxy import ConfigFileFutureProxy
+from config_exceptions import NotAnOptionError, CannotConvertError
 
 
 #==============================================================================
@@ -305,11 +308,10 @@ class ConfigurationManager(object):
             print >> output_stream, ''
 
         names_list = self.get_option_names()
-        print >> output_stream, (
-            "usage:\n",
-            self.app_invocation_name,
-            "[OPTIONS]..."
-        ),
+        print >> output_stream,  \
+            "usage:\n",  \
+            self.app_invocation_name,  \
+            "[OPTIONS]...",
         bracket_count = 0
         for key in names_list:
             an_option = self.option_definitions[key]
@@ -342,10 +344,8 @@ class ConfigurationManager(object):
             if doc:
                 line += '%s%s\n' % (pad, doc)
             try:
-                value = option.value
-                type_of_value = type(value)
-                converter_function = conv.to_string_converters[type_of_value]
-                default = converter_function(value)
+                default = str(option)
+
             except KeyError:
                 default = option.value
             if default is not None:
@@ -368,6 +368,8 @@ class ConfigurationManager(object):
                                file."""
 
         config_file_type = self._get_option('admin.print_conf').value
+        if isinstance(config_file_type, conv.DontCare):
+            return
 
         @contextlib.contextmanager
         def stdout_opener():
@@ -392,6 +394,8 @@ class ConfigurationManager(object):
 
         if not config_pathname:
             config_pathname = self._get_option('admin.dump_conf').value
+        if isinstance(config_pathname, conv.DontCare):
+            return
 
         opener = functools.partial(open, config_pathname, 'w')
         config_file_type = os.path.splitext(config_pathname)[1][1:]
@@ -461,11 +465,7 @@ class ConfigurationManager(object):
             if 'password' in key.lower():
                 logger.info('%s: *********', key)
             else:
-                try:
-                    logger.info('%s: %s', key,
-                                conv.to_string_converters[type(key)](val))
-                except KeyError:
-                    logger.info('%s: %s', key, val)
+                logger.info('%s: %s', key, conv.to_str(val))
 
     #--------------------------------------------------------------------------
     def get_option_names(self):
@@ -539,7 +539,7 @@ class ConfigurationManager(object):
             # keys holds a list of all keys in the option definitons in
             # breadth first order using this form: [ 'x', 'y', 'z', 'x.a',
             # 'x.b', 'z.a', 'z.b', 'x.a.j', 'x.a.k', 'x.b.h']
-            keys = [
+            self._keys = [
                 x for x
                 in self.option_definitions.keys_breadth_first()
                 if isinstance(self.option_definitions[x], Option)
@@ -549,19 +549,35 @@ class ConfigurationManager(object):
             # create alternate paths options
             set_of_reference_value_from_links = \
                 self._create_reference_value_from_links(
-                    keys,
+                    self._keys,
                     known_keys
                 )
             for a_ref_value_key in set_of_reference_value_from_links:
                 if a_ref_value_key not in all_reference_values:
                     all_reference_values[a_ref_value_key] = []
-            all_keys = list(set_of_reference_value_from_links) + keys
+            all_keys = list(set_of_reference_value_from_links) + self._keys
 
             # overlay process:
             # fetch all the default values from the value sources before
             # applying the from string conversions
             #
 
+            def _must_be(source, required_type):
+                if isinstance(source, required_type):
+                    return source
+                new_mapping = required_type()
+                for key, value in iteritems_breadth_first(
+                    source,
+                    include_dicts=True
+                ):
+                    if key in all_keys:
+                        new_mapping[key] = value
+                return new_mapping
+
+            values_from_all_sources = [
+                (v, _must_be(v.get_values(self, True), DotDict))
+                for v in self.values_source_list
+            ]
             for key in (k for k in all_keys if k not in known_keys):
                 #if not isinstance(an_option, Option):
                 #   continue  # aggregations and other types are ignored
@@ -582,27 +598,29 @@ class ConfigurationManager(object):
                         key
                     )
 
-                for a_value_source in self.values_source_list:
+                for i, (a_value_source, val_src_dict) in enumerate(
+                    values_from_all_sources
+                ):
                     try:
-                        # get all the option values from this value source
-                        val_src_dict = a_value_source.get_values(
-                            self,
-                            True
-                        )
-                        # make sure it is in the form of a DotDict
-                        # if acquisition is desired, make sure that the
-                        # value source is a DotDictWithAcquisition
-                        if not isinstance(val_src_dict, DotDict):
-                            val_src_dict = (
-                                DotDict(val_src_dict)
-                            )
                         # get the Option for this key
                         opt = self.option_definitions[key]
                         # overlay the default with the new value from
                         # the value source.  This assignment may come
                         # via acquisition, so the key given may not have
                         # been an exact match for what was returned.
-                        opt.default = val_src_dict[key]
+                        # oh, yeah, strip off any damn quotes, too
+                        overlay_value = conv.silent_str_quote_stripper(
+                            val_src_dict[key]
+                        )
+                        opt.default = conv.silent_str_quote_stripper(
+                            val_src_dict[key]
+                        )
+                        try:
+                            opt.value_source = conv.to_str(a_value_source)
+                            opt.current_converter = \
+                                a_value_source.converter_service
+                        except AttributeError:
+                            pass
                         if key in all_reference_values:
                             # make sure that this value gets propagated to keys
                             # even if the keys have already been overlaid
@@ -620,7 +638,17 @@ class ConfigurationManager(object):
                 #if not isinstance(an_option, Option):
                 #    continue  # aggregations, namespaces are ignored
                 # apply the from string conversion to make the real value
-                an_option.set_value(an_option.default)
+                try:
+                    an_option.set_value(an_option.default)
+                except CannotConvertError, x:
+                    x.args += (
+                        'on conversion of "%s" with value "%s" from "%s" ' % (
+                            key,
+                            an_option.default,
+                            an_option.value_source
+                        ),
+                    )
+                    raise
                 # new values have been seen, don't let loop break
                 new_keys_discovered = True
                 try:
@@ -811,7 +839,10 @@ class ConfigurationManager(object):
         for key, val in source.items():
             value_type = type(val)
             if isinstance(val, Option) or isinstance(val, Aggregation):
-                destination[key] = val.value
+                try:
+                    destination[key] = val.value.as_bare_value()
+                except AttributeError:
+                    destination[key] = val.value
             elif value_type == Namespace:
                 destination[key] = d = mapping_class()
                 self._walk_config_copy_values(val, d, mapping_class)

@@ -46,6 +46,13 @@ from source_exceptions import (CantHandleTypeException, ValueException,
                                NotEnoughInformationException)
 from ..namespace import Namespace
 from ..option import Option
+from ..converters import (
+    ConverterService,
+    list_converter,
+    AnyInstanceOf,
+    sequence_to_string,
+    to_str
+)
 
 file_name_extension = 'ini'
 
@@ -144,6 +151,16 @@ class LoadingIniFileFailsException(ValueException):
 
 #==============================================================================
 class ValueSource(object):
+    
+    converter_service = ConverterService()
+    converter_service.register_converter(
+        AnyInstanceOf(str),
+        list_converter
+    )
+    converter_service.register_converter(
+        AnyInstanceOf(list),
+        sequence_to_string
+    )
 
     #--------------------------------------------------------------------------
     def __init__(
@@ -174,7 +191,10 @@ class ValueSource(object):
             source.endswith(file_name_extension)
         ):
             try:
-                self.config_obj = ConfigObjWithIncludes(source)
+                self.config_obj = ConfigObjWithIncludes(
+                    source,
+                    list_values=False
+                )
             except Exception, x:
                 raise LoadingIniFileFailsException(
                     "ConfigObj cannot load ini: %s" % str(x)
@@ -228,7 +248,8 @@ class ValueSource(object):
         indent_spacer = " " * (level * indent_size)
         for an_option in options:
             print >>output_stream, "%s# %s" % (indent_spacer, an_option.doc)
-            option_value = str(an_option)
+
+            option_value = an_option.to_string_converter(an_option.value)
             if isinstance(option_value, unicode):
                 option_value = option_value.encode('utf8')
 
@@ -245,16 +266,6 @@ class ValueSource(object):
                 option_format = '%s%s=%s\n'
             else:
                 option_format = '%s#%s=%s\n'
-
-            repr_for_converter = repr(an_option.from_string_converter)
-            if (
-                repr_for_converter.startswith('<function') or
-                repr_for_converter.startswith('<built-in')
-            ):
-                option_value = repr(option_value)
-            elif an_option.from_string_converter is str:
-                if ',' in option_value or '\n' in option_value:
-                    option_value = repr(option_value)
 
             print >>output_stream, option_format % (
                 indent_spacer,
