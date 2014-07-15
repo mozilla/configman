@@ -58,6 +58,28 @@ def iteritems_breadth_first(a_mapping, include_dicts=False):
             yield '%s.%s' % (key, sub_key), value
 
 
+#------------------------------------------------------------------------------
+def configman_keys(a_mapping):
+    """return a DotDict that is a copy of the provided mapping with keys
+    transformed into a configman compatible form:
+     if the key is not all uppercase then
+        all doubled underscores will be replaced
+        with the '.' character.
+
+    This has a specific use with the os.environ.  Linux shells generally do not
+    allow the dot character in an identifier.  Configman relies on the
+    dot character to separate namespaces.  If the environment is processed
+    through this function, then doubled underscores will be interpretted as if
+    they were the dot character.
+    """
+    configmanized_keys_dict = DotDict()
+    for k, v in iteritems_breadth_first(a_mapping):
+        if '__' in k and k != k.upper():
+            k = k.replace('__', '.')
+        configmanized_keys_dict[k] = v
+    return configmanized_keys_dict
+
+
 #==============================================================================
 class DotDict(collections.MutableMapping):
     """This class is a mapping that stores its items within the __dict__

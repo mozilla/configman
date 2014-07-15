@@ -41,6 +41,7 @@ from configman.dotdict import (
     DotDict,
     DotDictWithAcquisition,
     iteritems_breadth_first,
+    configman_keys
 )
 
 
@@ -407,3 +408,18 @@ class TestCase(unittest.TestCase):
         keys = [x for x in d.keys_breadth_first()]
         self.assertTrue('m.m' in keys)
         self.assertEqual(len(keys), 1)
+
+    #--------------------------------------------------------------------------
+    def test_configmanize_dict(self):
+        d = {
+            "HELLO": "howdy",
+            "JELL__O": "gelatin",
+            "database_hostname": 'localhost',
+            "resources__postgres__database_hostname": 'more-localhost',
+        }
+        r = configman_keys(d)
+        self.assertTrue("HELLO" in r)
+        self.assertTrue("JELL__O" in r)
+        self.assertTrue("database_hostname" in r)
+        self.assertTrue("resources__postgres__database_hostname" not in r)
+        self.assertTrue("resources.postgres.database_hostname" in r)
