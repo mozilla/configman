@@ -74,7 +74,7 @@ def setup_definitions(source, destination):
                         destination[key] = namespace.Namespace()
                 # recurse!
                 setup_definitions(val, destination[key])
-        elif isinstance(val, (int, long, float, str, unicode)):
+        else:
             destination[key] = option.Option(name=key,
                                       doc=key,
                                       default=val)
