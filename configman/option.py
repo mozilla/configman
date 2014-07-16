@@ -102,9 +102,7 @@ class Option(object):
             else:
                 from_string_converter = conv.str_quote_stripper
         self.from_string_converter = from_string_converter
-        self._from_string_converter_key = conv._arbitrary_object_to_string(
-            from_string_converter
-        )
+        self._from_string_converter_key = conv.to_str(from_string_converter)
 
     #--------------------------------------------------------------------------
     def _set_to_string_converter(self, default, to_string_converter):
@@ -128,20 +126,6 @@ class Option(object):
         except (TypeError, ValueError):
             s = conv.to_str(self.value)
         return s
-
-    #--------------------------------------------------------------------------
-    #def to_str(self, converter_library):
-        #"""return an instance of Option's value as a string.
-
-        #The option instance doesn't actually have to be from the Option class.
-        #All it requires is that the passed option instance has a ``value``
-        #attribute.
-        #"""
-        #try:
-            #converter = converter_library[self._to_string_converter_key]
-            #return converter(self.value)
-        #except KeyError:
-            #return self.__str__()
 
     #--------------------------------------------------------------------------
     def __eq__(self, other):
@@ -186,7 +170,14 @@ class Option(object):
             try:
                 self.value = from_string_converter(val)
             except Exception, x:
-                raise CannotConvertError(str(x))
+                error_message = \
+                    "In '%s', '%s' fails to convert '%s', due to %r" % (
+                        self.name,
+                        conv.to_str(self.from_string_converter),
+                        conv.to_str(val),
+                        x
+                    )
+                raise CannotConvertError(error_message)
         elif isinstance(val, Option):
             self.set_value(val.default)
         elif isinstance(val, collections.Mapping) and 'default' in val:

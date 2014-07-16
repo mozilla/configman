@@ -198,7 +198,7 @@ class TestCase(unittest.TestCase):
     def test_setting_known_from_string_converter_onOption(self):
         opt = Option('name', default=u'Lärs')
         self.assertEqual(opt.default, u'Lärs')
-        self.assertEqual(opt.from_string_converter, conv.utf8_converter)
+        self.assertEqual(opt.from_string_converter, conv.str_to_utf8)
 
         opt = Option('name', default=100)
         self.assertEqual(opt.default, 100)

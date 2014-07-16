@@ -70,12 +70,14 @@ from configman.config_exceptions import CannotConvertError
 #  definitions:
 #     subject - in the context of a conversion function, this is the instance
 #               or the type that is to be converted.
-#     objective - in the context of a corversion  function, this the the type
+#     objective - in the context of a conversion  function, this is the type
 #                 that is to be the end result of the conversion.
 #     *_key - any variable ending in "_key" is a string representation of a
 #             reference to whatever the * represents:  "subject_key" in the
 #             context of a registered converter function means a string
 #             representation of the "subject" of the conversion.
+#             "objective_key" is a string representation of the "objective"
+#             argument.
 #******************************************************************************
 
 #------------------------------------------------------------------------------
@@ -93,7 +95,10 @@ def memoize(max_cache_size=1000, arg_type_index=0):
     the cache just a little larger that the maximum expected need.
 
     Parameters:
-      max_cache_size - the size to which a cache can grow
+        max_cache_size - the size to which a cache can grow
+        arg_type_index - the index into a key field for which we're going to
+            use the type to help differentiate the memoization of the
+            parameter list.
     """
     def wrapper(f):
         @wraps(f)
@@ -121,6 +126,10 @@ def memoize(max_cache_size=1000, arg_type_index=0):
         fn.count = 0
         return fn
     return wrapper
+
+# for instance methods, we can reuse this same memozation, but the item in the
+# args list for which we need use the type gets moved one place to the right.
+# therefore we need to add one to the arg_type_index default.
 memoize_instance_method = partial(memoize, arg_type_index=1)
 
 #------------------------------------------------------------------------------
@@ -163,7 +172,7 @@ class AnyInstanceOf(object):
 
 
 #==============================================================================
-class ConverterElement(object):
+class _ConverterElement(object):
     """This class encapsulates a converter for a ConverterService.
 
         Members:
@@ -212,20 +221,6 @@ class ConverterElement(object):
                 converter_function
             )
 
-    #--------------------------------------------------------------------------
-    @memoize_instance_method(1000)
-    def __call__(self, a_value):
-        """given a value, apply the conversion function and return the result
-        """
-        try:
-            converted_value = self.converter_function(a_value)
-            return converted_value
-        except (TypeError, ValueError), x:
-            CannotConvertError(
-                'Converting %s to %s failed: %s' %
-                (self.subject_key, self.objective_type_key, x)
-            )
-
 
 #==============================================================================
 class ConverterService(object):
@@ -268,7 +263,7 @@ class ConverterService(object):
         """create a new ConverterElement for this given subject, conversion
         function and/or objective_type"""
         if isinstance(subject, AnyInstanceOf):
-            a_converter_element = ConverterElement(
+            a_converter_element = _ConverterElement(
                 subject.a_type,
                 converter_function,
                 objective_type=objective_type,
@@ -288,7 +283,7 @@ class ConverterService(object):
             self.by_instance_of_subject_and_function[key] = \
                 a_converter_element
         else:
-            a_converter_element = ConverterElement(
+            a_converter_element = _ConverterElement(
                 subject,
                 converter_function,
                 objective_type=objective_type,
@@ -308,20 +303,12 @@ class ConverterService(object):
 
     #--------------------------------------------------------------------------
     def register_no_match_converter(self, objective_type, converter_function):
-        a_converter_element = ConverterElement(
+        a_converter_element = _ConverterElement(
             None,
             converter_function,
             objective_type
         )
         self.no_match_library[objective_type] = a_converter_element
-
-    #--------------------------------------------------------------------------
-    @staticmethod
-    def lookup_without_keyerror(mapping, key):
-        try:
-            return mapping[key]
-        except KeyError:
-            return None
 
     #--------------------------------------------------------------------------
     def _converter_search_generator(
@@ -346,16 +333,16 @@ class ConverterService(object):
             # option may have a converter assigned that needs to be overridden
 
             if not is_any_instance_type:
-                result = self.lookup_without_keyerror(
-                    self.by_subject_and_function,
+                result = self.by_subject_and_function.get(
                     (subject_key, converter_function_key),
+                    None
                 )
                 if result is not None:
                     yield result
 
-            result = self.lookup_without_keyerror(
-                self.by_instance_of_subject_and_function,
+            result = self.by_instance_of_subject_and_function.get(
                 (subject_type_key, converter_function_key),
+                None
             )
             if result is not None:
                 yield result
@@ -367,9 +354,9 @@ class ConverterService(object):
             # if execution has gotten here, then the previous search was
             # unsuccessful or unacceptable.  Let's look for a direct converter
             # for the subject itself, instead of the subject's type.
-            result = self.lookup_without_keyerror(
-                self.by_subject_and_objective,
-                (subject_key, objective_type_key)
+            result = self.by_subject_and_objective.get(
+                (subject_key, objective_type_key),
+                None
             )
             if result is not None:
                 yield result
@@ -378,18 +365,32 @@ class ConverterService(object):
         # converter_function_key or we failed in trying to do so.  Go on with
         # search for an appropriate converter.
         # is there a converter for an instance of the type of the subject?
-        result = self.lookup_without_keyerror(
-            self.by_instance_of_subject_and_objective,
-            (subject_type_key, objective_type_key)
+        result = self.by_instance_of_subject_and_objective.get(
+            (subject_type_key, objective_type_key),
+            None
         )
         if result is not None:
             yield result
 
+        # still nothing, eh?
+        # now we must start searching via base classes
+        try:
+            parent = the_subject_type.__mro__[1]  # select 1st parent class
+            for a_candidate in self._converter_search_generator(
+                AnyInstanceOf(parent),
+                objective_type_key,
+                converter_function_key,
+            ):
+                yield a_candidate
+        except IndexError:
+            # no parent classes
+            pass
+
         # the previous search failed or the result was unacceptable.  All
         # we have left is a fallback based on the target objective type.
-        result = self.lookup_without_keyerror(
-            self.no_match_library,
-            objective_type_key
+        result = self.no_match_library.get(
+            objective_type_key,
+            None
         )
         if result is not None:
             yield result
@@ -424,7 +425,7 @@ class ConverterService(object):
                     )
                 )
         raise CannotConvertError(
-            "There is no converter for '%s' to '%s'" % (
+            "There is no converter for '%s' to " % (
                 _arbitrary_object_to_string(a_thing),
                 objective_type_key
             )
@@ -440,7 +441,7 @@ class ConverterService(object):
     ):
         """given a subject and objective_type and/or converter_function_key
         get a converter function."""
-        result = self.get_converter_element(
+        result = self._get_converter_element(
             a_thing,
             objective_type_key,
             converter_function_key
@@ -451,18 +452,18 @@ class ConverterService(object):
 
     #--------------------------------------------------------------------------
     @memoize_instance_method(1000)
-    def get_converter_element(
+    def _get_converter_element(
         self,
         a_thing,
         objective_type_key=None,
         converter_function_key=None,
     ):
-        try:
+        """given a subject and objective_type and/or converter_function_key
+        get a converter element."""
+        try:  # if this is a "DontCare" derivative, use the real value
             a_thing = a_thing.as_bare_value()
         except AttributeError:
             pass
-        """given a subject and objective_type and/or converter_function_key
-        get a converter element."""
         for converter_element in self._converter_search_generator(
             a_thing, objective_type_key, converter_function_key
         ):
@@ -481,7 +482,7 @@ class ConverterService(object):
                 return converter_element
 
         if self.fallback_converter_service:
-            return self.fallback_converter_service.get_converter_element(
+            return self.fallback_converter_service._get_converter_element(
                 a_thing,
                 objective_type_key=objective_type_key,
                 converter_function_key=converter_function_key
@@ -524,12 +525,16 @@ def _arbitrary_object_to_string(a_thing):
     try:
         return a_thing.to_str()
     except (AttributeError, KeyError, TypeError):
+        # AttributeError - no to_str function?
+        # KeyError - DotDict has no to_str?
+        # TypeError - problem converting
         # nope, no to_str function
         pass
     # is this a type proxy?
     try:
         return _arbitrary_object_to_string(a_thing.a_type)
     except (AttributeError, KeyError, TypeError):
+        #
         # nope, no a_type property
         pass
     # is it a built in?
@@ -545,6 +550,8 @@ def _arbitrary_object_to_string(a_thing):
                 import sys
                 module_name = \
                     sys.modules['__main__'].__file__[:-3].replace('/', '.')
+                while module_name.startswith('.'):  # remove leading '.'
+                    module_name = module_name[1:]
             else:
                 module_name = a_thing.__module__
             return "%s.%s" % (module_name, a_thing.__name__)
@@ -570,11 +577,11 @@ converter_service.register_converter(
     _arbitrary_object_to_string,
     str
 )
-converter_service.register_converter(AnyInstanceOf(str), int, int)
-converter_service.register_converter(AnyInstanceOf(str), float, float)
-converter_service.register_converter(AnyInstanceOf(str), long, long)
+converter_service.register_converter(AnyInstanceOf(basestring), int, int)
+converter_service.register_converter(AnyInstanceOf(basestring), float, float)
+converter_service.register_converter(AnyInstanceOf(basestring), long, long)
 converter_service.register_converter(
-    AnyInstanceOf(str),
+    AnyInstanceOf(basestring),
     decimal.Decimal,
     decimal.Decimal
 )
@@ -696,7 +703,7 @@ def boolean_converter(input_str):
     input_str = str_quote_stripper(input_str)
     return input_str.lower() in ("true", "t", "1", "y", "yes")
 converter_service.register_converter(
-    AnyInstanceOf(str),
+    AnyInstanceOf(basestring),
     boolean_converter,
     objective_type=bool
 )
@@ -926,7 +933,7 @@ converter_service.register_converter(
 
 
 #------------------------------------------------------------------------------
-def utf8_converter(input_str):
+def str_to_utf8(input_str):
     if not isinstance(input_str, basestring):
         raise ValueError(input_str)
     input_str = str_quote_stripper(input_str)
@@ -936,13 +943,13 @@ def utf8_converter(input_str):
 
 converter_service.register_converter(
     AnyInstanceOf(str),
-    utf8_converter,
+    str_to_utf8,
     objective_type=unicode
 )
 
 
 #------------------------------------------------------------------------------
-def unicode_to_str(input_unicode):
+def utf8_to_str(input_unicode):
     if not isinstance(input_unicode, unicode):
         raise ValueError(input_unicode)
     input_unicode = str_quote_stripper(input_unicode)
@@ -950,7 +957,7 @@ def unicode_to_str(input_unicode):
 
 converter_service.register_converter(
     AnyInstanceOf(unicode),
-    unicode_to_str,
+    utf8_to_str,
     objective_type=str
 )
 
@@ -991,11 +998,6 @@ converter_service.register_converter(
 def get_from_string_converter(objective_type):
     """given a type, find a converter that will take a string representation
     and convert it into that type.
-
-    It is NOT appropriate for pass in instances of the target type, we need a
-    type itself.
-        get_from_string_converter(int)  # yes
-        get_from_string_converter(100)  # no
     """
     if not isinstance(objective_type, type):
         # an instance has been passed in rather than a type, get the type
@@ -1019,7 +1021,7 @@ def get_to_string_converter(subject_type):
         get_to_string_converter(100)  # no
     """
     assert isinstance(subject_type, type)
-    return converter_service.get_converter_element(
+    return converter_service._get_converter_element(
         AnyInstanceOf(subject_type),
         'str'
     )
@@ -1156,6 +1158,9 @@ def dont_care(value):
     except KeyError:
         try:
             from configman.converters import to_str
+            # dynamically create a new class based on the type of the value
+            # passed in.  If we fail because we cannot inherit from the base
+            # type, fallback to using the DontCare class above
             class X(value_type):
                 def __init__(self, value):
                     super(X, self).__init__(value)

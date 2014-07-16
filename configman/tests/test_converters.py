@@ -39,9 +39,15 @@
 
 import unittest
 import datetime
+import decimal
+import re
 
 from configman import converters
-from configman import RequiredConfig, Namespace, ConfigurationManager
+from configman import (
+    RequiredConfig,
+    Namespace,
+    ConfigurationManager,
+)
 
 
 #==============================================================================
@@ -104,7 +110,7 @@ class TestCase(unittest.TestCase):
 
     #--------------------------------------------------------------------------
     def test_some_unicode_stuff(self):
-        fn = converters.utf8_converter
+        fn = converters.str_to_utf8
         self.assertEqual(fn('Lärs'), u'L\xe4rs')
         self.assertEqual(fn('"""Lärs"""'), u'L\xe4rs')
         fn = converters.str_quote_stripper
@@ -511,6 +517,120 @@ class TestCase(unittest.TestCase):
             ),
             '-9'
         )
+
+    #--------------------------------------------------------------------------
+    def test_lookup_by_through_converter_service(self):
+        c = converters.converter_service
+
+        # test bool to str converter
+        c1 = c.get_converter(bool, 'str')
+        self.assertEqual(c1(bool), 'bool')
+
+        # test str to bool
+        c1 = c.get_converter('t', 'bool')
+        c2 = c.get_converter('False', 'bool')
+        self.assertTrue(c1 is c2)
+        self.assertTrue(c1('t'))
+        self.assertTrue(c1('True'))
+        self.assertTrue(c1('1'))
+        self.assertTrue(c1('y'))
+        self.assertTrue(c1('YES'))
+
+
+        # test any instance of type to str
+        c1 = c.get_converter(Foo, 'str')
+        c2 = c.get_converter(Bar, 'str')
+        self.assertTrue(c1 is c2)
+        self.assertEqual(c1(Foo), 'configman.tests.test_converters.Foo')
+
+        # test basestring to int
+        c1 = c.get_converter('7', 'int')
+        c2 = c.get_converter(u'88', 'int')
+        self.assertTrue(c1 is c2)
+        self.assertEqual(c1('7'), 7)
+
+        # test basestring to float
+        c1 = c.get_converter('7.28', 'float')
+        c2 = c.get_converter(u'88.0', 'float')
+        self.assertTrue(c1 is c2)
+        self.assertEqual(c1('7.28'), 7.28)
+
+        # test basestring to long
+        c1 = c.get_converter('999999999999', 'long')
+        c2 = c.get_converter(u'88888888888888', 'long')
+        self.assertTrue(c1 is c2)
+        self.assertEqual(c1('999999999999'), 999999999999)
+
+        # test basestring to decimal
+        c1 = c.get_converter('2.5', 'decimal.Decimal')
+        c2 = c.get_converter(u'88.0', 'decimal.Decimal')
+        self.assertTrue(c1 is c2)
+        self.assertEqual(c1('2.5'), decimal.Decimal('2.5'))
+
+        # test dict to str
+        d = { "a": 13, "b": "fred", "c": {"d": 'wilma'}}
+        c1 = c.get_converter(d, 'str')
+        # rather than depend on the order always being the same, we'll
+        # round trip instead.
+        c2 = c.get_converter(converters.AnyInstanceOf(str), 'dict')
+        self.assertEqual(d, c2(c1(d)))
+
+        l = [1, 2, 3]
+        c1 = c.get_converter(l, 'str')
+        self.assertEqual(c1(l), "1, 2, 3")
+
+        t = (1, 2, 3)
+        c1 = c.get_converter(t, 'str')
+        self.assertEqual(c1(t), "1, 2, 3")
+
+        r = re.compile('.*')
+        c1 = c.get_converter(r, 'str')
+        self.assertEqual(c1(r), ".*")
+
+        d = datetime.date(1970, 5, 4)
+        c1 = c.get_converter(d, 'str')
+        self.assertEqual(c1(d), "1970-05-04")
+        c2 = c.get_converter("1970-05-04", 'datetime.date')
+        self.assertEqual(c2("1970-05-04"), d)
+
+        d = datetime.datetime(1970, 5, 4, 12, 23, 34)
+        c1 = c.get_converter(d, 'str')
+        self.assertEqual(c1(d), "1970-05-04T12:23:34")
+        c2 = c.get_converter("1970-05-04T12:23:34", 'datetime.datetime')
+        self.assertEqual(c2("1970-05-04T12:23:34"), d)
+
+        d = datetime.timedelta(1, 2)
+        c1 = c.get_converter(d, 'str')
+        self.assertEqual(c1(d), "1:0:0:2")
+        c2 = c.get_converter("1:0:0:2", 'datetime.timedelta')
+        self.assertEqual(c2("1:0:0:2"), d)
+
+        s = '1, 2, 3, 5'
+        c1 = c.get_converter(s, 'list')
+        self.assertEqual(c1(s), ['1', '2', '3', '5'])
+
+        s = 'configman.tests.test_converters.Foo'
+        c1 = c.get_converter(s, 'type')
+        self.assertEqual(c1(s), Foo)
+
+        r = r'\..*?[a-zA-Z]+'
+        c1 = c.get_converter(r, '_sre.SRE_Pattern')
+        self.assertEqual(c1(r), re.compile(r))
+
+        s = 'Lars'
+        c1 = c.get_converter(s, 'unicode')
+        self.assertEqual(c1(s), u'Lars')
+        c2 = c.get_converter(c1(s), 'str')
+        self.assertEqual(c2(c1(s)), u'Lars')
+
+        u = u"'''Lars'''"
+        c1 = c.get_converter(u, 'unicode')
+        self.assertEqual(c1(u), u'Lars')
+
+        s = "'''Lars'''"
+        c1 = c.get_converter(s, 'str')
+        self.assertEqual(c1(s), 'Lars')
+
 
     #--------------------------------------------------------------------------
     def test_inherited_dont_care(self):

@@ -562,7 +562,7 @@ class ConfigurationManager(object):
             # applying the from string conversions
             #
 
-            def _must_be(source, required_type):
+            def _ensure_source_is_required_type(source, required_type):
                 if isinstance(source, required_type):
                     return source
                 new_mapping = required_type()
@@ -575,7 +575,13 @@ class ConfigurationManager(object):
                 return new_mapping
 
             values_from_all_sources = [
-                (v, _must_be(v.get_values(self, True), DotDict))
+                (
+                    v,
+                    _ensure_source_is_required_type(
+                        v.get_values(self, True),
+                        DotDict
+                    )
+                )
                 for v in self.values_source_list
             ]
             for key in (k for k in all_keys if k not in known_keys):
@@ -612,14 +618,14 @@ class ConfigurationManager(object):
                         overlay_value = conv.silent_str_quote_stripper(
                             val_src_dict[key]
                         )
-                        opt.default = conv.silent_str_quote_stripper(
-                            val_src_dict[key]
-                        )
+                        opt.default = overlay_value
+                        opt.value_source = conv.to_str(a_value_source)
                         try:
-                            opt.value_source = conv.to_str(a_value_source)
                             opt.current_converter = \
                                 a_value_source.converter_service
                         except AttributeError:
+                            # the value source doesn't have its own converter
+                            # service.  This is ok, we'll just move on.
                             pass
                         if key in all_reference_values:
                             # make sure that this value gets propagated to keys
@@ -642,7 +648,7 @@ class ConfigurationManager(object):
                     an_option.set_value(an_option.default)
                 except CannotConvertError, x:
                     x.args += (
-                        'on conversion of "%s" with value "%s" from "%s" ' % (
+                        'on conversion of "%s" with value %r from "%s" ' % (
                             key,
                             an_option.default,
                             an_option.value_source
