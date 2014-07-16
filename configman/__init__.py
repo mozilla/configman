@@ -58,3 +58,12 @@ from .converters import class_converter, regex_converter, timedelta_converter
 from config_file_future_proxy import ConfigFileFutureProxy
 from os import environ as environment
 import getopt as command_line
+
+
+#------------------------------------------------------------------------------
+def configuration(*args, **kwargs):
+    """this function just instantiates a ConfigurationManager and returns
+    the configuration dictionary.  It accepts all the same parameters as the
+    constructor for the ConfigurationManager class."""
+    cm = ConfigurationManager(*args, **kwargs)
+    return cm.get_config()
