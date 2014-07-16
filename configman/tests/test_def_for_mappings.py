@@ -38,8 +38,27 @@
 
 import unittest
 
-from configman import option, dotdict, namespace
+from configman import (
+    option, dotdict, namespace, ConfigurationManager, class_converter
+)
 from configman.def_sources import for_mappings
+
+
+#==============================================================================
+class MooseBase(object):
+    required_config = {
+        "nodename": "localhost",
+        "url": "http://twobraids.com/",
+        "auth_key": "675A8BFF2099",
+    }
+
+    #--------------------------------------------------------------------------
+    def __init__(self, config):
+        self.config = config
+
+    #--------------------------------------------------------------------------
+    def connect(self):
+        return "MooseBase connection"  # actual connection stuff ommitted
 
 
 #==============================================================================
@@ -62,7 +81,7 @@ class TestCase(unittest.TestCase):
         s.t2 = namespace.Namespace('empty namespace')
         d = dotdict.DotDict()
         for_mappings.setup_definitions(s, d)
-        self.assertTrue(len(d) == 5)
+        self.assertEqual(len(d), 6)
         self.assertTrue(isinstance(d.x, option.Option))
         self.assertTrue(isinstance(d.n, option.Option))
         self.assertTrue(d.n.name == 'n')
@@ -78,3 +97,15 @@ class TestCase(unittest.TestCase):
         self.assertTrue(d.w.doc == 'w')
         self.assertTrue(isinstance(d.t2, namespace.Namespace))
         self.assertTrue(len(d.t2) == 0)
+
+    #--------------------------------------------------------------------------
+    def test_setup_definitions_2(self):
+        d = {'cls': MooseBase}
+
+        cm = ConfigurationManager(d, values_source_list=[])
+        c = cm.get_config()
+        self.assertTrue(
+            cm.option_definitions.cls.from_string_converter is class_converter
+        )
+        self.assertTrue(c.cls is MooseBase)
+
