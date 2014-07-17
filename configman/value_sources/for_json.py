@@ -43,6 +43,7 @@ import sys
 from .. import converters as conv
 from ..namespace import Namespace
 from ..option import Option, Aggregation
+from ..dotdict import DotDict
 
 from source_exceptions import (ValueException, NotEnoughInformationException,
                                CantHandleTypeException)
@@ -100,31 +101,10 @@ class ValueSource(object):
 
     #--------------------------------------------------------------------------
     @staticmethod
-    def recursive_default_dict():
-        return collections.defaultdict(ValueSource.recursive_default_dict)
-
-    #--------------------------------------------------------------------------
-    @staticmethod
     def write(source_dict, output_stream=sys.stdout):
-        json_dict = ValueSource.recursive_default_dict()
-        for qkey in source_dict.keys_breadth_first(include_dicts=True):
-            val = source_dict[qkey]
-            if isinstance(val, Namespace):
-                continue
-            d = json_dict
-            for x in qkey.split('.'):
-                d = d[x]
-            if isinstance(val, Option):
-                for okey, oval in val.__dict__.iteritems():
-                    try:
-                        d[okey] = conv.to_string_converters[type(oval)](oval)
-                    except KeyError:
-                        d[okey] = str(oval)
-                d['default'] = d['value']
-            elif isinstance(val, Aggregation):
-                d['name'] = val.name
-                fn = val.function
-                d['function'] = conv.to_string_converters[type(fn)](fn)
+        json_dict = {}
+        for key in source_dict.keys_breadth_first():
+            json_dict[key] = conv.to_str(source_dict[key].value)
         json.dump(json_dict, output_stream)
 
 

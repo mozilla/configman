@@ -108,67 +108,7 @@ class TestCase(unittest.TestCase):
         jrec = json.loads(received)
 
         expect_to_find = {
-            "short_form": "a",
-            "default": "2011-05-04T15:10:00",
-            "doc": "the a",
-            "value": "2011-05-04T15:10:00",
-            "from_string_converter":
-            "configman.datetime_util.datetime_from_ISO_string",
-            "name": "aaa"
+            "aaa": "2011-05-04T15:10:00",
         }
         for key, value in expect_to_find.items():
-            self.assertEqual(jrec['aaa'][key], value)
-
-    #--------------------------------------------------------------------------
-    def test_json_round_trip(self):
-        n = config_manager.Namespace(doc='top')
-        n.add_option(
-            'aaa',
-            '2011-05-04T15:10:00',
-            'the a',
-            short_form='a',
-            from_string_converter=dtu.datetime_from_ISO_string
-        )
-        expected_date = dtu.datetime_from_ISO_string('2011-05-04T15:10:00')
-        n.add_option(
-            'bbb',
-            '37',
-            'the a',
-            short_form='a',
-            from_string_converter=int
-        )
-        n.add_option('write', 'json')
-        n.add_aggregation('bbb_minus_one', bbb_minus_one)
-        name = '/tmp/test.json'
-        import functools
-        opener = functools.partial(open, name, 'w')
-        c1 = config_manager.ConfigurationManager(
-            [n],
-            [],
-            use_admin_controls=True,
-            use_auto_help=False,
-            app_name='/tmp/test',
-            app_version='0',
-            app_description='',
-            argv_source=[]
-        )
-        c1.write_conf('json', opener)
-        d1 = {'bbb': 88}
-        d2 = {'bbb': '-99'}
-        try:
-            with open(name) as jfp:
-                j = json.load(jfp)
-            c2 = config_manager.ConfigurationManager(
-                (j,),
-                (d1, d2),
-                use_admin_controls=True,
-                use_auto_help=False,
-                argv_source=[]
-            )
-            config = c2.get_config()
-            self.assertEqual(config.aaa, expected_date)
-            self.assertEqual(config.bbb, -99)
-            self.assertEqual(config.bbb_minus_one, -100)
-
-        finally:
-            os.unlink(name)
+            self.assertEqual(jrec['aaa'], value)

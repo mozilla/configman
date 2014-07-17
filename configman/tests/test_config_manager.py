@@ -50,8 +50,13 @@ import mock
 import configman.config_manager as config_manager
 from configman.option import Option
 from configman.dotdict import DotDict, DotDictWithAcquisition
-from configman import Namespace, RequiredConfig
-from configman.converters import class_converter
+from configman import (
+    Namespace,
+    RequiredConfig,
+    ConfigFileFutureProxy,
+    command_line,
+    class_converter
+)
 import configman.datetime_util as dtu
 from configman.config_exceptions import NotAnOptionError
 from configman.value_sources.source_exceptions import (
@@ -80,6 +85,7 @@ class T3(RequiredConfig):
     required_config.namespace('ccc')
     required_config.ccc.add_option('x', default=99)
 
+
 #==============================================================================
 class AClass(RequiredConfig):
     required_config = Namespace()
@@ -96,6 +102,8 @@ class AClass(RequiredConfig):
         default='configman.tests.test_config_manager.BClass',
         from_string_converter=class_converter
     )
+
+
 #==============================================================================
 class BClass(RequiredConfig):
     required_config = Namespace()
@@ -106,7 +114,6 @@ class BClass(RequiredConfig):
         default=9988,
         reference_value_from='xxx.yyy'
     )
-
 
 
 #==============================================================================
@@ -624,9 +631,7 @@ c.string =   from ini
         self.assertEqual(c.option_definitions.c.zzz.fff.ooo.a.default, 2)
         self.assertEqual(c.option_definitions.c.zzz.fff.ooo.a.value, 2)
 
-
-
-    #--------------------------------------------------------------------------
+   #--------------------------------------------------------------------------
     def test_mapping_types_1(self):
         n = config_manager.Namespace()
         n.add_option(
@@ -833,7 +838,7 @@ c.string =   from ini
         class Poo:
             pass
 
-        class Combined(config_manager.RequiredConfig, Foo, Poo, Bar):
+        class Combined(RequiredConfig, Foo, Poo, Bar):
             pass
 
         result = Combined.get_required_config()
@@ -847,7 +852,7 @@ c.string =   from ini
 
     #--------------------------------------------------------------------------
     def test_app_name_from_app_obj(self):
-        class MyApp(config_manager.RequiredConfig):
+        class MyApp(RequiredConfig):
             app_name = 'fred'
             app_version = '1.0'
             app_description = "my app"
@@ -874,7 +879,9 @@ c.string =   from ini
 
     #--------------------------------------------------------------------------
     def test_help_out(self):
-        class MyApp(config_manager.RequiredConfig):
+        global command_line
+
+        class MyApp(RequiredConfig):
             app_name = 'fred'
             app_version = '1.0'
             app_description = "my app"
@@ -929,20 +936,25 @@ c.string =   from ini
 
         old_sys_exit = sys.exit
         sys.exit = my_exit
+        old_command_line = command_line
+        command_line = getopt
         try:
             MyConfigManager(
                 n,
-                [getopt],
+                [command_line],
                 use_admin_controls=True,
                 use_auto_help=True,
                 argv_source=['--password=wilma', '--help']
             )
         finally:
             sys.exit = old_sys_exit
+            command_line = old_command_line
 
     #--------------------------------------------------------------------------
     def test_write_gets_called(self):
-        class MyApp(config_manager.RequiredConfig):
+        global command_line
+
+        class MyApp(RequiredConfig):
             app_name = 'fred'
             app_version = '1.0'
             app_description = "my app"
@@ -951,7 +963,6 @@ c.string =   from ini
 
             def __init__(inner_self, config):
                 inner_self.config = config
-
         n = config_manager.Namespace()
         n.admin = config_manager.Namespace()
         n.add_option(
@@ -972,10 +983,12 @@ c.string =   from ini
             pass
         old_sys_exit = sys.exit
         sys.exit = my_exit
+        old_command_line = command_line
+        command_line = getopt
         try:
             c = MyConfigManager(
                 n,
-                [getopt],
+                [command_line],
                 use_admin_controls=True,
                 use_auto_help=True,
                 argv_source=[
@@ -986,10 +999,11 @@ c.string =   from ini
             self.assertEqual(c.dump_conf_called, True)
         finally:
             sys.exit = old_sys_exit
+            command_line = old_command_line
 
     #--------------------------------------------------------------------------
     def test_get_options(self):
-        class MyApp(config_manager.RequiredConfig):
+        class MyApp(RequiredConfig):
             app_name = 'fred'
             app_version = '1.0'
             app_description = "my app"
@@ -1038,7 +1052,7 @@ c.string =   from ini
 
     #--------------------------------------------------------------------------
     def test_log_config(self):
-        class MyApp(config_manager.RequiredConfig):
+        class MyApp(RequiredConfig):
             app_name = 'fred'
             app_version = '1.0'
             app_description = "my app"
@@ -1082,7 +1096,7 @@ c.string =   from ini
             "app_name: fred",
             "app_version: 1.0",
             "current configuration:",
-            "application: <class 'configman.tests.test_config_manager.MyApp'>",
+            "application: configman.tests.test_config_manager.MyApp",
             "password: *********",
             "sub.name: wilma"
         ]
@@ -1091,7 +1105,7 @@ c.string =   from ini
 
     #--------------------------------------------------------------------------
     def test_extra_commandline_parameters(self):
-        class MyApp(config_manager.RequiredConfig):
+        class MyApp(RequiredConfig):
             app_name = 'fred'
             app_version = '1.0'
             app_description = "my app"
@@ -1134,7 +1148,7 @@ c.string =   from ini
 
     #--------------------------------------------------------------------------
     def test_print_conf_called(self):
-        class MyApp(config_manager.RequiredConfig):
+        class MyApp(RequiredConfig):
             app_name = 'fred'
             app_version = '1.0'
             app_description = "my app"
@@ -1295,14 +1309,17 @@ c.string =   from ini
     #--------------------------------------------------------------------------
     def test_print_conf_some_options_excluded(self):
         n = config_manager.Namespace()
-        n.add_option('gender',
-                     default='Male',
-                     doc='What kind of genitalia?')
-        n.add_option('salary',
-                     default=10000,
-                     doc='How much do you earn?',
-                     exclude_from_print_conf=True
-                     )
+        n.add_option(
+            'hair_color',
+            default='blue',
+            doc='what hair color?'
+        )
+        n.add_option(
+            'salary',
+            default=10000,
+            doc='How much do you earn?',
+            exclude_from_print_conf=True
+        )
 
         old_stdout = sys.stdout
         temp_output = StringIO()
@@ -1321,21 +1338,23 @@ c.string =   from ini
             sys.stdout = old_stdout
 
         printed = temp_output.getvalue()
-        self.assertTrue('gender' in printed)
+        self.assertTrue('hair_color' in printed)
         self.assertTrue('salary' not in printed)
 
     #--------------------------------------------------------------------------
     def test_dump_conf_some_options_excluded(self):
         n = config_manager.Namespace()
-        n.add_option('gender',
-                     default='Male',
-                     doc='What kind of genitalia?',
-                     exclude_from_print_conf=True)
-        n.add_option('salary',
-                     default=10000,
-                     doc='How much do you earn?',
-                     exclude_from_dump_conf=True
-                     )
+        n.add_option(
+            'hair_color',
+            default='blue',
+            doc='what hair color?'
+        )
+        n.add_option(
+            'salary',
+            default=10000,
+            doc='How much do you earn?',
+            exclude_from_dump_conf=True
+        )
 
         try:
             config_manager.ConfigurationManager(
@@ -1349,7 +1368,7 @@ c.string =   from ini
             )
 
             printed = open('foo.conf').read()
-            self.assertTrue('gender' in printed)
+            self.assertTrue('hair_color' in printed)
             self.assertTrue('salary' not in printed)
 
         finally:
@@ -1389,7 +1408,7 @@ c.string =   from ini
                 )
             )
 
-        class MyApp(config_manager.RequiredConfig):
+        class MyApp(RequiredConfig):
             app_name = 'fred'
             app_version = '1.0'
             app_description = "my app"
@@ -1452,7 +1471,7 @@ c.string =   from ini
                                     all_config.password,
                                     args[1]))
 
-        class MyApp(config_manager.RequiredConfig):
+        class MyApp(RequiredConfig):
             app_name = 'fred'
             app_version = '1.0'
             app_description = "my app"
@@ -1510,7 +1529,7 @@ c.string =   from ini
             # the aggregator might be broken
             raise SomeException('anything')
 
-        class MyApp(config_manager.RequiredConfig):
+        class MyApp(RequiredConfig):
             app_name = 'fred'
             app_version = '1.0'
             app_description = "my app"
@@ -1597,7 +1616,7 @@ c.string =   from ini
 
     #--------------------------------------------------------------------------
     def _common_app_namespace_setup(self):
-        class MyApp(config_manager.RequiredConfig):
+        class MyApp(RequiredConfig):
             app_name = 'fred'
             app_version = '1.0'
             app_description = "my app"
@@ -1637,6 +1656,7 @@ c.string =   from ini
         try:
             c = config_manager.ConfigurationManager(
                 (n,),
+                values_source_list=[ConfigFileFutureProxy, command_line],
                 argv_source=['--admin.conf=x.ini']
             )
             with c.context() as config:
