@@ -42,6 +42,7 @@ import getopt
 import configman.config_manager as config_manager
 from configman.config_exceptions import NotAnOptionError
 from ..value_sources.for_getopt import ValueSource
+from configman.dotdict import DotDict, DotDictWithAcquisition
 
 
 #==============================================================================
@@ -71,6 +72,10 @@ class TestCase(unittest.TestCase):
         c.option_definitions.add_option('limit', default=0)
         self.assertEqual(o.get_values(c, False), {'limit': '10'})
         self.assertEqual(o.get_values(c, True), {'limit': '10'})
+        v = o.get_values(c, True, DotDict)
+        self.assertTrue(isinstance(v, DotDict))
+        v = o.get_values(c, True, DotDictWithAcquisition)
+        self.assertTrue(isinstance(v, DotDictWithAcquisition))
 
     #--------------------------------------------------------------------------
     def test_for_getopt_get_values_with_short_form(self):

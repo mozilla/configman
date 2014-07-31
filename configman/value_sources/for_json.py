@@ -47,6 +47,9 @@ from ..option import Option, Aggregation
 from source_exceptions import (ValueException, NotEnoughInformationException,
                                CantHandleTypeException)
 
+from configman.dotdict import DotDict
+from configman.memoize import memoize
+
 can_handle = (
     basestring,
     json
@@ -95,8 +98,11 @@ class ValueSource(object):
             raise CantHandleTypeException()
 
     #--------------------------------------------------------------------------
-    def get_values(self, config_manager, ignore_mismatches):
-        return self.values
+    @memoize()
+    def get_values(self, config_manager, ignore_mismatches, obj_hook=DotDict):
+        if isinstance(self.values, obj_hook):
+            return self.values
+        return obj_hook(self.values)
 
     #--------------------------------------------------------------------------
     @staticmethod

@@ -42,9 +42,11 @@ import tempfile
 import contextlib
 from cStringIO import StringIO
 
+import configman.datetime_util as dtu
+
 from ..value_sources import for_conf
 from configman import Namespace, ConfigurationManager
-import configman.datetime_util as dtu
+from configman.dotdict import DotDict, DotDictWithAcquisition
 
 
 def stringIO_context_wrapper(a_stringIO_instance):
@@ -109,6 +111,11 @@ class TestCase(unittest.TestCase):
             # not be true for all ValueSource implementations
             self.assertEqual(o.get_values(1, False), {'limit': '20'})
             self.assertEqual(o.get_values(2, True), {'limit': '20'})
+
+            v = o.get_values(None, True, DotDict)
+            self.assertTrue(isinstance(v, DotDict))
+            v = o.get_values(None, None, obj_hook=DotDictWithAcquisition)
+            self.assertTrue(isinstance(v, DotDictWithAcquisition))
         finally:
             if os.path.isfile(tmp_filename):
                 os.remove(tmp_filename)

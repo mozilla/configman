@@ -47,6 +47,9 @@ from source_exceptions import (CantHandleTypeException, ValueException,
 from ..namespace import Namespace
 from ..option import Option
 
+from configman.dotdict import DotDict
+from configman.memoize import memoize
+
 file_name_extension = 'ini'
 
 can_handle = (
@@ -183,7 +186,8 @@ class ValueSource(object):
             raise CantHandleTypeException()
 
     #--------------------------------------------------------------------------
-    def get_values(self, config_manager, ignore_mismatches):
+    @memoize()
+    def get_values(self, config_manager, ignore_mismatches, obj_hook=DotDict):
         """Return a nested dictionary representing the values in the ini file.
         In the case of this ValueSource implementation, both parameters are
         dummies."""
@@ -196,8 +200,10 @@ class ValueSource(object):
             except AttributeError:
                 # we don't have enough information to get the ini file
                 # yet.  we'll ignore the error for now
-                return {}
-        return self.config_obj
+                return obj_hook()  # return empty dict of the obj_hook type
+        if isinstance(self.config_obj, obj_hook):
+            return self.config_obj
+        return obj_hook(initializer=self.config_obj)
 
     #--------------------------------------------------------------------------
     @staticmethod

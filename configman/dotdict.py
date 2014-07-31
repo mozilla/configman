@@ -41,6 +41,7 @@ import collections
 import weakref
 
 from configman.orderedset import OrderedSet
+from configman.memoize import memoize
 
 
 #------------------------------------------------------------------------------
@@ -376,3 +377,69 @@ class DotDictWithAcquisition(DotDict):
             if key.startswith('__'):
                 raise
             raise KeyError(key)
+
+
+#------------------------------------------------------------------------------
+def create_key_translating_dot_dict(
+    new_class_name,
+    translation_tuples,
+    base_class=DotDict
+):
+    """this function will generate a DotDict derivative class that has key
+    translation built in.  If the key is not found, translations (as specified
+    by the translation_tuples) are performed on the key and the lookup is
+    tried again.  Only on failure of this second lookup will the KeyError
+    exception be raised.
+
+    parameters:
+        new_class_name - the name of the returned class
+        translation_tuples - a sequence of 2-tuples of the form:
+                             (original_substring, substitution_string)
+        base_class - the baseclass on which this new class is to be based
+    """
+    #==========================================================================
+    class DotDictWithKeyTranslations(base_class):
+
+        def __init__(self, *args, **kwargs):
+            self.__dict__['_translation_tuples'] = translation_tuples
+            super(DotDictWithKeyTranslations, self).__init__(*args, **kwargs)
+
+        #----------------------------------------------------------------------
+        @memoize()
+        def _translate_key(self, key):
+            for original, replacement in self._translation_tuples:
+                key = key.replace(original, replacement)
+            return key
+
+        #----------------------------------------------------------------------
+        def assign(self, key, value):
+            super(DotDictWithKeyTranslations, self).assign(
+                self._translate_key(key),
+                value
+            )
+
+        #----------------------------------------------------------------------
+        def __setattr__(self, key, value):
+            super(DotDictWithKeyTranslations, self).__setattr__(
+                self._translate_key(key),
+                value
+            )
+
+        #----------------------------------------------------------------------
+        def __getattr__(self, key):
+            alt_key = self._translate_key(key)
+            if alt_key == key:
+                return super(DotDictWithKeyTranslations, self).__getattr__(key)
+            try:
+                return getattr(self, alt_key)
+            except KeyError:
+                raise KeyError(key)
+
+        #----------------------------------------------------------------------
+        def __delattr__(self, key):
+            super(DotDictWithKeyTranslations, self).__delattr__(
+                self._translate_key(key)
+            )
+
+    DotDictWithKeyTranslations.__name__ = new_class_name
+    return DotDictWithKeyTranslations

@@ -40,10 +40,12 @@ import dotdict
 from option import Option, Aggregation
 
 
+#==============================================================================
 class Namespace(dotdict.DotDict):
 
-    def __init__(self, doc=''):
-        super(Namespace, self).__init__()
+    #--------------------------------------------------------------------------
+    def __init__(self, doc='', initializer=None):
+        super(Namespace, self).__init__(initializer=initializer)
         object.__setattr__(self, '_doc', doc)  # force into attributes
         object.__setattr__(self, '_reference_value_from', False)
 
@@ -86,7 +88,8 @@ class Namespace(dotdict.DotDict):
 
     #--------------------------------------------------------------------------
     def namespace(self, name, doc=''):
-        setattr(self, name, Namespace(doc=doc))
+        # ensure that all new sub-namespaces are of the same type as the parent
+        setattr(self, name, self.__class__(doc=doc))
 
     #--------------------------------------------------------------------------
     def set_value(self, name, value, strict=True):
