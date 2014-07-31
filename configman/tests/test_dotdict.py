@@ -43,6 +43,7 @@ from configman.dotdict import (
     iteritems_breadth_first,
     configman_keys
 )
+from configman.orderedset import OrderedSet
 
 
 #==============================================================================
@@ -423,3 +424,22 @@ class TestCase(unittest.TestCase):
         self.assertTrue("database_hostname" in r)
         self.assertTrue("resources__postgres__database_hostname" not in r)
         self.assertTrue("resources.postgres.database_hostname" in r)
+
+    #--------------------------------------------------------------------------
+    def test_verify_key_order(self):
+        d = DotDict()
+        d['a.b.c'] = 17
+        d['a.b.d'] = 8
+        d['a.x'] = 99
+        d['b'] = 21
+        self.assertTrue(isinstance(d._key_order, OrderedSet))
+        # the keys should be in order of insertion within each level of the
+        # nested dicts
+        keys_in_breadth_first_order = [
+            'a', 'b', 'a.b', 'a.x', 'a.b.c', 'a.b.d'
+        ]
+        self.assertEqual(
+            keys_in_breadth_first_order,
+            [k for k in d.keys_breadth_first(include_dicts=True)]
+        )
+

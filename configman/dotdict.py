@@ -40,6 +40,8 @@
 import collections
 import weakref
 
+from configman.orderedset import OrderedSet
+
 
 #------------------------------------------------------------------------------
 def iteritems_breadth_first(a_mapping, include_dicts=False):
@@ -130,7 +132,7 @@ class DotDict(collections.MutableMapping):
         parameters:
             initializer - a mapping of keys and values to be added to this
                           mapping."""
-        self.__dict__['_key_order'] = []
+        self.__dict__['_key_order'] = OrderedSet()
         if isinstance(initializer, collections.Mapping):
             for key, value in iteritems_breadth_first(
                 initializer,
@@ -146,8 +148,7 @@ class DotDict(collections.MutableMapping):
     #--------------------------------------------------------------------------
     def __setattr__(self, key, value):
         """this function saves keys into the mapping's __dict__."""
-        if key not in self._key_order:
-            self._key_order.append(key)
+        self._key_order.add(key)
         self.__dict__[key] = value
 
     #--------------------------------------------------------------------------
@@ -167,7 +168,7 @@ class DotDict(collections.MutableMapping):
     #--------------------------------------------------------------------------
     def __delattr__(self, key):
         try:
-            self._key_order.remove(key)
+            self._key_order.discard(key)
         except ValueError:
             # we must be trying to delete something that wasn't a key
             # the next line will catch the error if it still is one
