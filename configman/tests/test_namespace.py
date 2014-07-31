@@ -44,6 +44,7 @@ import configman.config_manager as config_manager
 import configman.datetime_util as dtu
 
 from configman.option import Option
+from configman.orderedset import OrderedSet
 
 
 #==============================================================================
@@ -274,3 +275,22 @@ class TestCase(unittest.TestCase):
         n = config_manager.Namespace()
         n.add_option(o)
         self.assertTrue(o is n.dwight)
+
+    #--------------------------------------------------------------------------
+    def test_verify_key_order(self):
+        d = config_manager.Namespace()
+        d.add_option('a.b.c')
+        d.a.b.add_option('d')
+        d.a.add_option('x')
+        d.add_aggregation('b', lambda x, y, z: None)
+        self.assertTrue(isinstance(d._key_order, OrderedSet))
+        # the keys should be in order of insertion within each level of the
+        # nested dicts
+        keys_in_breadth_first_order = [
+            'a', 'b', 'a.b', 'a.x', 'a.b.c', 'a.b.d'
+        ]
+        self.assertEqual(
+            keys_in_breadth_first_order,
+            [k for k in d.keys_breadth_first(include_dicts=True)]
+        )
+
