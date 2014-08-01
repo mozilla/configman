@@ -51,7 +51,7 @@ setup(
     packages=['configman'],
     package_data={'configman': ['*/*', 'version.txt']},
     install_requires=find_install_requires(),
-    tests_required=find_tests_require(),
+    tests_require=find_tests_require(),
     test_suite='nose.collector',
     zip_safe=False,
 ),
