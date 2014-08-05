@@ -215,12 +215,12 @@ bad_option=bar  # other comment
                 argv_source=[]
             )
             expected = """# the a
-#aaa='2011-05-04T15:10:00'
+#aaa=2011-05-04T15:10:00
 
 [c]
 
     # husband from Flintstones
-    #fred='stupid, deadly'
+    #fred=stupid, deadly
 
     # wife from Flintstones
     #wilma=waspish's
@@ -282,7 +282,7 @@ bad_option=bar  # other comment
                 argv_source=[]
             )
             expected = ("""# the a
-#aaa='2011-05-04T15:10:00'
+#aaa=2011-05-04T15:10:00
 
 [xxx]
 
@@ -298,7 +298,7 @@ bad_option=bar  # other comment
 [c]
 
     # husband from Flintstones
-    #fred='stupid, deadly'
+    #fred=stupid, deadly
 
     # wife from Flintstones
     #wilma=waspish's
@@ -360,7 +360,7 @@ bad_option=bar  # other comment
                 use_auto_help=False,
                 argv_source=[]
             )
-            expected = "# the doc string\n#a='one:One'\n"
+            expected = "# the doc string\n#a=one:One\n"
             out = StringIO()
             c.write_conf(for_configobj, opener=stringIO_context_wrapper(out))
             received = out.getvalue()

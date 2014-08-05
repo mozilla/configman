@@ -133,6 +133,30 @@ class TestCase(unittest.TestCase):
             )
         )
         self.assertEqual(
+            function('2 00:00:00'),
+            datetime.timedelta(
+                days=2,
+            )
+        )
+        self.assertEqual(
+            function('01:01:01:01'),
+            datetime.timedelta(
+                days=1,
+                hours=1,
+                minutes=1,
+                seconds=1
+            )
+        )
+        self.assertEqual(
+            function('1:1:1:01'),
+            datetime.timedelta(
+                days=1,
+                hours=1,
+                minutes=1,
+                seconds=1
+            )
+        )
+        self.assertEqual(
             function('1:1:1'),
             datetime.timedelta(
                 hours=1,
@@ -152,3 +176,8 @@ class TestCase(unittest.TestCase):
             datetime.timedelta(seconds=1)
         )
         self.assertRaises(ValueError, function, 'not a number')
+        self.assertEqual(
+            function('1'),
+            datetime.timedelta(seconds=1)
+        )
+        self.assertRaises(TypeError, function, 10.1)
