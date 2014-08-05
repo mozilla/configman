@@ -81,8 +81,13 @@ def timedelta_to_seconds(td):
 
 def str_to_timedelta(input_str):
     """ a string conversion function for timedelta for strings in the format
-    DD:HH:MM:SS
+    DD:HH:MM:SS or D HH:MM:SS
     """
+    try:
+        input_str = input_str.replace(' ', ':')
+    except (TypeError, AttributeError):
+        from configman.converters import to_str
+        raise TypeError('%s should have been a string' % to_str(input_str))
     days, hours, minutes, seconds = 0, 0, 0, 0
     details = input_str.split(':')
     if len(details) >= 4:
@@ -108,4 +113,4 @@ def timedelta_to_str(aTimedelta):
     hours = temp_seconds / 3600
     minutes = (temp_seconds - hours * 3600) / 60
     seconds = temp_seconds - hours * 3600 - minutes * 60
-    return '%d:%d:%d:%d' % (days, hours, minutes, seconds)
+    return '%d %02d:%02d:%02d' % (days, hours, minutes, seconds)

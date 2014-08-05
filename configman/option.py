@@ -93,22 +93,10 @@ class Option(object):
         All it requires is that the passed option instance has a ``value``
         attribute.
         """
-        if self.value is None:
-            return ''
-        if self.to_string_converter:
-            s = self.to_string_converter(self.value)
-        else:
-            try:
-                converter = conv.to_string_converters[type(self.value)]
-                s = converter(self.value)
-            except KeyError:
-                if not isinstance(self.value, basestring):
-                    s = unicode(self.value)
-                else:
-                    s = self.value
-        if self.from_string_converter in conv.converters_requiring_quotes:
-            s = "'''%s'''" % s
-        return s
+        try:
+            return self.to_string_converter(self.value)
+        except TypeError:
+            return conv.to_str(self.value)
 
     #--------------------------------------------------------------------------
     def __eq__(self, other):
@@ -135,7 +123,11 @@ class Option(object):
     #--------------------------------------------------------------------------
     def _deduce_converter(self, default):
         default_type = type(default)
-        return conv.from_string_converters.get(default_type, default_type)
+
+        return conv.str_to_instance_of_type_converters.get(
+            default_type,
+            default_type
+        )
 
     #--------------------------------------------------------------------------
     def set_value(self, val=None):

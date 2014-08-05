@@ -252,16 +252,6 @@ class ValueSource(object):
             else:
                 option_format = '%s#%s=%s\n'
 
-            repr_for_converter = repr(an_option.from_string_converter)
-            if (
-                repr_for_converter.startswith('<function') or
-                repr_for_converter.startswith('<built-in')
-            ):
-                option_value = repr(option_value)
-            elif an_option.from_string_converter is str:
-                if ',' in option_value or '\n' in option_value:
-                    option_value = repr(option_value)
-
             print >>output_stream, option_format % (
                 indent_spacer,
                 an_option.name,

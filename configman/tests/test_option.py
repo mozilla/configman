@@ -114,7 +114,6 @@ class TestCase(unittest.TestCase):
         self.assertEqual(o.default, '1')
         self.assertEqual(o.value, 1)
 
-
         data = {
             'name': 'lucy',
             'default': '1',
@@ -182,7 +181,7 @@ class TestCase(unittest.TestCase):
         data = {
             'default': '2011-12-31',
             'doc': "lucy's bday",
-            'from_string_converter': \
+            'from_string_converter':
             'configman.datetime_util.date_from_ISO_string',
         }
         o = Option('now', **data)
@@ -387,8 +386,8 @@ class TestCase(unittest.TestCase):
     #--------------------------------------------------------------------------
     def test_set_default(self):
         o1 = Option(
-          'name',
-          default=23
+            'name',
+            default=23
         )
         self.assertEqual(o1.value, 23)
         self.assertRaises(OptionError, o1.set_default, 68)
@@ -397,8 +396,8 @@ class TestCase(unittest.TestCase):
         self.assertTrue(o1.default, 68)
 
         o2 = Option(
-          'name',
-          default=None
+            'name',
+            default=None
         )
         self.assertTrue(o2.value is None)
         o2.set_default(68)
