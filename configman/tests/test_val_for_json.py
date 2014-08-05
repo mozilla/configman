@@ -47,6 +47,7 @@ import configman.config_manager as config_manager
 import configman.datetime_util as dtu
 from ..value_sources import for_json
 from configman.value_sources.for_json import ValueSource
+from configman.dotdict import DotDict, DotDictWithAcquisition
 
 
 #------------------------------------------------------------------------------
@@ -172,3 +173,30 @@ class TestCase(unittest.TestCase):
 
         finally:
             os.unlink(name)
+
+    def test_get_values(self):
+        j = {
+            'a': '1',
+            'b': 2,
+            'c': {
+                'd': 'x',
+                'e': 'y'
+            },
+            'd': {
+                'd': 'X'
+            }
+        }
+        tmp_filename = os.path.join(tempfile.gettempdir(), 'test.json')
+        with open(tmp_filename, 'w') as f:
+            json.dump(j, f)
+        try:
+            jvs = ValueSource(tmp_filename)
+            vals = jvs.get_values(None, True, DotDict)
+            self.assertTrue(isinstance(vals, DotDict))
+            vals = jvs.get_values(None, True, DotDictWithAcquisition)
+            self.assertTrue(isinstance(vals, DotDictWithAcquisition))
+            self.assertEqual(vals.d.b, 2)
+        finally:
+            if os.path.isfile(tmp_filename):
+                os.remove(tmp_filename)
+

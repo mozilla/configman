@@ -56,6 +56,9 @@ from .. import namespace
 from ..config_exceptions import NotAnOptionError
 from .. import converters as conv
 
+from configman.dotdict import DotDict
+from configman.memoize import memoize
+
 from source_exceptions import ValueException, CantHandleTypeException
 
 
@@ -91,7 +94,7 @@ class ValueSource(object):
     command_line_value_source = True
 
     #--------------------------------------------------------------------------
-    def get_values(self, config_manager, ignore_mismatches):
+    def get_values(self, config_manager, ignore_mismatches, obj_hook=DotDict):
         """This is the black sheep of the crowd of ValueSource implementations.
         It needs to know ahead of time all of the parameters that it will need,
         but we cannot give it.  We may not know all the parameters because
@@ -100,7 +103,13 @@ class ValueSource(object):
         already been defined.  The 'ignore_mismatches' parameter tells the
         implementation if it can or cannot ignore extraneous commandline
         options.  The last time this function is called, it will be required
-        to test for illegal commandline options and respond accordingly."""
+        to test for illegal commandline options and respond accordingly.
+
+        Unlike many of the Value sources, this method cannot be "memoized".
+        The return result depends on an internal state within the parameter
+        'config_manager'.  Any memoize decorator for this method would requrire
+        capturing that internal state in the memoize cache key.
+        """
         short_options_str, long_options_list = self.getopt_create_opts(
             config_manager.option_definitions
         )
@@ -118,7 +127,7 @@ class ValueSource(object):
                                                      long_options_list)
         except getopt.GetoptError, x:
             raise NotAnOptionError(str(x))
-        command_line_values = dotdict.DotDict()
+        command_line_values = obj_hook()
         for opt_name, opt_val in getopt_options:
             if opt_name.startswith('--'):
                 name = opt_name[2:]

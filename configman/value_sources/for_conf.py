@@ -52,6 +52,8 @@ from .. import option as opt
 from .. import converters
 
 from source_exceptions import ValueException, CantHandleTypeException
+from configman.dotdict import DotDict
+from configman.memoize import memoize
 
 function_type = type(lambda x: x)  # TODO: just how do you express the Fuction
                                    # type as a constant?
@@ -116,10 +118,13 @@ class ValueSource(object):
             )
 
     #--------------------------------------------------------------------------
-    def get_values(self, config_manager, ignore_mismatches):
+    @memoize()
+    def get_values(self, config_manager, ignore_mismatches, obj_hook=DotDict):
         """the 'config_manager' and 'ignore_mismatches' are dummy values for
         this implementation of a ValueSource."""
-        return self.values
+        if isinstance(self.values, obj_hook):
+            return self.values
+        return obj_hook(initializer=self.values)
 
     #--------------------------------------------------------------------------
     @staticmethod

@@ -41,9 +41,11 @@ from configman.dotdict import (
     DotDict,
     DotDictWithAcquisition,
     iteritems_breadth_first,
-    configman_keys
+    configman_keys,
+    create_key_translating_dot_dict
 )
 from configman.orderedset import OrderedSet
+from configman import Namespace
 
 
 #==============================================================================
@@ -443,3 +445,167 @@ class TestCase(unittest.TestCase):
             [k for k in d.keys_breadth_first(include_dicts=True)]
         )
 
+    #--------------------------------------------------------------------------
+    def test_translating_key_dot_dict(self):
+        HyphenUnderscoreDict = create_key_translating_dot_dict(
+            "HyphenUnderscoreDict",
+            (('-', '_'),)
+        )
+        d = HyphenUnderscoreDict()
+        d['a-a.b-b.c-c'] = 17
+        d['a-a.b_b.d-d'] = 8
+        d['a_a.x-x'] = 99
+        d['b-b'] = 21
+        self.assertTrue(isinstance(d._key_order, OrderedSet))
+        # the keys should be in order of insertion within each level of the
+        # nested dicts
+        keys_in_breadth_first_order = [
+            'a_a', 'b_b', 'a_a.b_b', 'a_a.x_x', 'a_a.b_b.c_c', 'a_a.b_b.d_d'
+        ]
+        self.assertEqual(
+            keys_in_breadth_first_order,
+            [k for k in d.keys_breadth_first(include_dicts=True)]
+        )
+
+        self.assertEqual(d.a_a.b_b.c_c, 17)
+        self.assertEqual(d.a_a.b_b['c-c'], 17)
+        self.assertEqual(d.a_a['b-b'].c_c, 17)
+        self.assertEqual(d['a-a'].b_b.c_c, 17)
+        self.assertEqual(d['a-a.b-b.c-c'], 17)
+        self.assertEqual(d['a-a.b-b.c_c'], 17)
+        self.assertEqual(d['a-a.b_b.c_c'], 17)
+        self.assertEqual(d['a_a.b_b.c_c'], 17)
+
+        del d['a-a.b-b.c-c']
+
+        self.assertTrue('a-a.b-b.c-c' not in d)
+        self.assertTrue('a-a.b-b.c_c' not in d)
+        self.assertTrue('a-a.b_b.c_c' not in d)
+        self.assertTrue('a_a.b_b.c_c' not in d)
+        self.assertTrue('c-c' not in d['a_a']['b_b']._key_order)
+        self.assertTrue('c_c' not in d['a_a']['b_b']._key_order)
+
+        self.assertTrue(isinstance(d, HyphenUnderscoreDict))
+        self.assertTrue(isinstance(d['a-a'], HyphenUnderscoreDict))
+        self.assertTrue(isinstance(d.a_a, HyphenUnderscoreDict))
+        self.assertTrue(isinstance(d.a_a.b_b, HyphenUnderscoreDict))
+
+    #--------------------------------------------------------------------------
+    def test_translating_key_dot_dict_with_acquisition(self):
+        HyphenUnderscoreDictWithAcquisition = create_key_translating_dot_dict(
+            "HyphenUnderscoreDictWithAcquisition",
+            (('-', '_'),),
+            base_class=DotDictWithAcquisition
+        )
+        d = HyphenUnderscoreDictWithAcquisition()
+        d['a-a.b-b.c-c'] = 17
+        d['a-a.b_b.d-d'] = 8
+        d['a_a.x-x'] = 99
+        d['b-b'] = 21
+        self.assertTrue(isinstance(d._key_order, OrderedSet))
+        # the keys should be in order of insertion within each level of the
+        # nested dicts
+        keys_in_breadth_first_order = [
+            'a_a', 'b_b', 'a_a.b_b', 'a_a.x_x', 'a_a.b_b.c_c', 'a_a.b_b.d_d'
+        ]
+        self.assertEqual(
+            keys_in_breadth_first_order,
+            [k for k in d.keys_breadth_first(include_dicts=True)]
+        )
+        self.assertEqual(d.a_a.b_b.c_c, 17)
+        self.assertEqual(d.a_a.b_b['c-c'], 17)
+        self.assertEqual(d.a_a['b-b'].c_c, 17)
+        self.assertEqual(d['a-a'].b_b.c_c, 17)
+        self.assertEqual(d['a-a.b-b.c-c'], 17)
+        self.assertEqual(d['a-a.b-b.c_c'], 17)
+        self.assertEqual(d['a-a.b_b.c_c'], 17)
+        self.assertEqual(d['a_a.b_b.c_c'], 17)
+
+        del d['a-a.b-b.c-c']
+
+        self.assertTrue('a-a.b-b.c-c' not in d)
+        self.assertTrue('a-a.b-b.c_c' not in d)
+        self.assertTrue('a-a.b_b.c_c' not in d)
+        self.assertTrue('a_a.b_b.c_c' not in d)
+        self.assertTrue('c-c' not in d['a_a']['b_b']._key_order)
+        self.assertTrue('c_c' not in d['a_a']['b_b']._key_order)
+
+        self.assertTrue(isinstance(d, HyphenUnderscoreDictWithAcquisition))
+        self.assertTrue(
+            isinstance(d['a-a'], HyphenUnderscoreDictWithAcquisition)
+        )
+        self.assertTrue(
+            isinstance(d.a_a, HyphenUnderscoreDictWithAcquisition)
+        )
+        self.assertTrue(
+            isinstance(d.a_a.b_b, HyphenUnderscoreDictWithAcquisition)
+        )
+
+        self.assertTrue(isinstance(d, HyphenUnderscoreDictWithAcquisition))
+        self.assertTrue(isinstance(d.a_a, HyphenUnderscoreDictWithAcquisition))
+        self.assertTrue(
+            isinstance(d.a_a.b_b, HyphenUnderscoreDictWithAcquisition)
+        )
+        self.assertEqual(d.a_a.b_b['x_x'], 99)
+        self.assertEqual(d.a_a.b_b.x_x, 99)
+        self.assertEqual(d.a_a['b-b']['a-a'].x_x, 99)
+        self.assertEqual(d.a_a['b-b']['a-a']['b-b']['a-a'].x_x, 99)
+
+    #--------------------------------------------------------------------------
+    def test_translating_key_namespace(self):
+        HyphenUnderscoreNamespace = create_key_translating_dot_dict(
+            "HyphenUnderscoreNamespace",
+            (('-', '_'),),
+            base_class=Namespace
+        )
+        d = HyphenUnderscoreNamespace()
+        d.namespace('a-a')
+        d.a_a.namespace('b-b')
+        d.a_a['b-b'].add_option('c-c')
+        d['a-a'].b_b.add_aggregation('d-d', lambda x, y, z: True)
+        d['a_a'].add_option('x-x')
+        d.add_option('b-b')
+        self.assertTrue(isinstance(d._key_order, OrderedSet))
+        # the keys should be in order of insertion within each level of the
+        # nested dicts
+        keys_in_breadth_first_order = [
+            'a_a', 'b_b', 'a_a.b_b', 'a_a.x_x', 'a_a.b_b.c_c', 'a_a.b_b.d_d'
+        ]
+        self.assertEqual(
+            keys_in_breadth_first_order,
+            [k for k in d.keys_breadth_first(include_dicts=True)]
+        )
+        self.assertEqual(d.a_a.b_b.c_c.name, 'c-c')
+        self.assertEqual(d.a_a.b_b['c-c'].name, 'c-c')
+        self.assertEqual(d.a_a['b-b'].c_c.name, 'c-c')
+        self.assertEqual(d['a-a'].b_b.c_c.name, 'c-c')
+        self.assertEqual(d['a-a.b-b.c-c'].name, 'c-c')
+        self.assertEqual(d['a-a.b-b.c_c'].name, 'c-c')
+        self.assertEqual(d['a-a.b_b.c_c'].name, 'c-c')
+        self.assertEqual(d['a_a.b_b.c_c'].name, 'c-c')
+
+        del d['a-a.b-b.c-c']
+
+        self.assertTrue('a-a.b-b.c-c' not in d)
+        self.assertTrue('a-a.b-b.c_c' not in d)
+        self.assertTrue('a-a.b_b.c_c' not in d)
+        self.assertTrue('a_a.b_b.c_c' not in d)
+        self.assertTrue('c-c' not in d['a_a']['b_b']._key_order)
+        self.assertTrue('c_c' not in d['a_a']['b_b']._key_order)
+
+        self.assertTrue(isinstance(d, HyphenUnderscoreNamespace))
+        self.assertTrue(
+            isinstance(d['a-a'], HyphenUnderscoreNamespace)
+        )
+        self.assertTrue(
+            isinstance(d.a_a, HyphenUnderscoreNamespace)
+        )
+        self.assertTrue(
+            isinstance(d.a_a.b_b, HyphenUnderscoreNamespace)
+        )
+
+        self.assertTrue(isinstance(d, HyphenUnderscoreNamespace))
+        self.assertTrue(isinstance(d.a_a, HyphenUnderscoreNamespace))
+        self.assertTrue(
+            isinstance(d.a_a.b_b, HyphenUnderscoreNamespace)
+        )

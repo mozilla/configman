@@ -47,6 +47,7 @@ import configman.config_manager as config_manager
 
 from configman import Namespace
 from configman.config_exceptions import NotAnOptionError
+from configman.dotdict import DotDict, DotDictWithAcquisition
 
 try:
     #from ..value_sources.for_configobj import ValueSource
@@ -121,6 +122,11 @@ foo=bar  # other comment
                 self.assertEqual(o.get_values(1, True), r)
                 self.assertEqual(o.get_values(2, False), r)
                 self.assertEqual(o.get_values(3, True), r)
+
+                v = o.get_values(None, True, DotDict)
+                self.assertTrue(isinstance(v, DotDict))
+                v = o.get_values(None, None, obj_hook=DotDictWithAcquisition)
+                self.assertTrue(isinstance(v, DotDictWithAcquisition))
 
             finally:
                 if os.path.isfile(tmp_filename):

@@ -52,11 +52,13 @@ import value_sources
 import def_sources
 
 #==============================================================================
-# for convenience define some external symbols here
+# for convenience define some external symbols here - some client modules may
+# import these symbols from here rather than their origin definition location.
+# PyFlakes may erroneously flag some of these as unused
 from option import Option, Aggregation
-from dotdict import DotDict, DotDictWithAcquisition
+from dotdict import DotDict, DotDictWithAcquisition, iteritems_breadth_first
 from namespace import Namespace
-from required_config import RequiredConfig
+from required_config import RequiredConfig  # used elsewhere - do not remove
 from config_file_future_proxy import ConfigFileFutureProxy
 
 
@@ -79,6 +81,7 @@ class ConfigurationManager(object):
         app_description='',
         config_pathname='.',
         config_optional=True,
+        value_source_object_hook=DotDict,
     ):
         """create and initialize a configman object.
 
@@ -121,7 +124,12 @@ class ConfigurationManager(object):
           config_optional - a boolean indicating if a missing default config
                             file is optional.  Note: this is only for the
                             default config file.  If a config file is specified
-                            on the commandline, it _must_ exsist."""
+                            on the commandline, it _must_ exist.
+          value_source_object_hook - a class used for the internal
+                                     representation of a value source.
+                                     This is used to enable any special
+                                     processing, like key translations.
+                            """
 
         # instead of allowing mutables as default keyword argument values...
         if definition_source is None:
@@ -144,6 +152,8 @@ class ConfigurationManager(object):
             options_banned_from_help = ['application']
         self.config_pathname = config_pathname
         self.config_optional = config_optional
+
+        self.value_source_object_hook = value_source_object_hook
 
         self.app_name = app_name
         self.app_version = app_version
@@ -587,15 +597,9 @@ class ConfigurationManager(object):
                         # get all the option values from this value source
                         val_src_dict = a_value_source.get_values(
                             self,
-                            True
+                            True,
+                            self.value_source_object_hook
                         )
-                        # make sure it is in the form of a DotDict
-                        # if acquisition is desired, make sure that the
-                        # value source is a DotDictWithAcquisition
-                        if not isinstance(val_src_dict, DotDict):
-                            val_src_dict = (
-                                DotDict(val_src_dict)
-                            )
                         # get the Option for this key
                         opt = self.option_definitions[key]
                         # overlay the default with the new value from
@@ -694,7 +698,8 @@ class ConfigurationManager(object):
             # of strings like this: 'x.y.z'
             value_source_mapping = a_value_source.get_values(
                 self,
-                allow_mismatches
+                allow_mismatches,
+                self.value_source_object_hook
             )
             value_source_keys_set = set([
                 k for k in

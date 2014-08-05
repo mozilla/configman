@@ -49,7 +49,11 @@ import mock
 
 import configman.config_manager as config_manager
 from configman.option import Option
-from configman.dotdict import DotDict, DotDictWithAcquisition
+from configman.dotdict import (
+    DotDict,
+    DotDictWithAcquisition,
+    create_key_translating_dot_dict,
+)
 from configman import Namespace, RequiredConfig
 from configman.converters import class_converter
 import configman.datetime_util as dtu
@@ -2008,3 +2012,131 @@ c.string =   from ini
         cn = cm.get_config()
         self.assertEqual(cn.fred, 21)
         self.assertEqual(cn.a.fred, 21)
+
+    #--------------------------------------------------------------------------
+    def test_value_source_object_hook_1(self):
+        """the definition source defines only keys with underscores.
+        the value sources may have hyphens instead of underscores.
+        test the use of a translating DotDict varient that changes
+        hyphens into underscores """
+
+        class A(RequiredConfig):
+            required_config = Namespace()
+            required_config.add_option(
+                'f_r_e_d',
+                default='77',
+                reference_value_from='a'
+            )
+
+        class B(RequiredConfig):
+            required_config = Namespace()
+            required_config.add_option(
+                'a_class',
+                default=A,
+                from_string_converter=class_converter,
+                reference_value_from='a'
+            )
+
+        r = Namespace()
+        r.add_option(
+            'some_class',
+            default=A,
+            from_string_converter=class_converter,
+            reference_value_from='a'
+        )
+        r.add_option(
+            'other_class',
+            default=A,
+            from_string_converter=class_converter,
+            reference_value_from='a'
+        )
+
+        cm = config_manager.ConfigurationManager(
+            [r],
+            [
+                {'a.f-r-e-d': 21},
+                {'other-class': B}
+            ],
+            value_source_object_hook=create_key_translating_dot_dict(
+                'HyphenIsUnderScoreDotDict',
+                (('-', '_'),),
+            )
+        )
+        cn = cm.get_config()
+        self.assertEqual(cn.f_r_e_d, 21)
+        self.assertEqual(cn.a.f_r_e_d, 21)
+        self.assertTrue(cn.other_class is B)
+        self.assertTrue(cn.some_class is A)
+
+    #--------------------------------------------------------------------------
+    def test_value_source_object_hook_2(self):
+        """the object hook system can be used to post process the value sources
+        as they're used in configman.  Define a mapping that insures that all
+        values are uppercase"""
+
+        class A(RequiredConfig):
+            required_config = Namespace()
+            required_config.add_option(
+                'fred',
+                default='abcdefgh',
+                reference_value_from='a'
+            )
+
+        class B(RequiredConfig):
+            required_config = Namespace()
+            required_config.add_option(
+                'a_class',
+                default=A,
+                from_string_converter=class_converter,
+                reference_value_from='a'
+            )
+            required_config.add_option(
+                'name',
+                default='wilma',
+                reference_value_from='a'
+            )
+
+        r = Namespace()
+        r.add_option(
+            'some_class',
+            default=A,
+            from_string_converter=class_converter,
+            reference_value_from='a'
+        )
+        r.add_option(
+            'other_class',
+            default=A,
+            from_string_converter=class_converter,
+            reference_value_from='a'
+        )
+
+        class UpperCaseValueDotDict(DotDict):
+            def __setattr__(self, key, value):
+                if isinstance(value, basestring):
+                    super(UpperCaseValueDotDict, self).__setattr__(
+                        key,
+                        value.upper()
+                    )
+                else:
+                    super(UpperCaseValueDotDict, self).__setattr__(
+                        key,
+                        value
+                    )
+
+        cm = config_manager.ConfigurationManager(
+            [r],
+            [
+                {
+                    'a.fred': 'this should be uppercase',
+                    'a.name': 'uppercase'
+                },
+                {'other_class': B}
+            ],
+            value_source_object_hook=UpperCaseValueDotDict
+        )
+        cn = cm.get_config()
+        self.assertEqual(cn.fred, "THIS SHOULD BE UPPERCASE")
+        self.assertEqual(cn.a.fred, "THIS SHOULD BE UPPERCASE")
+        self.assertEqual(cn.name, "UPPERCASE")
+        self.assertTrue(cn.other_class is B)
+        self.assertTrue(cn.some_class is A)

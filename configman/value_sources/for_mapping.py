@@ -41,6 +41,10 @@ import os
 
 from source_exceptions import CantHandleTypeException
 
+from configman.dotdict import DotDict
+from configman.memoize import memoize
+
+
 can_handle = (
     os.environ,
     collections.Mapping,
@@ -64,5 +68,9 @@ class ValueSource(object):
         self.source = source
 
     #--------------------------------------------------------------------------
-    def get_values(self, config_manager, ignore_mismatches):
-        return self.source
+    @memoize()
+    def get_values(self, config_manager, ignore_mismatches, obj_hook=DotDict):
+        if isinstance(self.source, obj_hook):
+            return self.source
+        return obj_hook(initializer=self.source)
+
