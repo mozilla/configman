@@ -326,7 +326,7 @@ def str_to_list(
     input_str,
     item_converter=lambda x: x,
     item_separator=',',
-    list_to_collection_converter=None
+    list_to_collection_converter=None,
 ):
     """ a conversion function for list
     """
@@ -408,10 +408,12 @@ def arbitrary_object_to_string(a_thing):
     try:
         if a_thing.__module__ not in ('__builtin__', 'exceptions'):
             if a_thing.__module__ == "__main__":
-                module_name = \
-                    sys.modules['__main__'].__file__[:-3].replace('/', '.')
-                while module_name.startswith('.'):  # remove leading '.'
-                    module_name = module_name[1:]
+                module_name = (
+                    sys.modules['__main__']
+                    .__file__[:-3]
+                    .replace('/', '.')
+                    .strip('.')
+                )
             else:
                 module_name = a_thing.__module__
             return "%s.%s" % (module_name, a_thing.__name__)
