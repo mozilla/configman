@@ -1942,13 +1942,14 @@ c.string =   from ini
         n = self._common_app_namespace_setup()
 
         # make a config file that nothing will understand
-        open('x.fred', 'w').write(
-            '[toplevel]\n'
-            'password=something\n'
-        )
+        with open('x.fred', 'w') as f:
+            f.write(
+                '[toplevel]\n'
+                'password=something\n'
+            )
         try:
             self.assertRaises(
-                NoHandlerForType,
+                AllHandlersFailedException,
                 config_manager.ConfigurationManager,
                 (n,),
                 argv_source=['--admin.conf=x.fred']
