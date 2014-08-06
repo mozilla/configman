@@ -271,12 +271,12 @@ class ConfigurationManager(object):
 
     #--------------------------------------------------------------------------
     @contextlib.contextmanager
-    def context(self):
+    def context(self, mapping_class=DotDictWithAcquisition):
         """return a config as a context that calls close on every item when
         it goes out of scope"""
         config = None
         try:
-            config = self.get_config()
+            config = self.get_config(mapping_class=mapping_class)
             yield config
         finally:
             if config:

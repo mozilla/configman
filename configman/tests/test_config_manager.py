@@ -1445,15 +1445,15 @@ c.string =   from ini
         def aggregation_test(all_config, local_namespace, args):
             self.assertTrue('password' in all_config)
             self.assertTrue('sub1' in all_config)
-            self.assertTrue('name' in all_config.sub1)
+            self.assertTrue('name' in all_config['sub1'])
             self.assertTrue('name' in local_namespace)
             self.assertTrue('spouse' in local_namespace)
             self.assertEqual(len(args), 2)
             return AggregatedValue('%s married %s using password %s but '
                                    'divorced because of %s.' %
-                                   (local_namespace.name,
-                                    local_namespace.spouse,
-                                    all_config.password,
+                                   (local_namespace['name'],
+                                    local_namespace['spouse'],
+                                    all_config['password'],
                                     args[1]))
 
         class MyApp(config_manager.RequiredConfig):
@@ -1492,6 +1492,14 @@ c.string =   from ini
             self.assertEqual(statement.value,
                              'wilma married fred using password @$*$&26Ht '
                              'but divorced because of arg2.')
+        self.assertTrue(statement.value is None)
+
+        with c.context(mapping_class=dict) as config:
+            self.assertTrue(isinstance(config, dict))
+            statement = config['sub1']['statement']
+            self.assertEqual(statement.value,
+                 'wilma married fred using password @$*$&26Ht '
+                 'but divorced because of arg2.')
         self.assertTrue(statement.value is None)
 
     #--------------------------------------------------------------------------
@@ -2140,3 +2148,85 @@ c.string =   from ini
         self.assertEqual(cn.name, "UPPERCASE")
         self.assertTrue(cn.other_class is B)
         self.assertTrue(cn.some_class is A)
+
+    #--------------------------------------------------------------------------
+    def test_bare_configuration_call(self):
+        from configman import configuration
+
+        class AggregatedValue(object):
+
+            def __init__(self, value):
+                self.value = value
+
+            def close(self):
+                self.value = None
+
+        def aggregation_test(all_config, local_namespace, args):
+            self.assertTrue('password' in all_config)
+            self.assertTrue('sub1' in all_config)
+            self.assertTrue('name' in all_config['sub1'])
+            self.assertTrue('name' in local_namespace)
+            self.assertTrue('spouse' in local_namespace)
+            self.assertEqual(len(args), 2)
+            return AggregatedValue('%s married %s using password %s but '
+                                   'divorced because of %s.' %
+                                   (local_namespace['name'],
+                                    local_namespace['spouse'],
+                                    all_config['password'],
+                                    args[1]))
+
+        class MyApp(config_manager.RequiredConfig):
+            app_name = 'fred'
+            app_version = '1.0'
+            app_description = "my app"
+            required_config = config_manager.Namespace()
+            required_config.add_option('password', '@$*$&26Ht', 'the password')
+            required_config.namespace('sub1')
+            required_config.sub1.add_option('name', 'ethel', 'the name')
+            required_config.sub1.add_option('spouse', 'fred', 'the spouse')
+            required_config.sub1.add_aggregation('statement', aggregation_test)
+
+            def __init__(inner_self, config):
+                inner_self.config = config
+
+        n = config_manager.Namespace()
+        n.add_option('application',
+                     MyApp,
+                     'the app object class')
+
+        config = configuration(
+            n,
+            [getopt],
+            use_admin_controls=False,
+            use_auto_help=False,
+            argv_source=[
+                '--sub1.name=wilma',
+                'arg1',
+                'arg2'
+            ]
+        )
+
+        self.assertTrue(isinstance(config, DotDictWithAcquisition))
+        statement = config['sub1']['statement']
+        self.assertEqual(statement.value,
+             'wilma married fred using password @$*$&26Ht '
+             'but divorced because of arg2.')
+
+        config = configuration(
+            n,
+            [getopt],
+            use_admin_controls=False,
+            use_auto_help=False,
+            argv_source=[
+                '--sub1.name=wilma',
+                'arg1',
+                'arg2'
+            ],
+            mapping_class=dict
+        )
+
+        self.assertTrue(isinstance(config, dict))
+        statement = config['sub1']['statement']
+        self.assertEqual(statement.value,
+             'wilma married fred using password @$*$&26Ht '
+             'but divorced because of arg2.')
