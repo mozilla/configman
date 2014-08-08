@@ -69,11 +69,10 @@ def configuration(*args, **kwargs):
     """this function just instantiates a ConfigurationManager and returns
     the configuration dictionary.  It accepts all the same parameters as the
     constructor for the ConfigurationManager class."""
-    if 'mapping_class' in kwargs:
-        mapping_class = kwargs.pop('mapping_class')
-    cm = ConfigurationManager(*args, **kwargs)
     try:
-        return cm.get_config(mapping_class=mapping_class)
-    except NameError:
-        return cm.get_config()
+        config_kwargs = {'mapping_class': kwargs.pop('mapping_class')}
+    except KeyError:
+        config_kwargs = {}
+    cm = ConfigurationManager(*args, **kwargs)
+    return cm.get_config(**config_kwargs)
 
