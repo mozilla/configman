@@ -64,6 +64,8 @@ class Option(object):
         self.name = name
         self.short_form = short_form
         self.default = default
+        if isinstance(doc, basestring):
+            doc = doc.strip()
         self.doc = doc
         if from_string_converter is None:
             if default is not None:

@@ -71,7 +71,12 @@ class TestCase(unittest.TestCase):
             from_string_converter=dtu.datetime_from_ISO_string
         )
         n.c = Namespace(doc='c space')
-        n.c.add_option('fred', 'stupid', 'husband from Flintstones')
+        n.c.add_option(
+            'fred',
+            'stupid',
+            # deliberate whitespace to test that it gets stripped
+            ' husband from Flintstones '
+        )
         n.c.add_option('wilma', 'waspish', 'wife from Flintstones')
         n.c.e = Namespace(doc='e space')
         n.c.e.add_option(

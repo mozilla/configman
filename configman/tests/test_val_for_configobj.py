@@ -81,7 +81,8 @@ else:
             n.c.add_option(
                 'fred',
                 'stupid, deadly',
-                'husband from Flintstones'
+                # deliberate whitespace to test that it gets stripped
+                ' husband from Flintstones '
             )
             n.c.add_option('wilma', "waspish's", 'wife from Flintstones')
             n.d = config_manager.Namespace(doc='d space')
