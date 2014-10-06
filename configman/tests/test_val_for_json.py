@@ -121,6 +121,38 @@ class TestCase(unittest.TestCase):
             self.assertEqual(jrec['aaa'][key], value)
 
     #--------------------------------------------------------------------------
+    def test_write_json_never_exposed_option(self):
+        n = config_manager.Namespace(doc='top')
+        n.add_option(
+            'secret',
+            'being evil',
+            'your darkest secret',
+            never_expose=True
+        )
+
+        c = config_manager.ConfigurationManager(
+            [n],
+            use_admin_controls=True,
+            use_auto_help=False,
+            argv_source=[]
+        )
+
+        out = StringIO()
+        c.write_conf(for_json, opener=stringIO_context_wrapper(out))
+        received = out.getvalue()
+        out.close()
+        jrec = json.loads(received)
+
+        expect_to_find = {
+            "default": "*" * 16,
+            "doc": "your darkest secret",
+            "value": "*" * 16,
+            "name": "secret"
+        }
+        for key, value in expect_to_find.items():
+            self.assertEqual(jrec['secret'][key], value)
+
+    #--------------------------------------------------------------------------
     def test_json_round_trip(self):
         n = config_manager.Namespace(doc='top')
         n.add_option(
@@ -199,4 +231,3 @@ class TestCase(unittest.TestCase):
         finally:
             if os.path.isfile(tmp_filename):
                 os.remove(tmp_filename)
-

@@ -137,4 +137,3 @@ class Namespace(dotdict.DotDict):
         # the __setattr__ method, this is the only way to actually force a
         # value to become an attribute rather than member of the dict
         object.__setattr__(self, '_reference_value_from', True)
-

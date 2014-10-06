@@ -249,6 +249,39 @@ bad_option=bar  # other comment
             self.assertEqual(expected.strip(), received.strip())
 
         #----------------------------------------------------------------------
+        def test_write_ini_with_never_exposed_options(self):
+            n = config_manager.Namespace(doc='top')
+            n.add_option(
+                'secret',
+                default="I'm alergic to people",
+                doc='Main dark secret',
+                never_expose=True
+            )
+            # should work for those that are likely to be changed too
+            n.add_option(
+                'other_secret',
+                default='I hate Swedes',
+                doc='Other dark secrets',
+                never_expose=True,
+                likely_to_be_changed=True
+            )
+            c = config_manager.ConfigurationManager(
+                [n],
+                use_admin_controls=True,
+                #use_config_files=False,
+                use_auto_help=False,
+                argv_source=[]
+            )
+            out = StringIO()
+            c.write_conf(for_configobj, opener=stringIO_context_wrapper(out))
+            received = out.getvalue()
+            out.close()
+            self.assertTrue('#secret=' in received)
+            self.assertTrue("I'm alergic to people" not in received)
+            self.assertTrue('other_secret=' in received)
+            self.assertTrue('I hate Swedes' not in received)
+
+        #----------------------------------------------------------------------
         def test_write_ini_with_reference_value_froms(
             self
         ):

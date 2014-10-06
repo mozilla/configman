@@ -234,9 +234,12 @@ class ValueSource(object):
         indent_spacer = " " * (level * indent_size)
         for an_option in options:
             print >>output_stream, "%s# %s" % (indent_spacer, an_option.doc)
-            option_value = str(an_option)
-            if isinstance(option_value, unicode):
-                option_value = option_value.encode('utf8')
+            if an_option.never_expose:
+                option_value = '*' * 16
+            else:
+                option_value = str(an_option)
+                if isinstance(option_value, unicode):
+                    option_value = option_value.encode('utf8')
 
             if an_option.reference_value_from:
                 print >>output_stream, (
