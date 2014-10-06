@@ -116,6 +116,10 @@ class BClass(RequiredConfig):
 #==============================================================================
 class TestCase(unittest.TestCase):
 
+    def shortDescription(self):
+        # so we can see the path to the failing test
+        return None
+
     #--------------------------------------------------------------------------
     def test_empty_ConfigurationManager_constructor(self):
         # because the default option argument defaults to using sys.argv we
@@ -779,6 +783,29 @@ c.string =   from ini
             )
             point = options.find(end)
 
+    def test_output_summary_with_never_expose(self):
+        """test the output_summary with a certain field that isn't called
+        "password" or anything alike but it shouldn't be exposed anyway."""
+        n = config_manager.Namespace()
+        n.add_option(
+            'secret',
+            default='I hate people',
+            doc='The secret',
+            never_expose=True
+        )
+        c = config_manager.ConfigurationManager(
+            [n],
+            use_admin_controls=True,
+            use_auto_help=False,
+            argv_source=[],
+        )
+        s = StringIO()
+        c.output_summary(output_stream=s)
+        r = s.getvalue()
+
+        self.assertTrue('--secret' in r)
+        self.assertTrue('I hate people' not in r)
+
     #--------------------------------------------------------------------------
     def test_output_summary_header(self):
         """a config with an app_name, app_version and app_description is
@@ -1340,6 +1367,11 @@ c.string =   from ini
                      doc='How much do you earn?',
                      exclude_from_dump_conf=True
                      )
+        n.add_option('secret',
+                     default='being evil',
+                     doc="What's your darkest secret?",
+                     never_expose=True
+                     )
 
         try:
             config_manager.ConfigurationManager(
@@ -1355,6 +1387,8 @@ c.string =   from ini
             printed = open('foo.conf').read()
             self.assertTrue('gender' in printed)
             self.assertTrue('salary' not in printed)
+            self.assertTrue('secret=' in printed)
+            self.assertTrue('being evil' not in printed)
 
         finally:
             if os.path.isfile('foo.conf'):

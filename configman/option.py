@@ -60,6 +60,7 @@ class Option(object):
         likely_to_be_changed=False,
         not_for_definition=False,
         reference_value_from=None,
+        never_expose=False
     ):
         self.name = name
         self.short_form = short_form
@@ -86,6 +87,7 @@ class Option(object):
         self.likely_to_be_changed = likely_to_be_changed
         self.not_for_definition = not_for_definition
         self.reference_value_from = reference_value_from
+        self.never_expose = never_expose
 
     #--------------------------------------------------------------------------
     def __str__(self):
@@ -205,7 +207,8 @@ class Option(object):
             is_argument=self.is_argument,
             likely_to_be_changed=self.likely_to_be_changed,
             not_for_definition=self.not_for_definition,
-            reference_value_from=self.reference_value_from
+            reference_value_from=self.reference_value_from,
+            never_expose=self.never_expose,
         )
         return o
 

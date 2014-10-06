@@ -359,7 +359,7 @@ class ConfigurationManager(object):
             except KeyError:
                 default = option.value
             if default is not None:
-                if 'password' in name.lower():
+                if option.never_expose or 'password' in name.lower():
                     default = '*********'
                 if name not in ('help',):
                     # don't bother with certain dead obvious ones

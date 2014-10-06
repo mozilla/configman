@@ -126,11 +126,12 @@ class ValueSource(object):
                         d[okey] = conv.to_string_converters[type(oval)](oval)
                     except KeyError:
                         d[okey] = str(oval)
-                d['default'] = d['value']
+                if val.never_expose:
+                    d['default'] = d['value'] = '*' * 16
+                else:
+                    d['default'] = d['value']
             elif isinstance(val, Aggregation):
                 d['name'] = val.name
                 fn = val.function
                 d['function'] = conv.to_string_converters[type(fn)](fn)
         json.dump(json_dict, output_stream)
-
-
