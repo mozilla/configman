@@ -60,6 +60,7 @@ class Option(object):
         likely_to_be_changed=False,
         not_for_definition=False,
         reference_value_from=None,
+        secret=False,
     ):
         self.name = name
         self.short_form = short_form
@@ -86,6 +87,7 @@ class Option(object):
         self.likely_to_be_changed = likely_to_be_changed
         self.not_for_definition = not_for_definition
         self.reference_value_from = reference_value_from
+        self.secret = secret
 
     #--------------------------------------------------------------------------
     def __str__(self):
@@ -205,7 +207,8 @@ class Option(object):
             is_argument=self.is_argument,
             likely_to_be_changed=self.likely_to_be_changed,
             not_for_definition=self.not_for_definition,
-            reference_value_from=self.reference_value_from
+            reference_value_from=self.reference_value_from,
+            secret=self.secret,
         )
         return o
 
@@ -216,7 +219,8 @@ class Aggregation(object):
     def __init__(
         self,
         name,
-        function
+        function,
+        secret=False,
     ):
         self.name = name
         if isinstance(function, basestring):
@@ -224,6 +228,7 @@ class Aggregation(object):
         else:
             self.function = function
         self.value = None
+        self.secret = secret
 
     #--------------------------------------------------------------------------
     def aggregate(self, all_options, local_namespace, args):

@@ -82,8 +82,8 @@ class Namespace(dotdict.DotDict):
         setattr(current_namespace, an_option.name, an_option)
 
     #--------------------------------------------------------------------------
-    def add_aggregation(self, name, function):
-        an_aggregation = Aggregation(name, function)
+    def add_aggregation(self, name, function, secret=False):
+        an_aggregation = Aggregation(name, function, secret)
         setattr(self, name, an_aggregation)
 
     #--------------------------------------------------------------------------
@@ -137,4 +137,3 @@ class Namespace(dotdict.DotDict):
         # the __setattr__ method, this is the only way to actually force a
         # value to become an attribute rather than member of the dict
         object.__setattr__(self, '_reference_value_from', True)
-
