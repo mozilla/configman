@@ -448,7 +448,8 @@ class TestCase(unittest.TestCase):
             is_argument=False,
             likely_to_be_changed=False,
             not_for_definition=False,
-            reference_value_from='external.postgresql'
+            reference_value_from='external.postgresql',
+            secret=True,
         )
         o2 = o.copy()
         self.assertEqual(o, o2)

@@ -187,7 +187,8 @@ class ConfigurationManager(object):
             'admin.conf',
             'admin.dump_conf',
             'admin.print_conf',
-            'admin.strict'
+            'admin.strict',
+            'admin.expose_secrets',
         ]
         self.options_banned_from_help = options_banned_from_help
 
@@ -292,18 +293,13 @@ class ConfigurationManager(object):
             return config
 
     #--------------------------------------------------------------------------
-    def output_summary(self,
-                       output_stream=sys.stdout,
-                       block_password=True):
+    def output_summary(self, output_stream=sys.stdout):
         """outputs a usage tip and the list of acceptable commands.
         This is useful as the output of the 'help' option.
 
         parameters:
             output_stream - an open file-like object suitable for use as the
                             target of a print statement
-            block_password - a boolean driving the use of a string of * in
-                             place of the value for any object containing the
-                             substring 'passowrd'
         """
         if self.app_name or self.app_description:
             print >> output_stream, 'Application:',
@@ -316,10 +312,8 @@ class ConfigurationManager(object):
 
         names_list = self.get_option_names()
         print >> output_stream, (
-            "usage:\n",
-            self.app_invocation_name,
-            "[OPTIONS]..."
-        ),
+            "usage:\n%s [OPTIONS]..." % self.app_invocation_name
+        )
         bracket_count = 0
         for key in names_list:
             an_option = self.option_definitions[key]
@@ -359,7 +353,8 @@ class ConfigurationManager(object):
             except KeyError:
                 default = option.value
             if default is not None:
-                if 'password' in name.lower():
+                if ((option.secret or 'password' in name.lower())
+                    and not self.option_definitions.admin.expose_secrets.default):
                     default = '*********'
                 if name not in ('help',):
                     # don't bother with certain dead obvious ones
@@ -448,6 +443,18 @@ class ConfigurationManager(object):
         else:
             option_defs = self.option_definitions
 
+        # find all of the secret options and overwrite their values with '*' * 16
+        if not self.option_definitions.admin.expose_secrets.default:
+            for a_key in option_defs.keys_breadth_first():
+                an_option = option_defs[a_key]
+                if ((not a_key.startswith('admin'))
+                    and isinstance(an_option, Option)
+                    and an_option.secret
+                ):
+                    # force the option to be a string of *
+                    option_defs[a_key].value = '*' * 16
+                    option_defs[a_key].from_string_converter = str
+
         value_sources.write(config_file_type,
                             option_defs,
                             opener)
@@ -468,7 +475,10 @@ class ConfigurationManager(object):
                   if key not in self.admin_controls_list]
         config.sort()
         for key, val in config:
-            if 'password' in key.lower():
+            if (
+                self.option_definitions[key].secret
+                or 'password' in key.lower()
+            ):
                 logger.info('%s: *********', key)
             else:
                 try:
@@ -800,6 +810,11 @@ class ConfigurationManager(object):
             doc='mismatched options generate exceptions rather'
                 ' than just warnings'
         )
+        admin.add_option(
+            name='expose_secrets',
+            default=False,
+            doc='should options marked secret get written out or hidden?'
+        )
         # only offer the config file admin options if they've been requested in
         # the values source list
         if ConfigFileFutureProxy in values_source_list:
@@ -846,13 +861,6 @@ class ConfigurationManager(object):
             return 'zzzzzzzzzzz%s' % key
         else:
             return key
-
-    #--------------------------------------------------------------------------
-    @staticmethod
-    def _block_password(qkey, key, value, block_password=True):
-        if block_password and 'password' in key.lower():
-            value = '*********'
-        return qkey, key, value
 
     #--------------------------------------------------------------------------
     def _get_option(self, name):

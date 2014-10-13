@@ -116,6 +116,10 @@ class BClass(RequiredConfig):
 #==============================================================================
 class TestCase(unittest.TestCase):
 
+    def shortDescription(self):
+        # so we can see the path to the failing test
+        return None
+
     #--------------------------------------------------------------------------
     def test_empty_ConfigurationManager_constructor(self):
         # because the default option argument defaults to using sys.argv we
@@ -780,6 +784,62 @@ c.string =   from ini
             point = options.find(end)
 
     #--------------------------------------------------------------------------
+    def test_output_summary_with_secret(self):
+        """test the output_summary with a certain field that isn't called
+        "password" or anything alike but it shouldn't be exposed anyway."""
+        n = config_manager.Namespace()
+        n.add_option(
+            'secret',
+            default='I hate people',
+            doc='The secret',
+            secret=True
+        )
+        c = config_manager.ConfigurationManager(
+            [n],
+            use_admin_controls=True,
+            use_auto_help=False,
+            argv_source=[],
+        )
+        s = StringIO()
+
+        self.assertFalse(c.option_definitions.admin.expose_secrets.default)
+        self.assertFalse(c.option_definitions.admin.expose_secrets.value)
+
+        c.output_summary(output_stream=s)
+        r = s.getvalue()
+
+        self.assertTrue('--secret' in r)
+        self.assertFalse('I hate people' in r)
+
+    #--------------------------------------------------------------------------
+    def test_output_summary_with_secret_exposed(self):
+        """test the output_summary with a certain field that isn't called
+        "password" or anything alike but it shouldn't be exposed anyway."""
+        n = config_manager.Namespace()
+        n.add_option(
+            'secret',
+            default='I hate people',
+            doc='The secret',
+            secret=True
+        )
+        c = config_manager.ConfigurationManager(
+            [n],
+            use_admin_controls=True,
+            use_auto_help=False,
+            argv_source=["--admin.expose_secrets"],
+        )
+        s = StringIO()
+
+        self.assertTrue(c.option_definitions.admin.expose_secrets.default)
+        self.assertTrue(c.option_definitions.admin.expose_secrets.value)
+
+        c.output_summary(output_stream=s)
+        r = s.getvalue()
+
+        self.assertTrue('--secret' in r)
+        self.assertTrue('I hate people' in r)
+
+    #--------------------------------------------------------------------------
     def test_output_summary_header(self):
         """a config with an app_name, app_version and app_description is
         printed on the output summary.
@@ -915,7 +975,6 @@ c.string =   from ini
                 output_stream = StringIO()
                 r = super(MyConfigManager, inner_self).output_summary(
                     output_stream=output_stream,
-                    block_password=False
                 )
                 r = output_stream.getvalue()
                 output_stream.close()
@@ -1025,6 +1084,7 @@ c.string =   from ini
         )
         r = sorted(c._get_options())
         e = sorted([
+            ('admin.expose_secrets', 'expose_secrets', False),
             ('admin.print_conf', 'print_conf', None),
             ('admin.dump_conf', 'dump_conf', ''),
             ('admin.conf', 'conf', None),
@@ -1299,14 +1359,17 @@ c.string =   from ini
     #--------------------------------------------------------------------------
     def test_print_conf_some_options_excluded(self):
         n = config_manager.Namespace()
-        n.add_option('gender',
-                     default='Male',
-                     doc='What kind of genitalia?')
-        n.add_option('salary',
-                     default=10000,
-                     doc='How much do you earn?',
-                     exclude_from_print_conf=True
-                     )
+        n.add_option(
+            'gender',
+            default='Male',
+            doc='what gender identity?',
+        )
+        n.add_option(
+            'salary',
+            default=10000,
+            doc='How much do you earn?',
+            exclude_from_print_conf=True
+        )
 
         old_stdout = sys.stdout
         temp_output = StringIO()
@@ -1329,11 +1392,90 @@ c.string =   from ini
         self.assertTrue('salary' not in printed)
 
     #--------------------------------------------------------------------------
+    def test_print_conf_with_secrets(self):
+        # the main purpose of this test is to indirectly test the method
+        # ConfigurationManager.write_conf
+        n = config_manager.Namespace()
+        n.add_option(
+            'gender',
+            default='Male',
+            doc='what gender identity?',
+        )
+        n.add_option(
+            'salary',
+            default=10000,
+            doc='How much do you earn?',
+            secret=True,
+        )
+
+        old_stdout = sys.stdout
+        temp_output = StringIO()
+        sys.stdout = temp_output
+        try:
+            config_manager.ConfigurationManager(
+                n,
+                [getopt],
+                use_admin_controls=True,
+                use_auto_help=False,
+                quit_after_admin=False,
+                argv_source=['--admin.print_conf=ini'],
+                config_pathname='fred'
+            )
+        finally:
+            sys.stdout = old_stdout
+
+        printed = temp_output.getvalue()
+        self.assertTrue('gender' in printed)
+        self.assertTrue('salary' in printed)
+        self.assertTrue('*' * 16 in printed)
+
+    #--------------------------------------------------------------------------
+    def test_print_conf_with_secrets_exposed(self):
+        # the main purpose of this test is to indirectly test the method
+        # ConfigurationManager.write_conf
+        n = config_manager.Namespace()
+        n.add_option(
+            'gender',
+            default='Male',
+            doc='what gender identity?',
+        )
+        n.add_option(
+            'salary',
+            default=10000,
+            doc='How much do you earn?',
+            secret=True,
+        )
+
+        old_stdout = sys.stdout
+        temp_output = StringIO()
+        sys.stdout = temp_output
+        try:
+            c = config_manager.ConfigurationManager(
+                n,
+                [getopt],
+                use_admin_controls=True,
+                use_auto_help=False,
+                quit_after_admin=False,
+                argv_source=[
+                    '--admin.print_conf=ini',
+                    '--admin.expose_secrets'
+                ],
+                config_pathname='fred'
+            )
+        finally:
+            sys.stdout = old_stdout
+
+        printed = temp_output.getvalue()
+        self.assertTrue('gender' in printed)
+        self.assertTrue('salary' in printed)
+        self.assertTrue('*' * 16 not in printed)
+
+    #--------------------------------------------------------------------------
     def test_dump_conf_some_options_excluded(self):
         n = config_manager.Namespace()
         n.add_option('gender',
                      default='Male',
-                     doc='What kind of genitalia?',
+                     doc='what gender identity?',
                      exclude_from_print_conf=True)
         n.add_option('salary',
                      default=10000,
@@ -1359,20 +1501,6 @@ c.string =   from ini
         finally:
             if os.path.isfile('foo.conf'):
                 os.remove('foo.conf')
-
-    #--------------------------------------------------------------------------
-    def test_ConfigurationManager_block_password(self):
-        function = config_manager.ConfigurationManager._block_password
-        self.assertEqual(function('foo', 'bar', 'peter', block_password=False),
-                         ('foo', 'bar', 'peter'))
-        self.assertEqual(function('foo', 'bar', 'peter', block_password=True),
-                         ('foo', 'bar', 'peter'))
-        self.assertEqual(function('foo', 'password', 'peter',
-                                  block_password=True),
-                         ('foo', 'password', '*********'))
-        self.assertEqual(function('foo', 'my_password', 'peter',
-                                  block_password=True),
-                         ('foo', 'my_password', '*********'))
 
     #--------------------------------------------------------------------------
     def test_do_aggregations(self):
@@ -1865,7 +1993,7 @@ c.string =   from ini
             self.assertTrue(
                 isinstance(cm.option_definitions[an_opt], Option)
             )
-        self.assertEqual(len(opts), 9)  # there must be exactly 9 options
+        self.assertEqual(len(opts), 10)  # there must be exactly 10 options
 
     #--------------------------------------------------------------------------
     @mock.patch('configman.config_manager.warnings')
