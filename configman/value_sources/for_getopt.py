@@ -217,19 +217,25 @@ class ValueSource(object):
             if args[0] == '--':
                 prog_args += args[1:]
                 break
-            if args[0][:2] == '--':
+            if args[0].startswith('--'):
                 try:
-                    opts, args = getopt.do_longs(opts, args[0][2:],
-                                                 longopts, args[1:])
+                    opts, args = getopt.do_longs(
+                        opts,
+                        args[0][2:],
+                        longopts,
+                        args[1:]
+                    )
                 except getopt.GetoptError:
-                    prog_args.append(args[0])
                     args = args[1:]
-            elif args[0][:1] == '-':
+            elif args[0][0] == '-':
                 try:
-                    opts, args = getopt.do_shorts(opts, args[0][1:], shortopts,
-                                                  args[1:])
+                    opts, args = getopt.do_shorts(
+                        opts,
+                        args[0][1:],
+                        shortopts,
+                        args[1:]
+                    )
                 except getopt.GetoptError:
-                    prog_args.append(args[0])
                     args = args[1:]
             else:
                 prog_args.append(args[0])

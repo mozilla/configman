@@ -118,11 +118,11 @@ class TestCase(unittest.TestCase):
         args = ['-a', '14', '--fred', 'sally', 'ethel', 'dwight']
         o, a = function(args, '', [])
         self.assertEqual([], o)
-        self.assertEqual(a, args)
+        self.assertEqual(a, ['14', 'sally', 'ethel', 'dwight'])
         args = ['-a', '14', '--fred', 'sally', 'ethel', 'dwight']
         o, a = function(args, 'a:', [])
         self.assertEqual(o, [('-a', '14')])
-        self.assertEqual(a, ['--fred', 'sally', 'ethel', 'dwight'])
+        self.assertEqual(a, ['sally', 'ethel', 'dwight'])
         args = ['-a', '14', '--fred', 'sally', 'ethel', 'dwight']
         o, a = function(args, 'a', ['fred='])
         self.assertEqual(o, [('-a', ''), ('--fred', 'sally')])
