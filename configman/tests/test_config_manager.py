@@ -784,6 +784,157 @@ c.string =   from ini
             point = options.find(end)
 
     #--------------------------------------------------------------------------
+    def test_output_summary_with_argument_1(self):
+        """test_output_summary: the output from help where one item is a
+        non-switch argument with no default value - the help output should
+        list that argument by name, shown as not optional"""
+        n = config_manager.Namespace()
+        n.add_option('application', None, 'the app', is_argument=True)
+        n.add_option('aaa', False, 'the a', short_form='a')
+        n.add_option('bee', True)
+        n.b = 17
+        n.c = config_manager.Namespace()
+        n.c.add_option('fred', doc='husband from Flintstones')
+        n.d = config_manager.Namespace()
+        n.d.add_option('fred', doc='male neighbor from I Love Lucy')
+        n.d.x = config_manager.Namespace()
+        n.d.x.add_option('size', 100, 'how big in tons', short_form='s')
+        n.d.x.add_option('password', 'secrets', 'the password')
+        c = config_manager.ConfigurationManager(
+            [n],
+            use_admin_controls=True,
+            use_auto_help=False,
+            argv_source=[],
+        )
+        s = StringIO()
+        c.output_summary(output_stream=s)
+        r = s.getvalue()
+        self.assertTrue('OPTIONS:\n' in r)
+        self.assertTrue('application' in r)  # yeah, we want to see option
+        self.assertFalse('[ application' in r)  # but don't want it optional
+
+    #--------------------------------------------------------------------------
+    def test_output_summary_with_argument_2(self):
+        """test_output_summary: the output from help where one item is a
+        non-switch argument with no default value - but the non-switch
+        with no default has been given a value by a value source.  That
+        argument should be shown by help with its value rather than its name
+        and its should show it as not optional."""
+        n = config_manager.Namespace()
+        n.add_option(
+            'application',
+            None,
+            'the app',
+            is_argument=True,
+            from_string_converter=class_converter
+        )
+        n.add_option('aaa', False, 'the a', short_form='a')
+        n.add_option('bee', True)
+        n.b = 17
+        n.c = config_manager.Namespace()
+        n.c.add_option('fred', doc='husband from Flintstones')
+        n.d = config_manager.Namespace()
+        n.d.add_option('fred', doc='male neighbor from I Love Lucy')
+        n.d.x = config_manager.Namespace()
+        n.d.x.add_option('size', 100, 'how big in tons', short_form='s')
+        n.d.x.add_option('password', 'secrets', 'the password')
+        c = config_manager.ConfigurationManager(
+            [n],
+            values_source_list=[{
+                'application': object  # just want any old class here
+            }],
+            use_admin_controls=True,
+            use_auto_help=False,
+            argv_source=[],
+        )
+        s = StringIO()
+        c.output_summary(output_stream=s)
+        r = s.getvalue()
+        self.assertTrue('OPTIONS:\n' in r)
+        self.assertFalse('application' in r)  # we don't want this as an option
+        self.assertTrue('object' in r)  # yeah, we want original str value
+        self.assertFalse('[ object' in r)  # but not as listed as optional
+
+    #--------------------------------------------------------------------------
+    def test_output_summary_with_argument_3(self):
+        """test_output_summary: the output from help where one item is a
+        non-switch argument with no default value"""
+        n = config_manager.Namespace()
+        n.add_option('application', 'somevalue', 'the app', is_argument=True)
+        n.add_option('aaa', False, 'the a', short_form='a')
+        n.add_option('bee', True)
+        n.b = 17
+        n.c = config_manager.Namespace()
+        n.c.add_option('fred', doc='husband from Flintstones')
+        n.d = config_manager.Namespace()
+        n.d.add_option('fred', doc='male neighbor from I Love Lucy')
+        n.d.x = config_manager.Namespace()
+        n.d.x.add_option('size', 100, 'how big in tons', short_form='s')
+        n.d.x.add_option('password', 'secrets', 'the password')
+        c = config_manager.ConfigurationManager(
+            [n],
+            use_admin_controls=True,
+            use_auto_help=False,
+            argv_source=[],
+        )
+        s = StringIO()
+        c.output_summary(output_stream=s)
+        r = s.getvalue()
+        self.assertTrue('OPTIONS:\n' in r)
+        self.assertTrue('application' in r)  # it ought to be there
+        self.assertTrue('[ application' in r)  # listed as optional
+        self.assertFalse('[ somevalue' in r)  # by name not by value
+
+
+    #--------------------------------------------------------------------------
+    def test_output_summary(self):
+        """test_output_summary: the output from help"""
+        n = config_manager.Namespace()
+        n.add_option('aaa', False, 'the a', short_form='a')
+        n.add_option('bee', True)
+        n.b = 17
+        n.c = config_manager.Namespace()
+        n.c.add_option('fred', doc='husband from Flintstones')
+        n.d = config_manager.Namespace()
+        n.d.add_option('fred', doc='male neighbor from I Love Lucy')
+        n.d.x = config_manager.Namespace()
+        n.d.x.add_option('size', 100, 'how big in tons', short_form='s')
+        n.d.x.add_option('password', 'secrets', 'the password')
+        c = config_manager.ConfigurationManager(
+            [n],
+            use_admin_controls=True,
+            use_auto_help=False,
+            argv_source=[],
+        )
+        s = StringIO()
+        c.output_summary(output_stream=s)
+        r = s.getvalue()
+        self.assertTrue('OPTIONS:\n' in r)
+
+        options = r.split('OPTIONS:\n')[1]
+        s.close()
+
+        padding = '\n' + ' ' * 4
+        expect = [
+            ('-a, --aaa', 'the a%s(default: False)' % padding),
+            ('--b', '(default: 17)'),
+            ('--bee', '(default: True)'),
+            ('--c.fred', 'husband from Flintstones'),
+            ('--d.fred', 'male neighbor from I Love Lucy'),
+            ('--d.x.password', 'the password%s(default: *********)' % padding),
+            ('-s, --d.x.size', 'how big in tons%s(default: 100)' % padding),
+        ]
+        point = -1  # used to assert the sort order
+        for i, (start, end) in enumerate(expect):
+            self.assertTrue(
+                point < options.find(start) < options.find(end),
+                expect[i]
+            )
+            point = options.find(end)
+
+
+
+    #--------------------------------------------------------------------------
     def test_output_summary_with_secret(self):
         """test the output_summary with a certain field that isn't called
         "password" or anything alike but it shouldn't be exposed anyway."""
