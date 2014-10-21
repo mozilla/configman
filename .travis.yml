@@ -26,5 +26,5 @@ deploy:
     on:
         tags: true
         repo: mozilla/configman
-        branch: travis-ci-deployment-by-tags
+        branch: master
     distributions: "sdist bdist_wheel"
