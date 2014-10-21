@@ -1,6 +1,8 @@
 configman
 =========
 
+[![Travis](https://travis-ci.org/mozilla/configman.png?branch=master)](https://travis-ci.org/mozilla/configman)
+
 (c) Mozilla
 
 General tool for setting up configuration options per namespaces.
