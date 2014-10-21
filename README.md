@@ -27,3 +27,30 @@ you might consider just using `nosetests`:
 
     nosetests configman.tests.test_config_manager:TestCase.test_write_flat
 
+
+Making a release
+----------------
+
+Because our `.travis.yml` has all the necessary information to automatically
+make a release, all you need to do is to push a tag. Most likely you will
+only want to do this after you have edited the `configman/version.txt`
+file. Suppose you make some changes:
+
+    git add configman/configman.py
+    git commit -m "fixed something"
+
+You might want to push that to your fork and make a pull request. Then,
+to update the version and make a release, first do this:
+
+    vim configman/version.txt
+    git add configman/version.txt
+    git commit -m "bump to version x.y.z"
+    git push origin master
+
+And the tag:
+
+    git tag x.y.z
+    git push origin --tags
+
+After that travis, upon a successful build will automatically make a new
+tarball and wheel and upload it to [PyPI](https://pypi.python.org/pypi/configman)
