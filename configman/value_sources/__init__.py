@@ -40,12 +40,17 @@ import collections
 import inspect
 import os
 
-from source_exceptions import (NoHandlerForType, ModuleHandlesNothingException,
-                               AllHandlersFailedException,
-                               UnknownFileExtensionException,
-                               ValueException)
+from source_exceptions import (
+    NoHandlerForType,
+    ModuleHandlesNothingException,
+    AllHandlersFailedException,
+    UnknownFileExtensionException,
+    ValueException,
+)
+from configman.orderedset import OrderedSet
 
 from ..config_file_future_proxy import ConfigFileFutureProxy
+from ..config_exceptions import CannotConvertError
 
 # replace with dynamic discovery and loading
 #import for_argparse
@@ -55,6 +60,7 @@ import for_json
 import for_conf
 import for_mapping
 import for_configobj
+import for_modules
 
 # please replace with dynamic discovery
 for_handlers = [
@@ -63,6 +69,7 @@ for_handlers = [
     for_json,
     for_conf,
     for_configobj,
+    for_modules,
 ]
 
 
@@ -72,11 +79,17 @@ for_handlers = [
 class DispatchByType(collections.defaultdict):
     #--------------------------------------------------------------------------
     def get_handlers(self, candidate):
-        handlers_set = set()
+        handlers_set = OrderedSet()
+        # find exact candidate matches first
         for key, handler_list in self.iteritems():
-            if (self._is_instance_of(candidate, key) or (candidate is key) or
-                    (inspect.ismodule(key) and candidate is key)):
-                handlers_set.update(handler_list)
+            if candidate is key:
+                for a_handler in handler_list:
+                    handlers_set.add(a_handler)
+        # then find the "instance of" candidate matches
+        for key, handler_list in self.iteritems():
+            if self._is_instance_of(candidate, key):
+                for a_handler in handler_list:
+                    handlers_set.add(a_handler)
         if not handlers_set:
             raise NoHandlerForType("no hander for %s is available" %
                                    candidate)
@@ -95,13 +108,17 @@ class DispatchByType(collections.defaultdict):
 type_handler_dispatch = DispatchByType(list)
 for a_handler in for_handlers:
     try:
-        for a_type_supported in a_handler.can_handle:
+        for a_supported_value_source in a_handler.can_handle:
             try:
-                type_handler_dispatch[a_type_supported].append(a_handler)
+                type_handler_dispatch[a_supported_value_source].append(
+                    a_handler
+                )
             except TypeError:
                 # likely this is an instance of a handleable type that is not
                 # hashable. Replace it with its base type and try to continue.
-                type_handler_dispatch[type(a_type_supported)].append(a_handler)
+                type_handler_dispatch[type(a_supported_value_source)].append(
+                    a_handler
+                )
     except AttributeError:
         # this module has no can_handle attribute, therefore cannot really
         # be a handler and an error should be raised
@@ -152,7 +169,7 @@ def wrap(value_source_list, a_config_manager):
                 wrapped_source = a_handler.ValueSource(a_source,
                                                        a_config_manager)
                 break
-            except ValueException, x:
+            except (ValueException, CannotConvertError), x:
                 # a failure is not necessarily fatal, we need to try all of
                 # the handlers.  It's only fatal when they've all failed
                 exception_as_str = str(x)
@@ -216,3 +233,4 @@ def config_filename_from_commandline(config_manager):
     if not os.path.isfile(config_file_name):
         raise IOError(config_file_name)
     return config_file_name
+
