@@ -311,16 +311,28 @@ class ConfigurationManager(object):
             print >> output_stream, ''
 
         names_list = self.get_option_names()
-        print >> output_stream, (
-            "usage:\n%s [OPTIONS]..." % self.app_invocation_name
-        )
+        print >> output_stream, \
+            "usage:\n%s [OPTIONS]... " % self.app_invocation_name,
         bracket_count = 0
+        # this section prints the non-switch command line arguments
         for key in names_list:
             an_option = self.option_definitions[key]
             if an_option.is_argument:
                 if an_option.default is None:
+                    # there's no option, assume the user must set this
                     print >> output_stream, an_option.name,
+                elif (inspect.isclass(an_option.value)
+                      or inspect.ismodule(an_option.value)
+                ):
+                    # this is already set and it could have expanded, most
+                    # likely this is a case where a sub-command has been
+                    # loaded and we're looking to show the help for it.
+                    # display show it as a constant already provided rather
+                    # than as an option the user must provide
+                    print >> output_stream, an_option.default,
                 else:
+                    # this is an argument that the user may alternatively
+                    # provide
                     print >> output_stream, "[ %s" % an_option.name,
                     bracket_count += 1
         print >> output_stream, ']' * bracket_count, '\n'
