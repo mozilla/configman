@@ -2510,3 +2510,50 @@ c.string =   from ini
         self.assertEqual(statement.value,
              'wilma married fred using password @$*$&26Ht '
              'but divorced because of arg2.')
+
+    #--------------------------------------------------------------------------
+    def test_configmanger_set_has_changed_successfully(self):
+
+        n = config_manager.Namespace()
+        n.add_option(
+            name='dwight',
+            default=0
+        )
+        n.add_option(
+            name='wilma',
+            default=0
+        )
+        n.add_option(
+            name='sarita',
+            default=0
+        )
+        n.add_option(
+            name='robert',
+            default=0
+        )
+
+        config = config_manager.ConfigurationManager(
+            n,
+            [
+                {
+                    "dwight": 20,
+                },
+                {
+                    "dwight": 22,
+                    "wilma": 10
+                },
+                {
+                    "wilma": 0,
+                    "robert": 16,
+                },
+            ],
+            use_admin_controls=False,
+            use_auto_help=False,
+            argv_source=[]
+        )
+        self.assertTrue(config.option_definitions.dwight.has_changed)
+        self.assertFalse(config.option_definitions.wilma.has_changed)
+        self.assertFalse(config.option_definitions.sarita.has_changed)
+        self.assertTrue(config.option_definitions.robert.has_changed)
+
+

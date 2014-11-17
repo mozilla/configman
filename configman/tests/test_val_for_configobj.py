@@ -211,6 +211,9 @@ bad_option=bar  # other comment
             n = self._some_namespaces()
             c = ConfigurationManager(
                 [n],
+                [{
+                    "c.fred": "just like George Jetson",
+                }],
                 use_admin_controls=True,
                 #use_config_files=False,
                 use_auto_help=False,
@@ -222,7 +225,7 @@ bad_option=bar  # other comment
 [c]
 
     # husband from Flintstones
-    #fred=stupid, deadly
+    fred=just like George Jetson
 
     # wife from Flintstones
     #wilma=waspish's
@@ -274,7 +277,7 @@ bad_option=bar  # other comment
                     'yyy': {
                         'password': 'dwight and wilma'
                     }
-                }
+                },
             }
             c = ConfigurationManager(
                 [n],
@@ -300,7 +303,7 @@ bad_option=bar  # other comment
 [c]
 
     # husband from Flintstones
-    #fred=stupid, deadly
+    #fred="stupid, deadly"
 
     # wife from Flintstones
     #wilma=waspish's
@@ -331,7 +334,7 @@ bad_option=bar  # other comment
 
     # the password
     # see "xxx.yyy.password" for the default or override it here
-    #password=dwight and wilma
+    password=dwight and wilma
 """)
             out = StringIO()
             c.write_conf(for_configobj, opener=stringIO_context_wrapper(out))
