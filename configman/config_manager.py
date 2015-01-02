@@ -461,7 +461,10 @@ class ConfigurationManager(object):
                 an_option = option_defs[a_key]
                 if ((not a_key.startswith('admin'))
                     and isinstance(an_option, Option)
-                    and an_option.secret
+                    and (
+                        an_option.secret
+                        or 'password' in an_option.name.lower()
+                    )
                 ):
                     # force the option to be a string of *
                     option_defs[a_key].value = '*' * 16
