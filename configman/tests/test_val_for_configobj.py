@@ -210,6 +210,7 @@ bad_option=bar  # other comment
             n = self._some_namespaces()
             c = config_manager.ConfigurationManager(
                 [n],
+                [{'admin.expose_secrets': True}],
                 use_admin_controls=True,
                 #use_config_files=False,
                 use_auto_help=False,
@@ -249,7 +250,7 @@ bad_option=bar  # other comment
             self.assertEqual(expected.strip(), received.strip())
 
         #----------------------------------------------------------------------
-        def test_write_ini_with_reference_value_froms(
+        def test_write_ini_with_reference_value_froms_exposed_secrets(
             self
         ):
             n = self._some_namespaces()
@@ -277,7 +278,10 @@ bad_option=bar  # other comment
             }
             c = config_manager.ConfigurationManager(
                 [n],
-                values_source_list=[external_values],
+                values_source_list=[
+                    external_values,
+                    {"admin.expose_secrets": True},
+                ],
                 use_admin_controls=True,
                 use_auto_help=False,
                 argv_source=[]
@@ -337,6 +341,100 @@ bad_option=bar  # other comment
             received = out.getvalue()
             out.close()
             self.assertEqual(expected.strip(), received.strip())
+
+        #----------------------------------------------------------------------
+        def test_write_ini_with_reference_value_froms_secrets(
+            self
+        ):
+            n = self._some_namespaces()
+            n.namespace('x1')
+            n.x1.add_option(
+                'password',
+                default='secret "message"',
+                doc='the password',
+                likely_to_be_changed=True,
+                reference_value_from='xxx.yyy'
+            )
+            n.namespace('x2')
+            n.x2.add_option(
+                'password',
+                default='secret "message"',
+                doc='the password',
+                reference_value_from='xxx.yyy'
+            )
+            external_values = {
+                'xxx': {
+                    'yyy': {
+                        'password': 'dwight and wilma'
+                    }
+                }
+            }
+            c = config_manager.ConfigurationManager(
+                [n],
+                values_source_list=[
+                    external_values,
+                    {"admin.expose_secrets": False},
+                ],
+                use_admin_controls=True,
+                use_auto_help=False,
+                argv_source=[]
+            )
+            expected = ("""# the a
+#aaa=2011-05-04T15:10:00
+
+[xxx]
+
+    #+include ./common_xxx.ini
+
+    [[yyy]]
+
+        #+include ./common_yyy.ini
+
+        # the password
+        password=****************
+
+[c]
+
+    # husband from Flintstones
+    #fred=stupid, deadly
+
+    # wife from Flintstones
+    #wilma=waspish's
+
+[d]
+
+    # female neighbor from I Love Lucy
+    #ethel=silly
+
+    # male neighbor from I Love Lucy
+    #fred=crabby
+
+[x]
+
+    # the password
+    #password=****************
+
+    # how big in tons
+    #size=100
+
+[x1]
+
+    # the password
+    # see "xxx.yyy.password" for the default or override it here
+    password=****************
+
+[x2]
+
+    # the password
+    # see "xxx.yyy.password" for the default or override it here
+    #password=****************
+""")
+            out = StringIO()
+            c.write_conf(for_configobj, opener=stringIO_context_wrapper(out))
+            received = out.getvalue()
+            out.close()
+            self.assertEqual(expected.strip(), received.strip())
+
 
         #----------------------------------------------------------------------
         def test_write_ini_with_custom_converters(self):
