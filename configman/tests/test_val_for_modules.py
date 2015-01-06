@@ -313,10 +313,10 @@ import os
 # suppress the mismatch warning since these symbols are
 # values for options, not option names themselves.
 ignore_symbol_list = [
-    Alpha,
-    DotDict,
-    foo,
-    os,
+    "Alpha",
+    "DotDict",
+    "foo",
+    "os",
 ]
 
 
@@ -403,10 +403,10 @@ import os
 # suppress the mismatch warning since these symbols are
 # values for options, not option names themselves.
 ignore_symbol_list = [
-    Alpha,
-    DotDict,
-    foo,
-    os,
+    "Alpha",
+    "DotDict",
+    "foo",
+    "os",
 ]
 
 
