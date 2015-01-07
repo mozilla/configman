@@ -48,6 +48,7 @@ from source_exceptions import (
     ValueException,
 )
 from configman.orderedset import OrderedSet
+from configman.converters import str_to_python_object
 
 from ..config_file_future_proxy import ConfigFileFutureProxy
 from ..config_exceptions import CannotConvertError
@@ -145,7 +146,7 @@ def wrap(value_source_list, a_config_manager):
         if a_source is ConfigFileFutureProxy:
             a_source = a_config_manager._get_option('admin.conf').default
             # raise hell if the config file doesn't exist
-            if a_source:
+            if isinstance(a_source, basestring):
                 config_file_doesnt_exist = not os.path.isfile(a_source)
                 if config_file_doesnt_exist:
                     if a_config_manager.config_optional:
@@ -231,6 +232,12 @@ def config_filename_from_commandline(config_manager):
         return None
 
     if not os.path.isfile(config_file_name):
-        raise IOError(config_file_name)
+        # its not a file, is it a python path?
+        try:
+            config_object = str_to_python_object(config_file_name)
+            return config_object
+        except CannotConvertError:
+            # ok give up, it's not a file nor a module path
+            raise IOError(config_file_name)
     return config_file_name
 

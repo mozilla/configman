@@ -482,7 +482,7 @@ class ValueSource(object):
                 "# values for options, not option names themselves."
             print >>output_stream, "ignore_symbol_list = ["
             for a_symbol in symbols_to_ignore:
-                print >>output_stream, "    %s," % a_symbol
+                print >>output_stream, '    "%s",' % a_symbol
             print >>output_stream, ']\n'
 
         # finally, as the last step, we need to write out the keys and values
