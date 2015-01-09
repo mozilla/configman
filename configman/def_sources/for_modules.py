@@ -36,10 +36,10 @@
 #
 # ***** END LICENSE BLOCK *****
 
-import for_mappings
+from configman.def_sources.for_mappings import setup_definitions
 
 
 def setup_definitions(source, destination):
     module_dict = source.__dict__.copy()
     del module_dict['__builtins__']
-    for_mappings.setup_definitions(module_dict, destination)
+    setup_definitions(module_dict, destination)

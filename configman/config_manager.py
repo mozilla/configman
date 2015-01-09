@@ -45,21 +45,35 @@ import contextlib
 import functools
 import warnings
 
-import configman as cm
-import converters as conv
-import config_exceptions as exc
-import value_sources
-import def_sources
-
 #==============================================================================
 # for convenience define some external symbols here - some client modules may
 # import these symbols from here rather than their origin definition location.
 # PyFlakes may erroneously flag some of these as unused
-from option import Option, Aggregation
-from dotdict import DotDict, DotDictWithAcquisition, iteritems_breadth_first
-from namespace import Namespace
-from required_config import RequiredConfig  # used elsewhere - do not remove
-from config_file_future_proxy import ConfigFileFutureProxy
+from configman.command_line import command_line
+from configman.converters import to_string_converters
+from configman.config_exceptions import NotAnOptionError
+from configman.config_file_future_proxy import ConfigFileFutureProxy
+from configman.def_sources import setup_definitions
+from configman.dotdict import (
+    DotDict,
+    DotDictWithAcquisition,
+    iteritems_breadth_first
+)
+from configman.environment import environment
+from configman.namespace import Namespace
+from configman.option import (
+    Option,
+    Aggregation
+)
+# The following is not used directly in this file, but made available as
+# a type to be imported from this module
+from configman.required_config import RequiredConfig
+from configman.value_sources import (
+    config_filename_from_commandline,
+    wrap_with_value_source_api,
+    dispatch_request_to_write,
+    file_extension_dispatch,
+)
 
 
 #==============================================================================
@@ -171,14 +185,14 @@ class ConfigurationManager(object):
             # nothing set, assume defaults
             if use_admin_controls:
                 values_source_list = (
-                    cm.ConfigFileFutureProxy,
-                    cm.environment,
-                    cm.command_line
+                    ConfigFileFutureProxy,
+                    environment,
+                    command_line
                 )
             else:
                 values_source_list = (
-                    cm.environment,
-                    cm.command_line
+                    environment,
+                    command_line
                 )
 
         admin_tasks_done = False
@@ -213,7 +227,7 @@ class ConfigurationManager(object):
                 # The only action we can take is to trust and continue with the
                 # original copy of the definition source.
                 safe_copy_of_def_source = a_definition_source
-            def_sources.setup_definitions(
+            setup_definitions(
                 safe_copy_of_def_source,
                 self.option_definitions
             )
@@ -221,15 +235,14 @@ class ConfigurationManager(object):
         if use_admin_controls:
             # the name of the config file needs to be loaded from the command
             # line prior to processing the rest of the command line options.
-            config_filename = \
-                value_sources.config_filename_from_commandline(self)
+            config_filename = config_filename_from_commandline(self)
             if (
                 config_filename
-                and cm.ConfigFileFutureProxy in values_source_list
+                and ConfigFileFutureProxy in values_source_list
             ):
                 self.option_definitions.admin.conf.default = config_filename
 
-        self.values_source_list = value_sources.wrap(
+        self.values_source_list = wrap_with_value_source_api(
             values_source_list,
             self
         )
@@ -250,7 +263,7 @@ class ConfigurationManager(object):
                 'app_description',
                 ''
             )
-        except exc.NotAnOptionError:
+        except NotAnOptionError:
             # there is no 'application' option, continue to use the
             # 'app_name' from the parameters passed in, if they exist.
             pass
@@ -360,7 +373,7 @@ class ConfigurationManager(object):
             try:
                 value = option.value
                 type_of_value = type(value)
-                converter_function = conv.to_string_converters[type_of_value]
+                converter_function = to_string_converters[type_of_value]
                 default = converter_function(value)
             except KeyError:
                 default = option.value
@@ -467,9 +480,7 @@ class ConfigurationManager(object):
                     option_defs[a_key].value = '*' * 16
                     option_defs[a_key].from_string_converter = str
 
-        value_sources.write(config_file_type,
-                            option_defs,
-                            opener)
+        dispatch_request_to_write(config_file_type, option_defs, opener)
 
     #--------------------------------------------------------------------------
     def log_config(self, logger):
@@ -495,7 +506,7 @@ class ConfigurationManager(object):
             else:
                 try:
                     logger.info('%s: %s', key,
-                                conv.to_string_converters[type(key)](val))
+                                to_string_converters[type(key)](val))
                 except KeyError:
                     logger.info('%s: %s', key, val)
 
@@ -747,11 +758,11 @@ class ConfigurationManager(object):
                 if self.option_definitions.admin.strict.default:
                     # raise hell...
                     if len(unmatched_keys) > 1:
-                        raise exc.NotAnOptionError(
+                        raise NotAnOptionError(
                             "%s are not valid Options" % unmatched_keys
                         )
                     elif len(unmatched_keys) == 1:
-                        raise exc.NotAnOptionError(
+                        raise NotAnOptionError(
                             "%s is not a valid Option" % unmatched_keys.pop()
                         )
                 else:
@@ -809,7 +820,7 @@ class ConfigurationManager(object):
             name='print_conf',
             default=None,
             doc='write current config to stdout (%s)'
-                % ', '.join(value_sources.file_extension_dispatch.keys())
+                % ', '.join(file_extension_dispatch.keys())
         )
         admin.add_option(
             name='dump_conf',
@@ -879,7 +890,7 @@ class ConfigurationManager(object):
         try:
             return self.option_definitions[name]
         except KeyError:
-            raise exc.NotAnOptionError('%s is not a known option name' % name)
+            raise NotAnOptionError('%s is not a known option name' % name)
 
     #--------------------------------------------------------------------------
     def _get_options(self, source=None, options=None, prefix=''):

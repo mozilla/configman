@@ -36,7 +36,7 @@
 #
 # ***** END LICENSE BLOCK *****
 
-from .. import config_exceptions
+from configman import config_exceptions
 
 
 class ValueException(config_exceptions.ConfigmanException):

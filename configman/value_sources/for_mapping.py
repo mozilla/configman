@@ -39,7 +39,7 @@
 import collections
 import os
 
-from source_exceptions import CantHandleTypeException
+from configman.value_sources.source_exceptions import CantHandleTypeException
 
 from configman.dotdict import DotDict
 from configman.memoize import memoize

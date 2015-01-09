@@ -40,7 +40,7 @@ import collections
 import inspect
 import os
 
-from source_exceptions import (
+from configman.value_sources.source_exceptions import (
     NoHandlerForType,
     ModuleHandlesNothingException,
     AllHandlersFailedException,
@@ -50,18 +50,18 @@ from source_exceptions import (
 from configman.orderedset import OrderedSet
 from configman.converters import str_to_python_object
 
-from ..config_file_future_proxy import ConfigFileFutureProxy
-from ..config_exceptions import CannotConvertError
+from configman.config_file_future_proxy import ConfigFileFutureProxy
+from configman.config_exceptions import CannotConvertError
 
 # replace with dynamic discovery and loading
-#import for_argparse
-#import for_xml
-import for_getopt
-import for_json
-import for_conf
-import for_mapping
-import for_configobj
-import for_modules
+#from configman.value_sources import for_argparse
+#from configman.value_sources import or_xml
+from configman.value_sources import for_getopt
+from configman.value_sources import for_json
+from configman.value_sources import for_conf
+from configman.value_sources import for_mapping
+from configman.value_sources import for_configobj
+from configman.value_sources import for_modules
 
 # please replace with dynamic discovery
 for_handlers = [
@@ -140,7 +140,7 @@ for a_handler in for_handlers:
 
 
 #------------------------------------------------------------------------------
-def wrap(value_source_list, a_config_manager):
+def wrap_with_value_source_api(value_source_list, a_config_manager):
     wrapped_sources = []
     for a_source in value_source_list:
         if a_source is ConfigFileFutureProxy:
@@ -192,7 +192,7 @@ def has_registration_for(config_file_type):
 
 
 #------------------------------------------------------------------------------
-def write(config_file_type,
+def dispatch_request_to_write(config_file_type,
           options_mapping,
           opener):
 

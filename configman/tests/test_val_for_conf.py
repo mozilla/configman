@@ -42,10 +42,11 @@ import tempfile
 import contextlib
 from cStringIO import StringIO
 
-import configman.datetime_util as dtu
+from configman.datetime_util import datetime_from_ISO_string
 
-from ..value_sources import for_conf
-from configman import Namespace, ConfigurationManager
+from configman.value_sources import for_conf
+from configman.namespace import Namespace
+from configman.config_manager import ConfigurationManager
 from configman.dotdict import DotDict, DotDictWithAcquisition
 
 
@@ -68,7 +69,7 @@ class TestCase(unittest.TestCase):
             '2011-05-04T15:10:00',
             'the a',
             short_form='a',
-            from_string_converter=dtu.datetime_from_ISO_string
+            from_string_converter=datetime_from_ISO_string
         )
         n.c = Namespace(doc='c space')
         n.c.add_option(

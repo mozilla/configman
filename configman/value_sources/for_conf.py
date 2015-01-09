@@ -47,11 +47,14 @@ to open it.
 import functools
 import sys
 
-from .. import namespace
-from .. import option as opt
-from .. import converters
-
-from source_exceptions import ValueException, CantHandleTypeException
+from configman import namespace
+from configman.option import (
+    Option,
+)
+from configman.value_sources.source_exceptions import (
+    ValueException,
+    CantHandleTypeException
+)
 from configman.dotdict import DotDict
 from configman.memoize import memoize
 
@@ -132,7 +135,7 @@ class ValueSource(object):
         options = [
             value
             for value in source_dict.values()
-            if isinstance(value, opt.Option)
+            if isinstance(value, Option)
         ]
         options.sort(cmp=lambda x, y: cmp(x.name, y.name))
         namespaces = [

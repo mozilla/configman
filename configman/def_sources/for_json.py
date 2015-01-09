@@ -36,7 +36,7 @@
 #
 # ***** END LICENSE BLOCK *****
 import json
-import for_mappings
+from configman.def_sources import for_mappings
 
 
 def setup_definitions(source, destination):

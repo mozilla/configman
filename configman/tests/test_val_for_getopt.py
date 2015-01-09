@@ -41,7 +41,7 @@ import getopt
 
 import configman.config_manager as config_manager
 from configman.config_exceptions import NotAnOptionError
-from ..value_sources.for_getopt import ValueSource
+from configman.value_sources.for_getopt import ValueSource
 from configman.dotdict import DotDict, DotDictWithAcquisition
 
 

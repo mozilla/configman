@@ -42,12 +42,19 @@ import datetime
 import types
 import json
 
-from required_config import RequiredConfig
-from namespace import Namespace
+from configman.datetime_util import (
+    datetime_from_ISO_string,
+    date_from_ISO_string,
+    datetime_to_ISO_string,
+    date_to_ISO_string,
+    timedelta_to_str,
+)
 
-from .datetime_util import datetime_from_ISO_string as datetime_converter
-from .datetime_util import date_from_ISO_string as date_converter
-from .config_exceptions import CannotConvertError
+# for backward compatibility these two methods get alternate names
+datetime_converter = datetime_from_ISO_string
+date_converter = date_from_ISO_string
+
+from configman.config_exceptions import CannotConvertError
 
 import datetime_util
 
@@ -243,6 +250,11 @@ def str_to_classes_in_namespaces(
                               well as an aggregator that will instantiate the
                               class.
                               """
+
+    # these are only used within this method.  No need to pollute the module
+    # scope with them and avoid potential circular imports
+    from configman.namespace import Namespace
+    from configman.required_config import RequiredConfig
 
     #--------------------------------------------------------------------------
     def class_list_converter(class_list_str):
@@ -453,9 +465,9 @@ to_string_converters = {
     tuple: list_to_str,
     bool: lambda x: 'True' if x else 'False',
     dict: json.dumps,
-    datetime.datetime: datetime_util.datetime_to_ISO_string,
-    datetime.date: datetime_util.date_to_ISO_string,
-    datetime.timedelta: datetime_util.timedelta_to_str,
+    datetime.datetime: datetime_to_ISO_string,
+    datetime.date: date_to_ISO_string,
+    datetime.timedelta: timedelta_to_str,
     type: arbitrary_object_to_string,
     types.ModuleType: arbitrary_object_to_string,
     types.FunctionType: arbitrary_object_to_string,

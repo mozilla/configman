@@ -42,10 +42,13 @@ import os.path
 
 import configobj
 
-from source_exceptions import (CantHandleTypeException, ValueException,
-                               NotEnoughInformationException)
-from ..namespace import Namespace
-from ..option import Option
+from configman.value_sources.source_exceptions import (
+    CantHandleTypeException,
+    ValueException,
+    NotEnoughInformationException
+)
+from configman.namespace import Namespace
+from configman.option import Option
 
 from configman.dotdict import DotDict
 from configman.memoize import memoize
