@@ -56,7 +56,7 @@ from configman.dotdict import (
 )
 from configman import Namespace, RequiredConfig
 from configman.converters import class_converter
-import configman.datetime_util as dtu
+from configman.datetime_util import datetime_from_ISO_string
 from configman.config_exceptions import NotAnOptionError
 from configman.value_sources.source_exceptions import (
     AllHandlersFailedException,
@@ -182,7 +182,7 @@ class TestCase(unittest.TestCase):
             '2011-05-04T15:10:00',
             'the a',
             short_form='a',
-            from_string_converter=dtu.datetime_from_ISO_string
+            from_string_converter=datetime_from_ISO_string
         )
         n.c = config_manager.Namespace(doc='c space')
         n.c.add_option('fred', 'stupid', 'husband from Flintstones')

@@ -39,8 +39,9 @@
 import unittest
 import collections
 
-import configman.config_manager as config_manager
-import configman.dotdict as dd
+from configman.namespace import Namespace
+
+from configman.dotdict import DotDict
 import configman.def_sources as defsrc
 
 
@@ -49,7 +50,7 @@ class TestCase(unittest.TestCase):
 
     #--------------------------------------------------------------------------
     def test_setup_definitions_1(self):
-        d = dd.DotDict()
+        d = DotDict()
 
         def fake_mapping_func(source, destination):
             self.assertTrue(isinstance(source, collections.Mapping))
@@ -59,16 +60,16 @@ class TestCase(unittest.TestCase):
             defsrc.definition_dispatch[collections.Mapping] = fake_mapping_func
             s = {}
             defsrc.setup_definitions(s, d)
-            s = dd.DotDict()
+            s = DotDict()
             defsrc.setup_definitions(s, d)
-            s = config_manager.Namespace()
+            s = Namespace()
             defsrc.setup_definitions(s, d)
         finally:
             defsrc.definition_dispatch = saved_original
 
     #--------------------------------------------------------------------------
     def test_setup_definitions_2(self):
-        d = dd.DotDict()
+        d = DotDict()
 
         def fake_mapping_func(source, destination):
             self.assertTrue(source is collections)
@@ -83,7 +84,7 @@ class TestCase(unittest.TestCase):
 
     #--------------------------------------------------------------------------
     def test_setup_definitions_3(self):
-        d = dd.DotDict()
+        d = DotDict()
 
         def fake_mapping_func(source, destination):
             self.assertTrue(isinstance(source, str))

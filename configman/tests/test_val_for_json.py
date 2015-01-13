@@ -43,9 +43,10 @@ import tempfile
 import contextlib
 from cStringIO import StringIO
 
-import configman.config_manager as config_manager
-import configman.datetime_util as dtu
-from ..value_sources import for_json
+from configman.namespace import Namespace
+from configman.config_manager import ConfigurationManager
+from configman.datetime_util import datetime_from_ISO_string
+from configman.value_sources import for_json
 from configman.value_sources.for_json import ValueSource
 from configman.dotdict import DotDict, DotDictWithAcquisition
 
@@ -86,16 +87,16 @@ class TestCase(unittest.TestCase):
 
     #--------------------------------------------------------------------------
     def test_write_json(self):
-        n = config_manager.Namespace(doc='top')
+        n = Namespace(doc='top')
         n.add_option(
             'aaa',
             '2011-05-04T15:10:00',
             'the a',
             short_form='a',
-            from_string_converter=dtu.datetime_from_ISO_string
+            from_string_converter=datetime_from_ISO_string
         )
 
-        c = config_manager.ConfigurationManager(
+        c = ConfigurationManager(
             [n],
             use_admin_controls=True,
             use_auto_help=False,
@@ -122,15 +123,15 @@ class TestCase(unittest.TestCase):
 
     #--------------------------------------------------------------------------
     def test_json_round_trip(self):
-        n = config_manager.Namespace(doc='top')
+        n = Namespace(doc='top')
         n.add_option(
             'aaa',
             '2011-05-04T15:10:00',
             'the a',
             short_form='a',
-            from_string_converter=dtu.datetime_from_ISO_string
+            from_string_converter=datetime_from_ISO_string
         )
-        expected_date = dtu.datetime_from_ISO_string('2011-05-04T15:10:00')
+        expected_date = datetime_from_ISO_string('2011-05-04T15:10:00')
         n.add_option(
             'bbb',
             '37',
@@ -143,7 +144,7 @@ class TestCase(unittest.TestCase):
         name = '/tmp/test.json'
         import functools
         opener = functools.partial(open, name, 'w')
-        c1 = config_manager.ConfigurationManager(
+        c1 = ConfigurationManager(
             [n],
             [],
             use_admin_controls=True,
@@ -159,7 +160,7 @@ class TestCase(unittest.TestCase):
         try:
             with open(name) as jfp:
                 j = json.load(jfp)
-            c2 = config_manager.ConfigurationManager(
+            c2 = ConfigurationManager(
                 (j,),
                 (d1, d2),
                 use_admin_controls=True,

@@ -38,8 +38,15 @@
 
 import collections
 
-import converters as conv
-from config_exceptions import CannotConvertError, OptionError
+from configman.converters import (
+    str_to_python_object,
+    from_string_converters,
+    to_str
+)
+from configman.config_exceptions import (
+    CannotConvertError,
+    OptionError
+)
 
 
 #==============================================================================
@@ -73,7 +80,7 @@ class Option(object):
                 # take a qualified guess from the default value
                 from_string_converter = self._deduce_converter(default)
         if isinstance(from_string_converter, basestring):
-            from_string_converter = conv.class_converter(from_string_converter)
+            from_string_converter = str_to_python_object(from_string_converter)
         self.from_string_converter = from_string_converter
         # if this is not set, the type is used in converters.py to attempt
         # the conversion
@@ -100,7 +107,7 @@ class Option(object):
         try:
             return self.to_string_converter(self.value)
         except TypeError:
-            return conv.to_str(self.value)
+            return to_str(self.value)
 
     #--------------------------------------------------------------------------
     def __eq__(self, other):
@@ -128,7 +135,7 @@ class Option(object):
     def _deduce_converter(self, default):
         default_type = type(default)
 
-        return conv.str_to_instance_of_type_converters.get(
+        return from_string_converters.get(
             default_type,
             default_type
         )
@@ -224,7 +231,7 @@ class Aggregation(object):
     ):
         self.name = name
         if isinstance(function, basestring):
-            self.function = conv.class_converter(function)
+            self.function = str_to_python_object(function)
         else:
             self.function = function
         self.value = None

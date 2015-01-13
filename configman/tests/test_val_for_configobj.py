@@ -42,16 +42,17 @@ import tempfile
 from cStringIO import StringIO
 import contextlib
 
-import configman.datetime_util as dtu
-import configman.config_manager as config_manager
-
-from configman import Namespace
+from configman.datetime_util import (
+    datetime_from_ISO_string
+)
+from configman.namespace import Namespace
+from configman.config_manager import ConfigurationManager
 from configman.config_exceptions import NotAnOptionError
 from configman.dotdict import DotDict, DotDictWithAcquisition
 
 try:
     #from ..value_sources.for_configobj import ValueSource
-    from ..value_sources import for_configobj
+    from configman.value_sources import for_configobj
 except ImportError:
     # this module is optional.  If it doesn't exsit, that's ok, we'll just
     # igrore the tests
@@ -69,15 +70,15 @@ else:
     class TestCase(unittest.TestCase):
         def _some_namespaces(self):
             """set up some namespaces"""
-            n = config_manager.Namespace(doc='top')
+            n = Namespace(doc='top')
             n.add_option(
                 'aaa',
                 '2011-05-04T15:10:00',
                 'the a',
                 short_form='a',
-                from_string_converter=dtu.datetime_from_ISO_string
+                from_string_converter=datetime_from_ISO_string
             )
-            n.c = config_manager.Namespace(doc='c space')
+            n.c = Namespace(doc='c space')
             n.c.add_option(
                 'fred',
                 'stupid, deadly',
@@ -85,14 +86,14 @@ else:
                 ' husband from Flintstones '
             )
             n.c.add_option('wilma', "waspish's", 'wife from Flintstones')
-            n.d = config_manager.Namespace(doc='d space')
+            n.d = Namespace(doc='d space')
             n.d.add_option('fred', "crabby", 'male neighbor from I Love Lucy')
             n.d.add_option(
                 'ethel',
                 'silly',
                 'female neighbor from I Love Lucy'
             )
-            n.x = config_manager.Namespace(doc='x space')
+            n.x = Namespace(doc='x space')
             n.x.add_option('size', 100, 'how big in tons', short_form='s')
             n.x.add_option('password', 'secret "message"', 'the password')
             return n
@@ -147,7 +148,7 @@ foo=bar  # other comment
 
             try:
                 o = for_configobj.ValueSource(tmp_filename)
-                c = config_manager.ConfigurationManager(
+                c = ConfigurationManager(
                     [],
                     use_admin_controls=True,
                     #use_config_files=False,
@@ -197,7 +198,7 @@ bad_option=bar  # other comment
 
                 self.assertRaises(
                     NotAnOptionError,
-                    config_manager.ConfigurationManager,
+                    ConfigurationManager,
                     [n],
                     [tmp_filename],
                 )
@@ -208,7 +209,7 @@ bad_option=bar  # other comment
         #----------------------------------------------------------------------
         def test_write_ini(self):
             n = self._some_namespaces()
-            c = config_manager.ConfigurationManager(
+            c = ConfigurationManager(
                 [n],
                 use_admin_controls=True,
                 #use_config_files=False,
@@ -275,7 +276,7 @@ bad_option=bar  # other comment
                     }
                 }
             }
-            c = config_manager.ConfigurationManager(
+            c = ConfigurationManager(
                 [n],
                 values_source_list=[external_values],
                 use_admin_controls=True,
@@ -347,7 +348,7 @@ bad_option=bar  # other comment
             def dict_decoder(string):
                 return dict(x.split(':') for x in string.split(','))
 
-            n = config_manager.Namespace(doc='top')
+            n = Namespace(doc='top')
             n.add_option(
                 'a',
                 default={'one': 'One'},
@@ -355,7 +356,7 @@ bad_option=bar  # other comment
                 to_string_converter=dict_encoder,
                 from_string_converter=dict_decoder,
             )
-            c = config_manager.ConfigurationManager(
+            c = ConfigurationManager(
                 [n],
                 use_admin_controls=True,
                 use_auto_help=False,

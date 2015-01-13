@@ -41,10 +41,14 @@ import os
 import contextlib
 
 
-import configman.datetime_util as dtu
-import configman.config_manager as config_manager
+from configman.datetime_util import (
+    datetime_from_ISO_string
+)
+from configman.namespace import Namespace
+from configman.config_manager import ConfigurationManager
+from configman.config_file_future_proxy import ConfigFileFutureProxy
 
-from configman import command_line
+from configman.command_line import command_line
 
 
 #--------------------------------------------------------------------------
@@ -59,38 +63,38 @@ def stringIO_context_wrapper(a_stringIO_instance):
 class TestCase(unittest.TestCase):
     def _some_namespaces(self):
         """set up some namespaces"""
-        n = config_manager.Namespace(doc='top')
+        n = Namespace(doc='top')
         n.add_option(
             'aaa',
             '2011-05-04T15:10:00',
             'the a',
             short_form='a',
-            from_string_converter=dtu.datetime_from_ISO_string
+            from_string_converter=datetime_from_ISO_string
         )
-        n.c = config_manager.Namespace(doc='c space')
+        n.c = Namespace(doc='c space')
         n.c.add_option(
             'dwight',
             'stupid, deadly',
             'husband from Flintstones'
         )
         n.c.add_option('wilma', "waspish's", 'wife from Flintstones')
-        n.d = config_manager.Namespace(doc='d space')
+        n.d = Namespace(doc='d space')
         n.d.add_option('dwight', "crabby", 'male neighbor from I Love Lucy')
         n.d.add_option(
             'ethel',
             'silly',
             'female neighbor from I Love Lucy'
         )
-        n.x = config_manager.Namespace(doc='x space')
+        n.x = Namespace(doc='x space')
         n.x.add_option('size', 100, 'how big in tons', short_form='s')
         n.x.add_option('password', 'secret "message"', 'the password')
         return n
 
     #----------------------------------------------------------------------
     def test_no_config_and_not_required(self):
-        config_manager.ConfigurationManager(
+        ConfigurationManager(
             definition_source=self._some_namespaces(),
-            values_source_list=[config_manager.ConfigFileFutureProxy],
+            values_source_list=[ConfigFileFutureProxy],
             app_name='dwight',
             config_pathname='.',
             config_optional=True,
@@ -100,9 +104,9 @@ class TestCase(unittest.TestCase):
     def test_no_config_and_config_required(self):
         self.assertRaises(
             IOError,
-            config_manager.ConfigurationManager,
+            ConfigurationManager,
             definition_source=self._some_namespaces(),
-            values_source_list=[config_manager.ConfigFileFutureProxy],
+            values_source_list=[ConfigFileFutureProxy],
             app_name='dwight',
             config_pathname='.',
             config_optional=False,
@@ -111,9 +115,9 @@ class TestCase(unittest.TestCase):
     #----------------------------------------------------------------------
     def test_configdir_exists_but_no_config_and_not_required(self):
         temp_config_dir = '/tmp'
-        config_manager.ConfigurationManager(
+        ConfigurationManager(
             definition_source=self._some_namespaces(),
-            values_source_list=[config_manager.ConfigFileFutureProxy],
+            values_source_list=[ConfigFileFutureProxy],
             app_name='dwight',
             config_pathname=temp_config_dir,
             config_optional=True,
@@ -124,9 +128,9 @@ class TestCase(unittest.TestCase):
         temp_config_dir = '/tmp'
         self.assertRaises(
             IOError,
-            config_manager.ConfigurationManager,
+            ConfigurationManager,
             definition_source=self._some_namespaces(),
-            values_source_list=[config_manager.ConfigFileFutureProxy],
+            values_source_list=[ConfigFileFutureProxy],
             app_name='dwight',
             config_pathname=temp_config_dir,
             config_optional=False,
@@ -138,9 +142,9 @@ class TestCase(unittest.TestCase):
         with open('/tmp/dwight.ini', 'w') as f:
             f.write('')
         try:
-            config_manager.ConfigurationManager(
+            ConfigurationManager(
                 definition_source=self._some_namespaces(),
-                values_source_list=[config_manager.ConfigFileFutureProxy],
+                values_source_list=[ConfigFileFutureProxy],
                 app_name='dwight',
                 config_pathname=temp_config_dir,
                 config_optional=True,
@@ -156,9 +160,9 @@ class TestCase(unittest.TestCase):
         with open('/tmp/dwight.ini', 'w') as f:
             f.write('[x]\n    size=42')
         try:
-            cm = config_manager.ConfigurationManager(
+            cm = ConfigurationManager(
                 definition_source=self._some_namespaces(),
-                values_source_list=[config_manager.ConfigFileFutureProxy],
+                values_source_list=[ConfigFileFutureProxy],
                 app_name='dwight',
                 config_pathname=temp_config_dir,
                 config_optional=False,
@@ -177,10 +181,10 @@ class TestCase(unittest.TestCase):
         try:
             self.assertRaises(
                 IOError,
-                config_manager.ConfigurationManager,
+                ConfigurationManager,
                 definition_source=self._some_namespaces(),
                 values_source_list=[
-                    config_manager.ConfigFileFutureProxy,
+                    ConfigFileFutureProxy,
                     command_line
                 ],
                 argv_source=['--admin.conf=wilma.ini'],
@@ -201,10 +205,10 @@ class TestCase(unittest.TestCase):
             with open('/tmp/wilma.ini', 'w') as f:
                 f.write('[x]\n    size=666')
             try:
-                cm = config_manager.ConfigurationManager(
+                cm = ConfigurationManager(
                     definition_source=self._some_namespaces(),
                     values_source_list=[
-                        config_manager.ConfigFileFutureProxy,
+                        ConfigFileFutureProxy,
                         command_line
                     ],
                     argv_source=['--admin.conf=/tmp/wilma.ini'],
@@ -228,10 +232,10 @@ class TestCase(unittest.TestCase):
             with open('./wilma.ini', 'w') as f:
                 f.write('')
             try:
-                config_manager.ConfigurationManager(
+                ConfigurationManager(
                     definition_source=self._some_namespaces(),
                     values_source_list=[
-                        config_manager.ConfigFileFutureProxy,
+                        ConfigFileFutureProxy,
                         command_line
                     ],
                     argv_source=['--admin.conf=./wilma.ini'],
@@ -256,10 +260,10 @@ class TestCase(unittest.TestCase):
             try:
                 self.assertRaises(
                     IOError,
-                    config_manager.ConfigurationManager,
+                    ConfigurationManager,
                     definition_source=self._some_namespaces(),
                     values_source_list=[
-                        config_manager.ConfigFileFutureProxy,
+                        ConfigFileFutureProxy,
                         command_line
                     ],
                     argv_source=['--admin.conf=wilma.ini'],

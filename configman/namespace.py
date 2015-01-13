@@ -36,12 +36,12 @@
 #
 # ***** END LICENSE BLOCK *****
 
-import dotdict
-from option import Option, Aggregation
+from configman.dotdict import DotDict
+from configman.option import Option, Aggregation
 
 
 #==============================================================================
-class Namespace(dotdict.DotDict):
+class Namespace(DotDict):
 
     #--------------------------------------------------------------------------
     def __init__(self, doc='', initializer=None):

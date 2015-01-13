@@ -41,8 +41,18 @@ import datetime
 import unittest
 import re
 
-import configman.converters as conv
-import configman.datetime_util as dtu
+from configman.converters import (
+    boolean_converter,
+    list_converter,
+    timedelta_converter,
+    regex_converter,
+)
+from configman.datetime_util import (
+    datetime_from_ISO_string,
+    date_from_ISO_string,
+    timedelta_to_str,
+)
+
 from configman.option import Option
 from configman.config_exceptions import CannotConvertError, OptionError
 
@@ -145,7 +155,7 @@ class TestCase(unittest.TestCase):
         self.assertEqual(o.default, d)
         self.assertEqual(o.doc, None)
         self.assertEqual(o.from_string_converter,
-                         dtu.datetime_from_ISO_string)
+                         datetime_from_ISO_string)
         self.assertEqual(o.value, d)
 
         data = {
@@ -168,13 +178,13 @@ class TestCase(unittest.TestCase):
         data = {
             'default': '2011-12-31',
             'doc': "lucy's bday",
-            'from_string_converter': dtu.date_from_ISO_string,
+            'from_string_converter': date_from_ISO_string,
         }
         o = Option('now', **data)
         self.assertEqual(o.name, 'now')
         self.assertEqual(o.default, '2011-12-31')
         self.assertEqual(o.doc, "lucy's bday")
-        self.assertEqual(o.from_string_converter, dtu.date_from_ISO_string)
+        self.assertEqual(o.from_string_converter, date_from_ISO_string)
         o.set_value()
         self.assertEqual(o.value, datetime.date(2011, 12, 31))
 
@@ -188,7 +198,7 @@ class TestCase(unittest.TestCase):
         self.assertEqual(o.name, 'now')
         self.assertEqual(o.default, '2011-12-31')
         self.assertEqual(o.doc, "lucy's bday")
-        self.assertEqual(o.from_string_converter, dtu.date_from_ISO_string)
+        self.assertEqual(o.from_string_converter, date_from_ISO_string)
         self.assertEqual(o.value, '2011-12-31')
         o.set_value()
         self.assertEqual(o.value, datetime.date(2011, 12, 31))
@@ -217,27 +227,26 @@ class TestCase(unittest.TestCase):
 
         opt = Option('name', default=False)
         self.assertEqual(opt.default, False)
-        self.assertEqual(opt.from_string_converter,
-                         conv.boolean_converter)
+        self.assertEqual(opt.from_string_converter, boolean_converter)
 
         dt = datetime.datetime(2011, 8, 10, 0, 0, 0)
         opt = Option('name', default=dt)
         self.assertEqual(opt.default, dt)
         self.assertEqual(opt.from_string_converter,
-                         dtu.datetime_from_ISO_string)
+                         datetime_from_ISO_string)
 
         dt = datetime.date(2011, 8, 10)
         opt = Option('name', default=dt)
         self.assertEqual(opt.default, dt)
         self.assertEqual(opt.from_string_converter,
-                         dtu.date_from_ISO_string)
+                         date_from_ISO_string)
 
     #--------------------------------------------------------------------------
     def test_boolean_converter_inOption(self):
         opt = Option('name', default=False)
         self.assertEqual(opt.default, False)
         self.assertEqual(opt.from_string_converter,
-                         conv.boolean_converter)
+                         boolean_converter)
 
         opt.set_value('true')
         self.assertEqual(opt.value, True)
@@ -284,7 +293,7 @@ class TestCase(unittest.TestCase):
         opt = Option('some name', default=some_list)
         self.assertEqual(opt.default, some_list)
         self.assertEqual(opt.from_string_converter,
-                         conv.list_converter)
+                         list_converter)
 
         opt.set_value('list, of, things')
         self.assertEqual(opt.value, ['list', 'of', 'things'])
@@ -295,10 +304,10 @@ class TestCase(unittest.TestCase):
         opt = Option('some name', default=one_day)
         self.assertEqual(opt.default, one_day)
         self.assertEqual(opt.from_string_converter,
-                         conv.timedelta_converter)
+                         timedelta_converter)
 
         two_days = datetime.timedelta(days=2)
-        timedelta_as_string = dtu.timedelta_to_str(two_days)
+        timedelta_as_string = timedelta_to_str(two_days)
         assert isinstance(timedelta_as_string, basestring)
         opt.set_value(timedelta_as_string)
         self.assertEqual(opt.value, two_days)
@@ -322,7 +331,7 @@ class TestCase(unittest.TestCase):
         opt = Option('name', default=sample_regex)
         self.assertEqual(opt.default, sample_regex)
         self.assertEqual(opt.from_string_converter,
-                         conv.regex_converter)
+                         regex_converter)
 
         opt.set_value(regex_str)
         self.assertEqual(opt.value.pattern, sample_regex.pattern)

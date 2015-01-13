@@ -36,8 +36,8 @@
 #
 # ***** END LICENSE BLOCK *****
 
-import os
-with open(os.path.join(os.path.dirname(__file__), 'version.txt')) as f:
+from os import path
+with open(path.join(path.dirname(__file__), 'version.txt')) as f:
     __version__ = f.read().strip()
 
 # Having these here makes it possible to easily import once configman is
@@ -47,21 +47,17 @@ with open(os.path.join(os.path.dirname(__file__), 'version.txt')) as f:
 #    from configman import Namespace, ConfigurationManager
 #
 
-from .config_manager import ConfigurationManager
-from .required_config import RequiredConfig
-from .namespace import Namespace
-
-from .converters import class_converter, regex_converter, timedelta_converter
-
-
-# constants used to refer to Value Source concepts generically
-from config_file_future_proxy import ConfigFileFutureProxy
-import getopt as command_line
-
-from os import environ
-from .dotdict import configman_keys
-environment = configman_keys(environ)
-environment.always_ignore_mismatches = True
+from configman.config_manager import ConfigurationManager
+from configman.required_config import RequiredConfig
+from configman.namespace import Namespace
+from configman.config_file_future_proxy import ConfigFileFutureProxy
+from configman.converters import (
+    class_converter,
+    regex_converter,
+    timedelta_converter
+)
+from configman.environment import environment
+from configman.command_line import command_line
 
 
 #------------------------------------------------------------------------------

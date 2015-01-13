@@ -41,7 +41,7 @@ import datetime
 import functools
 
 import configman.config_manager as config_manager
-import configman.datetime_util as dtu
+from configman.datetime_util import datetime_from_ISO_string
 
 from configman.option import Option
 from configman.orderedset import OrderedSet
@@ -66,7 +66,7 @@ class TestCase(unittest.TestCase):
         self.assertEqual(namespace.beta.default, my_birthday)
         self.assertEqual(
             namespace.beta.from_string_converter,
-            dtu.datetime_from_ISO_string
+            datetime_from_ISO_string
         )
         self.assertEqual(namespace.beta.value, my_birthday)
 

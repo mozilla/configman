@@ -1,5 +1,3 @@
-import collections
-
 # ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
 #
@@ -38,36 +36,10 @@ import collections
 #
 # ***** END LICENSE BLOCK *****
 
-# TODO: This is a temporary dispatch mechanism.  This whole system
-# is to be changed to automatic discovery of the for_* modules
+from os import environ
 
-from configman.def_sources import for_mappings
-from configman.def_sources import for_modules
-from configman.def_sources import for_json
+from configman.dotdict import configman_keys
 
-definition_dispatch = {
-  collections.Mapping: for_mappings.setup_definitions,
-  type(for_modules): for_modules.setup_definitions,
-  #list: for_list.setup_definitions,
-  str: for_json.setup_definitions,
-  unicode: for_json.setup_definitions,
-  #type: for_class.setup_definitions,
-}
+environment = configman_keys(environ)
+environment.always_ignore_mismatches = True
 
-
-class UnknownDefinitionTypeException(Exception):
-    pass
-
-
-def setup_definitions(source, destination):
-    target_setup_func = None
-    try:
-        target_setup_func = definition_dispatch[type(source)]
-    except KeyError:
-        for a_key in definition_dispatch.keys():
-            if isinstance(source, a_key):
-                target_setup_func = definition_dispatch[a_key]
-                break
-        if not target_setup_func:
-            raise UnknownDefinitionTypeException(repr(type(source)))
-    target_setup_func(source, destination)

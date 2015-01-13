@@ -38,9 +38,12 @@
 
 import collections
 
-from .. import converters
-from .. import namespace
-from .. import option
+from configman.converters import str_dict_keys
+from configman.namespace import Namespace
+from configman.option import (
+    Option,
+    Aggregation,
+)
 
 
 #------------------------------------------------------------------------------
@@ -48,33 +51,33 @@ def setup_definitions(source, destination):
     for key, val in source.items():
         if key.startswith('__'):
             continue  # ignore these
-        if isinstance(val, option.Option):
+        if isinstance(val, Option):
             destination[key] = val
             if not val.name:
                 val.name = key
             val.set_value(val.default)
-        elif isinstance(val, option.Aggregation):
+        elif isinstance(val, Aggregation):
             destination[key] = val
         elif isinstance(val, collections.Mapping):
             if 'name' in val and 'default' in val:
                 # this is an Option in the form of a dict, not a Namespace
                 if key == 'not_for_definition' and val is True:
                     continue # ignore this element
-                params = converters.str_dict_keys(val)
-                destination[key] = option.Option(**params)
+                params = str_dict_keys(val)
+                destination[key] = Option(**params)
             elif 'function' in val:  # this is an Aggregation
-                params = converters.str_dict_keys(val)
-                destination[key] = option.Aggregation(**params)
+                params = str_dict_keys(val)
+                destination[key] = Aggregation(**params)
             else:
                 # this is a Namespace
                 if key not in destination:
                     try:
-                        destination[key] = namespace.Namespace(doc=val._doc)
+                        destination[key] = Namespace(doc=val._doc)
                     except AttributeError:
-                        destination[key] = namespace.Namespace()
+                        destination[key] = Namespace()
                 # recurse!
                 setup_definitions(val, destination[key])
         else:
-            destination[key] = option.Option(name=key,
+            destination[key] = Option(name=key,
                                       doc=key,
                                       default=val)
