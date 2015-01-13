@@ -22,8 +22,16 @@ from configman.converters import (
     regex_converter,
     timedelta_converter
 )
+
 from configman.environment import environment
-from configman.command_line import command_line
+# this next line brings in command_line and, if argparse is available,
+# a definition of the configman version of ArgumentParser.  Why is it done
+# with "import *" ? Because I don't know what symbols to import, the decision
+# about what is symbols exist within the module.  To make the import specific
+# here, it would be necessary to reproduce the same logic that is already
+# in the commandline module.
+from configman.commandline import *
+
 
 
 #------------------------------------------------------------------------------

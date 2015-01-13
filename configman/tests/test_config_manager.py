@@ -13,7 +13,12 @@ import getopt
 
 import mock
 
+import argparse
+import getopt
+
+
 import configman.config_manager as config_manager
+from configman.commandline import command_line
 from configman.option import Option
 from configman.dotdict import (
     DotDict,
@@ -21,6 +26,7 @@ from configman.dotdict import (
     create_key_translating_dot_dict,
 )
 from configman import Namespace, RequiredConfig
+from configman.config_file_future_proxy import ConfigFileFutureProxy
 from configman.converters import class_converter
 from configman.datetime_util import datetime_from_ISO_string
 from configman.config_exceptions import NotAnOptionError
@@ -770,14 +776,13 @@ c.string =   from ini
             [n],
             use_admin_controls=True,
             use_auto_help=False,
-            argv_source=[],
+            argv_source=['some_app'],
         )
         s = StringIO()
         c.output_summary(output_stream=s)
         r = s.getvalue()
-        self.assertTrue('OPTIONS:\n' in r)
+        self.assertTrue('[OPTIONS]... ' in r)
         self.assertTrue('application' in r)  # yeah, we want to see option
-        self.assertFalse('[ application' in r)  # but don't want it optional
 
     #--------------------------------------------------------------------------
     def test_output_summary_with_argument_2(self):
@@ -2104,7 +2109,8 @@ c.string =   from ini
 
         cm = config_manager.ConfigurationManager(
             (n,),
-            argv_source=[]
+            values_source_list=[ConfigFileFutureProxy, getopt],
+            argv_source=[],
         )
         opts = cm.get_option_names()
         for an_opt in opts:
