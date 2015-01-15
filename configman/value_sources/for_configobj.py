@@ -250,10 +250,15 @@ class ValueSource(object):
                     )
                 )
 
-            if an_option.likely_to_be_changed:
+            if an_option.likely_to_be_changed or an_option.has_changed:
                 option_format = '%s%s=%s\n'
             else:
                 option_format = '%s#%s=%s\n'
+
+            if isinstance(option_value, basestring) and ',' in option_value:
+                # quote lists unless they're already quoted
+                if option_value[0] not in '\'"':
+                    option_value = '"%s"' % option_value
 
             print >>output_stream, option_format % (
                 indent_spacer,

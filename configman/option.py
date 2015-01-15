@@ -68,6 +68,7 @@ class Option(object):
         not_for_definition=False,
         reference_value_from=None,
         secret=False,
+        has_changed=False,
     ):
         self.name = name
         self.short_form = short_form
@@ -95,6 +96,7 @@ class Option(object):
         self.not_for_definition = not_for_definition
         self.reference_value_from = reference_value_from
         self.secret = secret
+        self.has_changed = has_changed
 
     #--------------------------------------------------------------------------
     def __str__(self):
@@ -146,8 +148,11 @@ class Option(object):
             val = self.default
         if isinstance(val, basestring):
             try:
-                self.value = self.from_string_converter(val)
+                new_value = self.from_string_converter(val)
+                self.has_changed = new_value != self.value
+                self.value = new_value
             except TypeError:
+                self.has_changed = val != self.value
                 self.value = val
             except ValueError:
                 error_message = "In '%s', '%s' fails to convert '%s'" % (
@@ -157,10 +162,12 @@ class Option(object):
                 )
                 raise CannotConvertError(error_message)
         elif isinstance(val, Option):
+            self.has_changed = val.default != self.value
             self.value = val.default
         elif isinstance(val, collections.Mapping) and 'default' in val:
             self.set_value(val["default"])
         else:
+            self.has_changed = val != self.value
             self.value = val
 
     #--------------------------------------------------------------------------
@@ -192,6 +199,7 @@ class Option(object):
         if self.default is None or force:
             self.default = val
             self.set_value(val)
+            self.has_changed = True
         else:
             raise OptionError(
                 "cannot override existing default without using the 'force' "
@@ -216,6 +224,7 @@ class Option(object):
             not_for_definition=self.not_for_definition,
             reference_value_from=self.reference_value_from,
             secret=self.secret,
+            has_changed=self.has_changed,
         )
         return o
 
