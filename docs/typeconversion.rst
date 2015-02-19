@@ -90,7 +90,7 @@ have one that looks like this::
 
 
 Another more advanced example is to load a *class* rather than a simple
- value. To do this you'll need to use one of the pre-defined ``configman``
+value. To do this you'll need to use one of the pre-defined ``configman``
 converters as the ``from_string_converter`` value. To our example
 above we're going to add a configurable class::
 
