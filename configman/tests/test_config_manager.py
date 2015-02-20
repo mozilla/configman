@@ -2268,6 +2268,39 @@ c.string =   from ini
         self.assertEqual(cn.a.fred, 21)
 
     #--------------------------------------------------------------------------
+    def test_expansion_new_req_as_dict_bug(self):
+        # when a class is expanded and that class has required config that is
+        # of Mapping that is not a Namespace or DotDict, adding those
+        # requirements has been failing.  Test that it now works after a change
+        # that converts them to Namespaces during the expansion process.
+        class A(RequiredConfig):
+            @staticmethod
+            def get_required_config():
+                return {
+                    "alpha": 1,
+                    "beta": True,
+                    "gamma": "hello",
+                }
+
+        r = Namespace()
+        r.add_option(
+            'some_class',
+            default=A,
+            from_string_converter=class_converter,
+        )
+
+        cm = config_manager.ConfigurationManager(
+            definition_source=[r],
+            values_source_list=[],
+            argv_source=[]
+        )
+        cn = cm.get_config()
+
+        self.assertEqual(cn.alpha, 1)
+        self.assertTrue(cn.beta)
+        self.assertEqual(cn.gamma, 'hello')
+
+    #--------------------------------------------------------------------------
     def test_value_source_object_hook_1(self):
         """the definition source defines only keys with underscores.
         the value sources may have hyphens instead of underscores.
