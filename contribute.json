@@ -8,7 +8,7 @@
     "participate": {
         "home": "https://github.com/mozilla/configman",
         "docs": "http://configman.readthedocs.org/en/latest/",
-        "irc": "irc://irc.mozilla.org/#webeng",
+        "irc": "irc://irc.mozilla.org/#breakpad",
         "irc-contacts": ["lars", "peterbe"]
     },
     "bugs": {
