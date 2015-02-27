@@ -630,18 +630,23 @@ class ConfigurationManager(object):
                 try:
                     try:
                         # try to fetch new requirements from this value
-                        new_req = an_option.value.get_required_config()
+                        new_requirements = \
+                            an_option.value.get_required_config()
                     except AttributeError:
-                        new_req = an_option.value.required_config
+                        new_requirements = an_option.value.required_config
                     # make sure what we got as new_req is actually a
                     # Mapping of some sort
-                    if not isinstance(new_req, collections.Mapping):
+                    if not isinstance(new_requirements, collections.Mapping):
                         # we didn't get a mapping, perhaps the option value
                         # was a Mock object - in any case we can't try to
                         # interpret 'new_req' as a configman requirement
                         # collection.  We must abandon processing this
                         # option further
                         continue
+                    if not isinstance(new_requirements, Namespace):
+                        new_requirements = Namespace(
+                            initializer=new_requirements
+                        )
                     # get the parent namespace
                     current_namespace = self.option_definitions.parent(key)
                     if current_namespace is None:
@@ -657,12 +662,13 @@ class ConfigurationManager(object):
                     # as unseen so that the new default doesn't overwrite any
                     # of the overlays that have already taken place.
                     known_keys = known_keys.difference(
-                        known_keys.intersection(new_req.keys())
+                        known_keys.intersection(new_requirements.keys())
                     )
                     # add the new Options to the namespace
-                    new_namespace = new_req.safe_copy(
+                    new_namespace = new_requirements.safe_copy(
                         an_option.reference_value_from
                     )
+
                     for new_key in new_namespace.keys_breadth_first():
                         if new_key not in current_namespace:
                             current_namespace[new_key] = new_namespace[new_key]
