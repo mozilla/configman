@@ -14,7 +14,6 @@ except ImportError:
     raise SkipTest
 
 from mock import Mock
-from os import environ
 
 from functools import partial
 
@@ -24,21 +23,16 @@ from configman.converters import (
     boolean_converter,
     list_converter,
     list_to_str,
-    to_str,
 )
 
-from configman.config_file_future_proxy import ConfigFileFutureProxy
 from configman.commandline import command_line
-from configman.dotdict import DotDict
-from configman.value_sources.source_exceptions import CantHandleTypeException
 
 from configman.def_sources.for_argparse import ArgumentParser
 from configman.value_sources.for_argparse import (
     #issubclass_with_no_type_error,
     ValueSource,
-    argparse,
-    IntermediateConfigmanParser,
 )
+
 
 #------------------------------------------------------------------------------
 def quote_stripping_list_of_ints(a_string):
@@ -48,6 +42,7 @@ def quote_stripping_list_of_ints(a_string):
         item_separator=' ',
         item_converter=int
     )
+
 
 #==============================================================================
 class TestCaseForValSourceArgparse(TestCase):
@@ -83,7 +78,7 @@ class TestCaseForValSourceArgparse(TestCase):
             'beta',
             default='the second',
             doc='the first parameter',
-            short_form = 'b',
+            short_form='b',
         )
         n.add_option(
             'gamma',
@@ -136,36 +131,6 @@ class TestCaseForValSourceArgparse(TestCase):
             argv_source=[
                 "16",
                 "-b=THE SECOND",
-                '--gamma="88 99 111 333"',
-                "--delta",
-            ],
-            use_auto_help=False,
-        )
-        config = cm.get_config()
-
-        expected = {
-            "alpha": 16,
-            "beta": 'THE SECOND',
-            "gamma": [88, 99, 111, 333],
-            "delta": True,
-            "admin.print_conf": None,
-            "admin.dump_conf": '',
-            "admin.strict": False,
-            "admin.expose_secrets": False
-        }
-
-        for k in config.keys_breadth_first():
-            self.assertEqual(config[k], expected[k])
-
-    #--------------------------------------------------------------------------
-    def test_basic_02_change_all(self):
-        option_definitions = self.setup_configman_namespace()
-        cm = ConfigurationManager(
-            definition_source=option_definitions,
-            values_source_list=[command_line],
-            argv_source=[
-                "16",
-                "--b=THE SECOND",
                 '--gamma="88 99 111 333"',
                 "--delta",
             ],
@@ -285,7 +250,6 @@ class TestCaseForValSourceArgparse(TestCase):
         for k in config.keys_breadth_first():
             self.assertEqual(config[k], expected[k])
 
-
     #--------------------------------------------------------------------------
     def test_basic_06_argparse_class_expansion(self):
         option_definitions = self.setup_configman_namespace()
@@ -379,19 +343,3 @@ class TestCaseForValSourceArgparse(TestCase):
 
         for k in config.keys_breadth_first():
             self.assertEqual(config[k], expected[k])
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
