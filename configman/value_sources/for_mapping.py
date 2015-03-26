@@ -4,17 +4,20 @@
 
 import collections
 import os
+import sys
 
 from configman.value_sources.source_exceptions import CantHandleTypeException
-
+from configman.option import Option
 from configman.dotdict import DotDict
 from configman.memoize import memoize
-
+from configman import namespace
 
 can_handle = (
     os.environ,
     collections.Mapping,
 )
+
+file_name_extension = 'env'
 
 
 #==============================================================================
@@ -40,3 +43,57 @@ class ValueSource(object):
             return self.source
         return obj_hook(initializer=self.source)
 
+    #--------------------------------------------------------------------------
+    @staticmethod
+    def write(source_mapping, output_stream=sys.stdout):
+        ValueSource._write_ini(source_mapping, output_stream=output_stream)
+
+    #--------------------------------------------------------------------------
+    @staticmethod
+    def _namespace_reference_value_from_sort(key_value_tuple):
+        key, value = key_value_tuple
+        if value._reference_value_from:
+            # this forces referenced value sections to sort to the top.
+            return 'aaaaaa' + key
+        else:
+            return key
+
+    #--------------------------------------------------------------------------
+    @staticmethod
+    def write(source_dict, namespace_name=None, output_stream=sys.stdout):
+        options = [
+            value
+            for value in source_dict.values()
+            if isinstance(value, Option)
+        ]
+        options.sort(cmp=lambda x, y: cmp(x.name, y.name))
+        namespaces = [
+            (key, value)
+            for key, value in source_dict.items()
+            if isinstance(value, namespace.Namespace)
+        ]
+        for an_option in options:
+            if namespace_name:
+                option_name = "%s.%s" % (namespace_name, an_option.name)
+            else:
+                option_name = an_option.name
+            option_value = str(an_option)
+            if isinstance(option_value, unicode):
+                option_value = option_value.encode('utf8')
+
+            option_format = '%s=%r'
+            print >>output_stream, option_format % (
+              option_name.replace('.', '__'),
+              option_value
+            )
+        for key, a_namespace in namespaces:
+            if namespace_name:
+                namespace_label = ''.join((namespace_name, '.', key))
+            else:
+                namespace_label = key
+            print >> output_stream, ''
+            ValueSource.write(
+              a_namespace,
+              namespace_name=namespace_label,
+              output_stream=output_stream
+            )
