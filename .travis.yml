@@ -24,7 +24,6 @@ deploy:
     password:
         secure: pLLUb5KUKlK+/G05WxbWhv0TCBqtsdgK6FylIca1EkfvVeVSEZzbL/ptSKt47cIUypm6tkbcG2QE1FzCD/Oj/JnttJyQg0UMOFnobbYqaldgDYi6LXNejG4/5SqNkMu0yabkcK0nKx2s614lCAUypvWZrX5KYh61vHT/+Asxqek=
     on:
-        tags: true
         repo: mozilla/configman
         branch: master
     distributions: "sdist bdist_wheel"
