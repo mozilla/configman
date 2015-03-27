@@ -3,7 +3,7 @@ configman
 
 [![Travis](https://travis-ci.org/mozilla/configman.png?branch=master)](https://travis-ci.org/mozilla/configman)
 
-(c) Mozilla
+Copyright Mozilla, 2013 - 2015
 
 General tool for setting up configuration options per namespaces.
 Supports reading and writing configs generally from and into config
