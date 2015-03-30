@@ -14,7 +14,7 @@ from configman.namespace import Namespace
 from configman.config_manager import ConfigurationManager
 from configman.config_file_future_proxy import ConfigFileFutureProxy
 
-from configman.command_line import command_line
+from configman import command_line
 
 
 #--------------------------------------------------------------------------

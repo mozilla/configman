@@ -412,8 +412,8 @@ py_obj_to_str = arbitrary_object_to_string  # for backwards compatibility
 
 
 #------------------------------------------------------------------------------
-def list_to_str(a_list):
-    return ', '.join(to_str(x) for x in a_list)
+def list_to_str(a_list, delimiter=', '):
+    return delimiter.join(to_str(x) for x in a_list)
 
 #------------------------------------------------------------------------------
 known_mapping_type_to_str = dict(

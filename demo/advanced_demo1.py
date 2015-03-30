@@ -41,7 +41,6 @@ def define_config():
       name='host',
       default='localhost',
       doc='the hostname of the database',
-      short_form='h'
     )
     definition.add_option(
       name='dbname',
