@@ -14,10 +14,8 @@ from configman.def_sources import for_json
 definition_dispatch = {
   collections.Mapping: for_mappings.setup_definitions,
   type(for_modules): for_modules.setup_definitions,
-  #list: for_list.setup_definitions,
   str: for_json.setup_definitions,
   unicode: for_json.setup_definitions,
-  #type: for_class.setup_definitions,
 }
 
 

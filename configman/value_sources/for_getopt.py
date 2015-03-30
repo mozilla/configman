@@ -241,3 +241,13 @@ class ValueSource(object):
                 # this option definition does have the concept of being
                 # an argument - likely an aggregation
                 pass
+
+    #--------------------------------------------------------------------------
+    @staticmethod
+    def _setup_auto_help(the_config_manager):
+        help_option = option.Option(
+            name='help',
+            doc='print this',
+            default=False
+        )
+        the_config_manager.definition_source_list.append({'help': help_option})

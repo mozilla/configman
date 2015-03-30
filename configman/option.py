@@ -35,6 +35,7 @@ class Option(object):
         reference_value_from=None,
         secret=False,
         has_changed=False,
+        foreign_data=None,
     ):
         self.name = name
         self.short_form = short_form
@@ -63,6 +64,7 @@ class Option(object):
         self.reference_value_from = reference_value_from
         self.secret = secret
         self.has_changed = has_changed
+        self.foreign_data = foreign_data
 
     #--------------------------------------------------------------------------
     def __str__(self):
@@ -97,7 +99,9 @@ class Option(object):
         if self.default is None:
             return '<Option: %r>' % self.name
         else:
-            return '<Option: %r, default=%r>' % (self.name, self.default)
+            return '<Option: %r, default=%r, value=%r, is_argument=%r>' % (
+                self.name, self.default, self.value, self.is_argument
+            )
 
     #--------------------------------------------------------------------------
     def _deduce_converter(self, default):
@@ -191,6 +195,7 @@ class Option(object):
             reference_value_from=self.reference_value_from,
             secret=self.secret,
             has_changed=self.has_changed,
+            foreign_data=self.foreign_data,
         )
         return o
 

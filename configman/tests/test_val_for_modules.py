@@ -20,6 +20,7 @@ from configman import (
 from configman.option import Option
 from configman.config_exceptions import CannotConvertError, NotAnOptionError
 from configman.value_sources.for_modules import ValueSource
+from configman.converters import class_converter
 
 
 #==============================================================================
@@ -47,6 +48,20 @@ class Beta(RequiredConfig):
         self.config = config
         self.b = config.b
 
+#==============================================================================
+class Delta(RequiredConfig):
+    required_config = Namespace()
+    required_config.add_option(
+        'messy',
+        doc='messy',
+        default=-99
+    )
+    required_config.add_option(
+        'dd',
+        doc='dd',
+        default=Beta,
+        from_string_converter=class_converter
+    )
 
 #==========================================================================
 class TestCase(unittest.TestCase):
