@@ -5,6 +5,7 @@
 
 import collections
 import weakref
+import StringIO
 
 from configman.orderedset import OrderedSet
 from configman.memoize import memoize
@@ -240,6 +241,16 @@ class DotDict(collections.MutableMapping):
             return None
         else:
             return self[parent_key]
+
+    def __str__(self):
+        out = StringIO.StringIO()
+        for key in self.keys_breadth_first(False):
+            value = self[key]
+            indent = '\t' * key.count('.')
+            if isinstance(value, collections.Mapping):
+                value = str(value)  # recurse!
+            print >>out, '{0}{1}: {2}'.format(indent, key, repr(value))
+        return out.getvalue().strip()
 
 
 #==============================================================================
