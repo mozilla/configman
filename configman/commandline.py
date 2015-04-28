@@ -5,5 +5,6 @@
 # this will be expanded in the future when additional command line libraries
 # are supported
 
+# at which point we want to make argparse the default, we will eliminate
+# this line
 import getopt as command_line
-
