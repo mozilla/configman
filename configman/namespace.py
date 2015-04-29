@@ -46,16 +46,20 @@ class Namespace(DotDict):
         an_option.name = name_parts[-1]
 
         setattr(current_namespace, an_option.name, an_option)
+        return an_option
 
     #--------------------------------------------------------------------------
     def add_aggregation(self, name, function, secret=False):
         an_aggregation = Aggregation(name, function, secret)
         setattr(self, name, an_aggregation)
+        return an_aggregation
 
     #--------------------------------------------------------------------------
     def namespace(self, name, doc=''):
         # ensure that all new sub-namespaces are of the same type as the parent
-        setattr(self, name, self.__class__(doc=doc))
+        a_namespace = self.__class__(doc=doc)
+        setattr(self, name, a_namespace)
+        return a_namespace
 
     #--------------------------------------------------------------------------
     def set_value(self, name, value, strict=True):
