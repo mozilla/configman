@@ -375,7 +375,10 @@ class ArgumentParser(argparse.ArgumentParser):
 
         #--------------------------------------------------------------------
         # STORE_CONST
-        elif argparse_action_name == 'store_const':
+        elif (
+            argparse_action_name == 'store_const'
+            or argparse_action_name == 'count'
+        ):
             if argparse_dest is None:
                 configman_name, configman_is_argument = self._get_option_name(
                     args
