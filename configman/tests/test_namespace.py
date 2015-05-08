@@ -260,3 +260,30 @@ class TestCase(unittest.TestCase):
             [k for k in d.keys_breadth_first(include_dicts=True)]
         )
 
+    #--------------------------------------------------------------------------
+    def test_add_option_returns_option(self):
+        n = config_manager.Namespace()
+        option = n.add_option('name', 'Peter')
+        self.assertEqual(option.name, 'name')
+        self.assertEqual(option.value, 'Peter')
+        self.assertEqual(option, n['name'])
+
+        # should work the same if you add an option straight
+        o = Option('dwight')
+        option = n.add_option(o)
+        self.assertEqual(option, o)
+
+    #--------------------------------------------------------------------------
+    def test_add_aggregation_returns_aggregation(self):
+        def foo(all, local, args):
+            return 17
+        n = config_manager.Namespace()
+        aggregation = n.add_aggregation('myaggregation', foo)
+        self.assertEqual(n['myaggregation'], aggregation)
+
+    #--------------------------------------------------------------------------
+    def test_add_namespace_returns_namespace(self):
+        n = config_manager.Namespace()
+        namespace = n.namespace('deeper', 'My doc')
+        self.assertEqual(namespace, n.deeper)
+        self.assertEqual(namespace._doc, 'My doc')
