@@ -72,6 +72,20 @@ class ValueSource(object):
             for key, value in source_dict.items()
             if isinstance(value, namespace.Namespace)
         ]
+
+        def split_long_line(line, prefix='\n', max_length=80):
+            parts = line.split()
+            lines = []
+            one = []
+            for part in parts:
+                if len(' '.join(one + [part])) > max_length - len(prefix):
+                    lines.append(one)
+                    one = []
+                one.append(part)
+            lines.append(one)
+            lines.insert(0, '')
+            return prefix.join([' '.join(x) for x in lines])
+
         for an_option in options:
             if namespace_name:
                 option_name = "%s.%s" % (namespace_name, an_option.name)
@@ -80,6 +94,13 @@ class ValueSource(object):
             option_value = str(an_option)
             if isinstance(option_value, unicode):
                 option_value = option_value.encode('utf8')
+
+            comment_line = '%s (default: %r)' % (
+                an_option.doc or '',
+                an_option.default
+            )
+            comment_lines = split_long_line(comment_line, '\n# ').lstrip()
+            print >>output_stream, comment_lines
 
             option_format = '%s=%r'
             print >>output_stream, option_format % (
