@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -575,3 +576,30 @@ class TestCase(unittest.TestCase):
         self.assertTrue(
             isinstance(d.a_a.b_b, HyphenUnderscoreNamespace)
         )
+
+    #--------------------------------------------------------------------------
+    def test__str__(self):
+        d = DotDict()
+        d.a = 1
+        d.b = True
+        d.c = 10/3.0
+        d.d = DotDict()
+        d.d.a = 'String'
+        d.d.b = u'Péter'
+        d.d.c = 6
+        d.d.d = DotDict()
+        d.d.d.a = 7
+        d.e = DotDict()
+        d.e.a = 8
+        output = str(d)
+        expected_output = '\n'.join([
+            'a: 1',
+            'b: True',
+            'c: %r' % (10/3.0,),
+            '\td.a: %r' % 'String',
+            '\td.b: %r' % u'Péter',
+            '\td.c: 6',
+            '\t\td.d.a: 7',
+            '\te.a: 8',
+        ])
+        self.assertEqual(output, expected_output)
