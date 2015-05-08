@@ -128,17 +128,56 @@ class TestCase(unittest.TestCase):
         cm.write_conf(for_mapping, opener=stringIO_context_wrapper(out))
         received = out.getvalue()
         out.close()
-        expected = """aaa='2011-05-04T15:10:00'
+        expected = """
+# the a (default: '2011-05-04T15:10:00')
+aaa='2011-05-04T15:10:00'
 
+# your uncle (default: 98)
 c__dwight='98'
+# husband from Flintstones (default: 'stupid')
 c__fred='stupid'
+# wife from Flintstones (default: 'waspish')
 c__wilma='waspish'
 
+# my uncle (default: 97)
 c__e__dwight='97'
 
+# female neighbor from I Love Lucy (default: 'silly')
 d__ethel='silly'
+# male neighbor from I Love Lucy (default: 'crabby')
 d__fred='crabby'
 
+# the password (default: 'secret')
 x__password='secret'
-x__size='100'"""
+# how big in tons (default: 100)
+x__size='100'
+        """.strip()
+        self.assertEqual(received.strip(), expected)
+
+    #--------------------------------------------------------------------------
+    def test_for_mapping_long_doc_in_write_conf(self):
+        n = self._some_namespaces()
+        n = Namespace(doc='top')
+        n.add_option(
+            'aaa',
+            'Default Value Goes In Here',
+            'This time the documentation string is really long. So long '
+            'that we have to write it on multiple lines.',
+        )
+        cm = ConfigurationManager(
+            n,
+            values_source_list=[],
+        )
+        out = StringIO()
+        cm.write_conf(for_mapping, opener=stringIO_context_wrapper(out))
+        received = out.getvalue()
+        out.close()
+        lines = received.splitlines()
+        for line in received.splitlines():
+            self.assertTrue(len(line) < 80, line)
+        expected = """
+# This time the documentation string is really long. So long that we have to
+# write it on multiple lines. (default: 'Default Value Goes In Here')
+aaa='Default Value Goes In Here'
+        """.strip()
         self.assertEqual(received.strip(), expected)
