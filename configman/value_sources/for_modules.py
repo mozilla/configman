@@ -447,7 +447,7 @@ class ValueSource(object):
                 "# suppress the mismatch warning since these symbols are\n" \
                 "# values for options, not option names themselves."
             print >>output_stream, "ignore_symbol_list = ["
-            for a_symbol in symbols_to_ignore:
+            for a_symbol in sorted(symbols_to_ignore):
                 print >>output_stream, '    "%s",' % a_symbol
             print >>output_stream, ']\n'
 
