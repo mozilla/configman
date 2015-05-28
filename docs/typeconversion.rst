@@ -5,7 +5,7 @@ Type conversion
 ===============
 
 ``configman`` comes with an advanced set of type conversion utilities.
-This is necessary since config files don't allow rich python type to
+This is necessary since config files don't allow rich python types to
 be expressed. The way this is done is by turning things into strings
 and turning strings into rich python objects by labelling what type
 conversion script to use.
