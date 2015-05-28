@@ -98,7 +98,7 @@ def str_quote_stripper(input_str):
 # a bunch of known mappings of builtin items to strings
 import __builtin__
 known_mapping_str_to_type = dict(
-    (key, val) for key, val in __builtin__.__dict__.iteritems()
+    (key, val) for key, val in sorted(__builtin__.__dict__.items())
     if val not in (True, False)
 )
 
@@ -417,7 +417,7 @@ def list_to_str(a_list, delimiter=', '):
 
 #------------------------------------------------------------------------------
 known_mapping_type_to_str = dict(
-    (val, key) for key, val in __builtin__.__dict__.iteritems()
+    (val, key) for key, val in sorted(__builtin__.__dict__.items())
     if val not in (True, False, list, dict)
 )
 
