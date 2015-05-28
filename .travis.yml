@@ -21,23 +21,20 @@ env:
     - PIP_WHEEL_DIR=$HOME/.cache/pip/wheels
     - PIP_FIND_LINKS=file://$HOME/.cache/pip/wheels
 
-python:
-    - 2.6
-    - 2.7
-
+  matrix:
+    - TOX_ENV=py26
+    - TOX_ENV=py27
 
 install:
     # Before installation, we'll run ``pip wheel``, this will build wheels for
     # anything that doesn't already have one on PyPI.
-    - pip wheel -r test-requirements.txt
+    - travis_retry pip wheel tox
     # Actually install our dependencies now, this will pull from the directory
     # that the first command placed the Wheels into.
-    - pip install -r test-requirements.txt
-    
-    - python setup.py install
+    - travis_retry pip install tox
 
 script:
-    - nosetests configman
+    - tox -e $TOX_ENV
 
 notifications:
     irc:
