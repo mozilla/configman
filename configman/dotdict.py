@@ -147,7 +147,10 @@ class DotDict(collections.MutableMapping):
     def __getitem__(self, key):
         """define the square bracket operator to refer to the object's __dict__
         for fetching values.  It accepts keys in the form X.Y.Z"""
-        key_split = key.split('.')
+        try:
+            key_split = key.split('.')
+        except AttributeError:
+            key_split =  [key]
         current = self
         for k in key_split:
             current = getattr(current, k)

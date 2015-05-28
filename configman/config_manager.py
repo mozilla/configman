@@ -556,40 +556,45 @@ class ConfigurationManager(object):
                 if isinstance(self.option_definitions[x], Option)]
 
     #--------------------------------------------------------------------------
-    def _create_reference_value_from_links(self, keys, known_keys):
+    def _create_reference_value_options(self, keys, finished_keys):
         """this method steps through the option definitions looking for
         alt paths.  On finding one, it creates the 'reference_value_from' links
         within the option definitions and populates it with copied options."""
         # a set of known reference_value_from_links
-        set_of_reference_value_from_links = set()
-        for key in (k for k in keys if k not in known_keys):
+        set_of_reference_value_option_names = set()
+        for key in keys:
+            if key in finished_keys:
+                continue
             an_option = self.option_definitions[key]
             if an_option.reference_value_from:
 
-                reference_name = '.'.join((
+                fully_qualified_reference_name = '.'.join((
                     an_option.reference_value_from,
                     an_option.name
                 ))
-                if reference_name in self.option_definitions:
+                if fully_qualified_reference_name in keys:
                     continue  # this referenced value has already been defined
                               # no need to repeat it - skip on to the next key
                 reference_option = an_option.copy()
                 reference_option.reference_value_from = None
-                reference_option.name = reference_name
+                reference_option.name = fully_qualified_reference_name
                 # wait, aren't we setting a fully qualified dotted name into
                 # the name field?  Yes, 'add_option' below sees that
                 # full pathname and does the right thing with it to ensure
                 # that the reference_option is created within the
                 # correct namespace
-                set_of_reference_value_from_links.add(reference_option.name)
+                set_of_reference_value_option_names.add(
+                    fully_qualified_reference_name
+                )
                 self.option_definitions.add_option(reference_option)
 
-        for a_reference_value_from in set_of_reference_value_from_links:
-            for x in range(a_reference_value_from.count('.')):
-                namespace_path = a_reference_value_from.rsplit('.', x + 1)[0]
+        for a_reference_value_option_name in set_of_reference_value_option_names:
+            for x in range(a_reference_value_option_name.count('.')):
+                namespace_path = \
+                    a_reference_value_option_name.rsplit('.', x + 1)[0]
                 self.option_definitions[namespace_path].ref_value_namespace()
 
-        return set_of_reference_value_from_links
+        return set_of_reference_value_option_names
 
     #--------------------------------------------------------------------------
     def _overlay_expand(self):
@@ -607,31 +612,35 @@ class ConfigurationManager(object):
         own configuration options, bring those into the current namespace and
         then proceed to overlay/expand those.
         """
-        new_keys_discovered = True  # loop control, False breaks the loop
-        known_keys = set()  # a set of keys that have been expanded
+        new_keys_have_been_discovered = True  # loop control, False breaks the loop
+        finished_keys = set()
         all_reference_values = {}
 
-        while new_keys_discovered:  # loop until nothing more is done
-            # keys holds a list of all keys in the option definitons in
-            # breadth first order using this form: [ 'x', 'y', 'z', 'x.a',
-            # 'x.b', 'z.a', 'z.b', 'x.a.j', 'x.a.k', 'x.b.h']
-            keys = [
+        while new_keys_have_been_discovered:  # loop until nothing more is done
+            # names_of_all_exsting_options holds a list of all keys in the
+            # option definitons in breadth first order using this form:
+            # [ 'x', 'y', 'z', 'x.a', 'x.b', 'z.a', 'z.b', 'x.a.j', 'x.a.k',
+            # 'x.b.h']
+            names_of_all_exsting_options = [
                 x for x
                 in self.option_definitions.keys_breadth_first()
                 if isinstance(self.option_definitions[x], Option)
             ]
-            new_keys_discovered = False  # setup to break loop
+            new_keys_have_been_discovered = False  # setup to break loop
 
             # create alternate paths options
-            set_of_reference_value_from_links = \
-                self._create_reference_value_from_links(
-                    keys,
-                    known_keys
+            set_of_reference_value_option_names = \
+                self._create_reference_value_options(
+                    names_of_all_exsting_options,
+                    finished_keys
                 )
-            for a_ref_value_key in set_of_reference_value_from_links:
-                if a_ref_value_key not in all_reference_values:
-                    all_reference_values[a_ref_value_key] = []
-            all_keys = list(set_of_reference_value_from_links) + keys
+
+            for a_ref_option_name in set_of_reference_value_option_names:
+                if a_ref_option_name not in all_reference_values:
+                    all_reference_values[a_ref_option_name] = []
+
+            all_keys = list(set_of_reference_value_option_names) \
+                + names_of_all_exsting_options
 
             # previous versions of this method pulled the values from the
             # values sources deeper within the following nested loops.
@@ -651,7 +660,9 @@ class ConfigurationManager(object):
             # fetch all the default values from the value sources before
             # applying the from string conversions
 
-            for key in (k for k in all_keys if k not in known_keys):
+            for key in all_keys:
+                if key in finished_keys:
+                    continue
                 #if not isinstance(an_option, Option):
                 #   continue  # aggregations and other types are ignored
                 # loop through all the value sources looking for values
@@ -675,7 +686,9 @@ class ConfigurationManager(object):
                 if key in all_reference_values:
                     # make sure that this value gets propagated to keys
                     # even if the keys have already been overlaid
-                    known_keys -= set(all_reference_values[key])
+                    finished_keys -= set(
+                        all_reference_values[key]
+                    )
 
                 for val_src_dict in values_from_all_sources:
                     try:
@@ -691,23 +704,27 @@ class ConfigurationManager(object):
                         if key in all_reference_values:
                             # make sure that this value gets propagated to keys
                             # even if the keys have already been overlaid
-                            known_keys -= set(all_reference_values[key])
+                            finished_keys -= set(
+                                all_reference_values[key]
+                            )
                     except KeyError, x:
                         pass  # okay, that source doesn't have this value
 
             # expansion process:
             # step through all the keys converting them to their proper
             # types and bringing in any new keys in the process
-            for key in (k for k in all_keys if k not in known_keys):
+            for key in all_keys:
+                if key in finished_keys:
+                    continue
                 # mark this key as having been seen and processed
-                known_keys.add(key)
+                finished_keys.add(key)
                 an_option = self.option_definitions[key]
                 #if not isinstance(an_option, Option):
                 #    continue  # aggregations, namespaces are ignored
                 # apply the from string conversion to make the real value
                 an_option.set_value(an_option.default)
                 # new values have been seen, don't let loop break
-                new_keys_discovered = True
+                new_keys_have_been_discovered = True
                 try:
                     try:
                         # try to fetch new requirements from this value
@@ -743,11 +760,22 @@ class ConfigurationManager(object):
                         # targets
                         continue
                     # some new Options to be brought in may have already been
-                    # seen and in the known_keys set.  They must be marked
-                    # as unseen so that the new default doesn't overwrite any
-                    # of the overlays that have already taken place.
-                    known_keys = known_keys.difference(
-                        known_keys.intersection(new_requirements.keys())
+                    # seen and in the finished_keys set.  They must be reset
+                    # as unfinished so that a new default doesn't permanently
+                    # overwrite any of the values already placed by the
+                    # overlays.  So we've got to remove those keys from the
+                    # finished keys list.
+                    # Before we can do that however, we need the fully
+                    # qualified names for the new keys.
+                    qualified_parent_name_list = key.rsplit('.', 1)
+                    if len(qualified_parent_name_list) > 1:
+                        qualified_parent_name = qualified_parent_name_list[0]
+                    else:
+                        qualified_parent_name = ''
+
+                    finished_keys = finished_keys.difference(
+                        '.'.join((qualified_parent_name, ref_option_name))
+                        for ref_option_name in new_requirements
                     )
                     # add the new Options to the namespace
                     new_namespace = new_requirements.safe_copy(
@@ -761,7 +789,7 @@ class ConfigurationManager(object):
                     # there are apparently no new Options to bring in from
                     # this option's value
                     pass
-        return known_keys
+        return finished_keys
 
     #--------------------------------------------------------------------------
     def _check_for_mismatches(self, known_keys):
