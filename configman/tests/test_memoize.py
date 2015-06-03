@@ -6,6 +6,7 @@ import unittest
 
 from configman.memoize import memoize
 
+
 #==============================================================================
 class TestCase(unittest.TestCase):
 
@@ -31,6 +32,7 @@ class TestCase(unittest.TestCase):
         class A(object):
             def __init__(self):
                 self.counter = 0
+
             @memoize()
             def foo(self, a, b, c):
                 self.counter += 1
@@ -88,8 +90,3 @@ class TestCase(unittest.TestCase):
             expected = [(x, x, x) for x in range(10)]
             self.assertEqual(results, expected)
             self.assertEqual(A.counter, 10)
-
-
-
-
-

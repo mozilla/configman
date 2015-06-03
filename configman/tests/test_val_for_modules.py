@@ -48,6 +48,7 @@ class Beta(RequiredConfig):
         self.config = config
         self.b = config.b
 
+
 #==============================================================================
 class Delta(RequiredConfig):
     required_config = Namespace()
@@ -62,6 +63,7 @@ class Delta(RequiredConfig):
         default=Beta,
         from_string_converter=class_converter
     )
+
 
 #==========================================================================
 class TestCase(unittest.TestCase):
@@ -348,9 +350,9 @@ xxx.yyy = 18
         }
         required_config = Namespace()
         required_config.add_option(
-          'minimal_version_for_understanding_refusal',
-          doc='ignore the Thottleable protocol',
-          default={'Firefox': '3.5.4'},
+            'minimal_version_for_understanding_refusal',
+            doc='ignore the Thottleable protocol',
+            default={'Firefox': '3.5.4'},
         )
 
         cm = ConfigurationManager(
@@ -358,7 +360,7 @@ xxx.yyy = 18
             values_source_list=[],
         )
 
-        config = cm.get_config()
+        cm.get_config()
 
         s = StringIO()
 
@@ -434,16 +436,16 @@ xxx.yyy = {
     def test_write_with_imported_module_with_regex(self):
         required_config = Namespace()
         required_config.add_option(
-          'identifier',
-          doc='just an identifier re',
-          default=r'[a-zA-Z][a-zA-Z0-9]*',
-          from_string_converter=re.compile
+            'identifier',
+            doc='just an identifier re',
+            default=r'[a-zA-Z][a-zA-Z0-9]*',
+            from_string_converter=re.compile
         )
         cm = ConfigurationManager(
             required_config,
             values_source_list=[],
         )
-        config = cm.get_config()
+        cm.get_config()
 
         s = StringIO()
 
@@ -462,14 +464,13 @@ identifier = "[a-zA-Z][a-zA-Z0-9]*"
 """
         self.assertEqual(generated_python_module_text, expected)
 
-
     #--------------------------------------------------------------------------
     def test_write_skip_aggregations(self):
         required_config = Namespace()
         required_config.add_option(
-          'minimal_version_for_understanding_refusal',
-          doc='ignore the Thottleable protocol',
-          default={'Firefox': '3.5.4'},
+            'minimal_version_for_understanding_refusal',
+            doc='ignore the Thottleable protocol',
+            default={'Firefox': '3.5.4'},
         )
         required_config.add_aggregation(
             'an_agg',
@@ -481,7 +482,7 @@ identifier = "[a-zA-Z][a-zA-Z0-9]*"
             values_source_list=[],
         )
 
-        config = cm.get_config()
+        cm.get_config()
 
         s = StringIO()
 
@@ -502,4 +503,3 @@ minimal_version_for_understanding_refusal = {
 }
 """
         self.assertEqual(generated_python_module_text, expected)
-

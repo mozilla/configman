@@ -4,7 +4,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import unittest
-import tempfile
 import datetime
 
 from configman import converters
@@ -308,6 +307,7 @@ class TestCase(unittest.TestCase):
             function(u'P\xefter, L\xa3rs'),
             [u'P\xefter', u'L\xa3rs']
         )
+
     #--------------------------------------------------------------------------
     def test_to_str(self):
         to_str = converters.to_str
@@ -342,6 +342,37 @@ class TestCase(unittest.TestCase):
         self.assertEqual(to_str(False), 'False')
         self.assertEqual(to_str((2, False, int, max)), '2, False, int, max')
         self.assertEqual(to_str(None), '')
+        self.assertEqual(to_str('hello'), "hello")
+        self.assertEqual(
+            to_str(u"'你好'"),
+            u"'\u4f60\u597d'"
+        )
+        self.assertEqual(
+            converters.list_to_str([1, 2, 3]),
+            "1, 2, 3"
+        )
+        self.assertEqual(
+            to_str(datetime.datetime(1960, 5, 4, 15, 10)),
+            "1960-05-04T15:10:00"
+        )
+        self.assertEqual(
+            to_str(datetime.date(1960, 5, 4)),
+            "1960-05-04"
+        )
+        self.assertEqual(
+            to_str(datetime.timedelta(days=1, seconds=1)),
+            "1 00:00:01"
+        )
+        self.assertEqual(to_str(unittest), 'unittest')
+
+        self.assertEqual(
+            to_str(to_str),
+            'configman.converters.to_str'
+        )
+
+        import re
+        r = re.compile('.*')
+        self.assertEqual(to_str(r), '.*')
 
     #--------------------------------------------------------------------------
     def test_str_to_boolean(self):
@@ -444,49 +475,3 @@ class TestCase(unittest.TestCase):
             function((u'P\xefter', u'L\xa3rs')),
             u'P\xefter, L\xa3rs'
         )
-
-    #--------------------------------------------------------------------------
-    def test_to_str(self):
-        self.assertEqual(converters.to_str(1), "1")
-        self.assertEqual(converters.to_str(3.1415), "3.1415")
-        self.assertEqual(converters.to_str('hello'), "hello")
-        self.assertEqual(
-            converters.to_str(u"'你好'"),
-            u"'\u4f60\u597d'"
-        )
-        self.assertEqual(
-            converters.list_to_str([1, 2, 3]),
-            "1, 2, 3"
-        )
-        self.assertEqual(
-            converters.to_str(True),
-            "True"
-        )
-        self.assertEqual(
-            converters.to_str(False),
-            "False"
-        )
-        self.assertEqual(
-            converters.to_str(datetime.datetime(1960, 5, 4, 15, 10)),
-            "1960-05-04T15:10:00"
-        )
-        self.assertEqual(
-            converters.to_str(datetime.date(1960, 5, 4)),
-            "1960-05-04"
-        )
-        self.assertEqual(
-            converters.to_str(datetime.timedelta(days=1, seconds=1)),
-            "1 00:00:01"
-        )
-        self.assertEqual(converters.to_str(int), 'int')
-        self.assertEqual(converters.to_str(float), 'float')
-        self.assertEqual(converters.to_str(unittest), 'unittest')
-
-        self.assertEqual(
-            converters.to_str(converters.to_str),
-            'configman.converters.to_str'
-        )
-
-        import re
-        r = re.compile('.*')
-        self.assertEqual(converters.to_str(r), '.*')

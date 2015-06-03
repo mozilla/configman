@@ -14,6 +14,8 @@ from configman.value_sources import for_mapping
 from configman.value_sources.for_mapping import ValueSource
 from configman.dotdict import DotDict, DotDictWithAcquisition
 
+
+#------------------------------------------------------------------------------
 def stringIO_context_wrapper(a_stringIO_instance):
     @contextlib.contextmanager
     def stringIS_context_manager():
@@ -172,7 +174,6 @@ x__size='100'
         cm.write_conf(for_mapping, opener=stringIO_context_wrapper(out))
         received = out.getvalue()
         out.close()
-        lines = received.splitlines()
         for line in received.splitlines():
             self.assertTrue(len(line) < 80, line)
         expected = """

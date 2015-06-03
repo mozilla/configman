@@ -50,6 +50,7 @@ def is_identifier(a_candidate):
         return False  # identifiers can't also be keywords
     return bool(identifier_re.match(a_candidate))
 
+
 #------------------------------------------------------------------------------
 def sequence_to_string(
     a_list,
@@ -395,7 +396,7 @@ class ValueSource(object):
                 output_line = "from %s import (\n" % a_module_path
                 for a_class, a_class_name in sorted(list_of_class_names):
                     if a_class in alias_by_class:
-                        output_line =  "%s\n    %s as %s," % (
+                        output_line = "%s\n    %s as %s," % (
                             output_line,
                             a_class_name,
                             alias_by_class[a_class]
@@ -437,7 +438,7 @@ class ValueSource(object):
                 continue
             import_str = ("import %s" % a_class_name).strip()
             symbols_to_ignore.add(a_class_name)
-            print  >>output_stream, import_str
+            print >>output_stream, import_str
 
         # See the explanation of 'symbols_to_ignore' above
         if symbols_to_ignore:

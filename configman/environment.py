@@ -8,4 +8,3 @@ from configman.dotdict import configman_keys
 
 environment = configman_keys(environ)
 environment.always_ignore_mismatches = True
-
