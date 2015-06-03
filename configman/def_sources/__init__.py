@@ -19,6 +19,16 @@ definition_dispatch = {
 }
 
 
+try:
+    from configman.def_sources import for_argparse
+    import argparse
+    definition_dispatch[argparse.ArgumentParser] = \
+        for_argparse.setup_definitions
+except ImportError:
+    # silently ignore that argparse doesn't exist
+    pass
+
+
 class UnknownDefinitionTypeException(Exception):
     pass
 

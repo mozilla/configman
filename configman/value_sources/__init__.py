@@ -20,7 +20,7 @@ from configman.config_file_future_proxy import ConfigFileFutureProxy
 from configman.config_exceptions import CannotConvertError
 
 # replace with dynamic discovery and loading
-#from configman.value_sources import for_argparse
+from configman.value_sources import for_argparse
 #from configman.value_sources import or_xml
 from configman.value_sources import for_getopt
 from configman.value_sources import for_json
@@ -31,6 +31,7 @@ from configman.value_sources import for_modules
 
 # please replace with dynamic discovery
 for_handlers = [
+    for_argparse,
     for_mapping,
     for_getopt,
     for_json,

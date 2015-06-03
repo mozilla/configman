@@ -13,6 +13,9 @@ import getopt
 
 import mock
 
+import argparse
+import getopt
+
 import configman.config_manager as config_manager
 from configman.commandline import command_line
 from configman.option import Option
