@@ -150,7 +150,7 @@ class DotDict(collections.MutableMapping):
         try:
             key_split = key.split('.')
         except AttributeError:
-            key_split =  [key]
+            key_split = [key]
         current = self
         for k in key_split:
             current = getattr(current, k)

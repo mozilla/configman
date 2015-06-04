@@ -13,7 +13,6 @@ from configman.datetime_util import (
     date_from_ISO_string,
     datetime_to_ISO_string,
     date_to_ISO_string,
-    timedelta_to_str,
 )
 
 # for backward compatibility these two methods get alternate names
@@ -21,8 +20,6 @@ datetime_converter = datetime_from_ISO_string
 date_converter = date_from_ISO_string
 
 from configman.config_exceptions import CannotConvertError
-
-import datetime_util
 
 #------------------------------------------------------------------------------
 #  Utility section

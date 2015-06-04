@@ -16,13 +16,11 @@ represents the argv source."""
 import getopt
 import collections
 
-from configman import dotdict
 from configman import option
 from configman import namespace
 from configman.config_exceptions import NotAnOptionError
 from configman.converters import boolean_converter
 from configman.dotdict import DotDict
-from configman.memoize import memoize
 
 from configman.value_sources.source_exceptions import (
     ValueException,

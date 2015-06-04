@@ -103,5 +103,3 @@ class ValueSource(object):
                 fn = val.function
                 d['function'] = to_string_converters[type(fn)](fn)
         json.dump(json_dict, output_stream)
-
-

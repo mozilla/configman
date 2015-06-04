@@ -23,10 +23,10 @@ class TestCase(unittest.TestCase):
     #--------------------------------------------------------------------------
     def test_for_getopt_get_values(self):
         c = config_manager.ConfigurationManager(
-          use_admin_controls=True,
-          #use_config_files=False,
-          use_auto_help=False,
-          argv_source=[]
+            use_admin_controls=True,
+            #use_config_files=False,
+            use_auto_help=False,
+            argv_source=[]
         )
 
         source = ['--limit', '10']
@@ -46,10 +46,10 @@ class TestCase(unittest.TestCase):
     #--------------------------------------------------------------------------
     def test_for_getopt_get_values_with_short_form(self):
         c = config_manager.ConfigurationManager(
-          use_admin_controls=True,
-          #use_config_files=False,
-          use_auto_help=False,
-          argv_source=[]
+            use_admin_controls=True,
+            #use_config_files=False,
+            use_auto_help=False,
+            argv_source=[]
         )
 
         source = ['-l', '10']

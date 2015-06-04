@@ -71,7 +71,7 @@ class ValueSource(object):
                     if line[0] in ' \t' and previous_key:
                         line = line[1:]
                         self.values[previous_key] = (
-                            '%s%s' % (self.values[previous_key],line.rstrip())
+                            '%s%s' % (self.values[previous_key], line.rstrip())
                         )
                         continue
                     try:
@@ -125,8 +125,8 @@ class ValueSource(object):
             else:
                 option_format = '# %s=%r\n'
             print >>output_stream, option_format % (
-              option_name,
-              option_value
+                option_name,
+                option_value
             )
         for key, a_namespace in namespaces:
             if namespace_name:
@@ -139,7 +139,7 @@ class ValueSource(object):
                 a_namespace._doc
             )
             ValueSource.write(
-              a_namespace,
-              namespace_name=namespace_label,
-              output_stream=output_stream
+                a_namespace,
+                namespace_name=namespace_label,
+                output_stream=output_stream
             )

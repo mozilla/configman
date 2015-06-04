@@ -4,7 +4,7 @@
 
 """this module introduces support for argparse as a data definition source
 for configman.  Rather than write using configman's data definition language,
-programsd can instead use the familiar argparse method."""
+programs can instead use the familiar argparse method."""
 
 import argparse
 import inspect
@@ -641,7 +641,6 @@ class ArgumentParser(argparse.ArgumentParser):
         # argparse is loose in the manner that it names arguments.  Sometimes
         # it comes in as the 'dest' kwarg, othertimes it is deduced from args
         # as the first "long" style argument in the args.  This method
-        long_name = []
         short_name = None
         for an_option in args:
             if an_option[0] in self.prefix_chars:
@@ -654,6 +653,7 @@ class ArgumentParser(argparse.ArgumentParser):
         if short_name:
             return short_name, False
         return None
+
 
 #------------------------------------------------------------------------------
 def setup_definitions(source, destination):

@@ -166,4 +166,3 @@ class TestCase(unittest.TestCase):
         finally:
             if os.path.isfile(tmp_filename):
                 os.remove(tmp_filename)
-
