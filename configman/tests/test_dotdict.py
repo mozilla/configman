@@ -5,6 +5,7 @@
 from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
+import six
 import unittest
 from configman.dotdict import (
     DotDict,
@@ -134,8 +135,8 @@ class TestCase(unittest.TestCase):
         self.assertEqual(len(d), 3)
         _keys = [x for x in d]
         self.assertEqual(_keys, ['e', 'dd', 'a'])
-        self.assertEqual(d.keys(), ['e', 'dd', 'a'])
-        self.assertEqual(list(d.iterkeys()), ['e', 'dd', 'a'])
+        self.assertEqual(list(d.keys()), ['e', 'dd', 'a'])
+        self.assertEqual(list(six.iterkeys(d)), ['e', 'dd', 'a'])
 
         d.xxx = DotDictWithAcquisition()
         d.xxx.p = 69

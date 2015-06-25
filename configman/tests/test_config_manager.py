@@ -1341,7 +1341,7 @@ c.string =   from ini
             ]
         )
         conf = c.get_config()
-        self.assertEqual(conf.keys(), ['admin', 'application'])
+        self.assertEqual(list(conf.keys()), ['admin', 'application'])
 
     #--------------------------------------------------------------------------
     def test_print_conf(self):
@@ -1798,7 +1798,7 @@ c.string =   from ini
         )
         conf = c.get_config()
         self.assertEqual(len(conf), 3)
-        self.assertEqual(conf.keys(), ['source', 'destination', 'admin'])
+        self.assertEqual(list(conf.keys()), ['source', 'destination', 'admin'])
         self.assertEqual(len(conf.source), 3)
         self.assertEqual(conf.source.c, 33)
         self.assertEqual(conf.source.cls, T3)
