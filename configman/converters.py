@@ -349,7 +349,7 @@ list_converter = str_to_list  # for backward compatibility
 str_to_instance_of_type_converters = {
     int: int,
     float: float,
-    str: str,
+    six.binary_type: six.binary_type,
     six.text_type: six.text_type,
     bool: boolean_converter,
     dict: json.loads,
@@ -450,7 +450,7 @@ for key, val in sorted(builtins.__dict__.items()):
 to_string_converters = {
     int: str,
     float: str,
-    str: str,
+    six.binary_type: six.binary_type,
     six.text_type: six.text_type,
     list: list_to_str,
     tuple: list_to_str,

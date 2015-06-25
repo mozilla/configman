@@ -6,7 +6,7 @@ from __future__ import absolute_import, division, print_function, \
 
 import collections
 import weakref
-from six import StringIO
+import six
 
 from configman.orderedset import OrderedSet
 from configman.memoize import memoize
@@ -17,7 +17,7 @@ def iteritems_breadth_first(a_mapping, include_dicts=False):
     """a generator that returns all the keys in a set of nested
     Mapping instances.  The keys take the form X.Y.Z"""
     subordinate_mappings = []
-    for key, value in a_mapping.iteritems():
+    for key, value in six.iteritems(a_mapping):
         if isinstance(value, collections.Mapping):
             subordinate_mappings.append((key, value))
             if include_dicts:
@@ -247,7 +247,7 @@ class DotDict(collections.MutableMapping):
             return self[parent_key]
 
     def __str__(self):
-        out = StringIO()
+        out = six.StringIO()
         for key in self.keys_breadth_first(False):
             value = self[key]
             indent = '\t' * key.count('.')

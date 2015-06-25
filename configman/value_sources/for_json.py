@@ -1,9 +1,12 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
+from __future__ import absolute_import, division, print_function, \
+    unicode_literals
 
 import json
 import collections
+import six
 import sys
 
 from configman.converters import (
@@ -22,7 +25,8 @@ from configman.dotdict import DotDict
 from configman.memoize import memoize
 
 can_handle = (
-    basestring,
+    six.binary_type,
+    six.text_type,
     json
 )
 
@@ -55,7 +59,7 @@ class ValueSource(object):
             try:
                 with open(source) as fp:
                     self.values = json.load(fp)
-            except IOError, x:
+            except IOError as x:
                 # The file doesn't exist.  That's ok, we'll give warning
                 # but this isn't a fatal error
                 import warnings

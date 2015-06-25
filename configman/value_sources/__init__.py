@@ -1,6 +1,8 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
+from __future__ import absolute_import, division, print_function, \
+    unicode_literals
 
 import collections
 import os
@@ -136,7 +138,7 @@ def wrap_with_value_source_api(value_source_list, a_config_manager):
                 wrapped_source = a_handler.ValueSource(a_source,
                                                        a_config_manager)
                 break
-            except (ValueException, CannotConvertError), x:
+            except (ValueException, CannotConvertError) as x:
                 # a failure is not necessarily fatal, we need to try all of
                 # the handlers.  It's only fatal when they've all failed
                 exception_as_str = str(x)
