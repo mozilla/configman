@@ -51,12 +51,12 @@ class DispatchByType(collections.defaultdict):
     def get_handlers(self, candidate):
         handlers_set = OrderedSet()
         # find exact candidate matches first
-        for key, handler_list in self.iteritems():
+        for key, handler_list in six.iteritems(self):
             if candidate is key:
                 for a_handler in handler_list:
                     handlers_set.add(a_handler)
         # then find the "instance of" candidate matches
-        for key, handler_list in self.iteritems():
+        for key, handler_list in six.iteritems(self):
             if self._is_instance_of(candidate, key):
                 for a_handler in handler_list:
                     handlers_set.add(a_handler)

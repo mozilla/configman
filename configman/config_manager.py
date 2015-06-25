@@ -440,7 +440,7 @@ class ConfigurationManager(object):
 
         skip_keys = [
             k for (k, v)
-            in self.option_definitions.iteritems()
+            in six.iteritems(self.option_definitions)
             if isinstance(v, Option) and v.exclude_from_print_conf
         ]
         self.write_conf(config_file_type, stdout_opener, skip_keys=skip_keys)
@@ -463,7 +463,7 @@ class ConfigurationManager(object):
 
         skip_keys = [
             k for (k, v)
-            in self.option_definitions.iteritems()
+            in six.iteritems(self.option_definitions)
             if isinstance(v, Option) and v.exclude_from_dump_conf
         ]
 
