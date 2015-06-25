@@ -1,6 +1,9 @@
+from __future__ import absolute_import, division, print_function, \
+    unicode_literals
 import codecs
 import os
 from setuptools import setup
+import sys
 
 
 # Prevent spurious errors during `python setup.py test`, a la
@@ -9,6 +12,10 @@ try:
     import multiprocessing
 except ImportError:
     pass
+
+if sys.version_info[:3] <= (2, 6, 4):
+    print("Please upgrade to a python >= 2.6.5!", file=sys.stderr)
+    sys.exit(1)
 
 
 def read(fname):

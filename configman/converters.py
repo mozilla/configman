@@ -1,12 +1,15 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
+from __future__ import absolute_import, division, print_function, \
+    unicode_literals
 
 import sys
 import re
 import datetime
 import types
 import json
+import six
 
 from configman.datetime_util import (
     datetime_from_ISO_string,
@@ -30,6 +33,7 @@ from configman.config_exceptions import CannotConvertError
 
 #------------------------------------------------------------------------------
 def str_dict_keys(a_dict):
+    # Stop supporting python <= 2.6.4
     """return a modified dict where all the keys that are anything but str get
     converted to str.
     E.g.
@@ -62,18 +66,19 @@ def str_dict_keys(a_dict):
     Using integers as parameter keys is a silly example but the point is that
     due to the python 2.6.4 bug only unicode keys are converted to str.
     """
-    new_dict = {}
-    for key in a_dict:
-        if isinstance(key, unicode):
-            new_dict[str(key)] = a_dict[key]
-        else:
-            new_dict[key] = a_dict[key]
-    return new_dict
+    return a_dict
+#    new_dict = {}
+#    for key in a_dict:
+#        if isinstance(key, unicode):
+#            new_dict[str(key)] = a_dict[key]
+#        else:
+#            new_dict[key] = a_dict[key]
+#    return new_dict
 
 
 #------------------------------------------------------------------------------
 def str_quote_stripper(input_str):
-    if not isinstance(input_str, basestring):
+    if not isinstance(input_str, (six.binary_type, six.text_type)):
         raise ValueError(input_str)
     while (
         input_str
@@ -109,13 +114,25 @@ timedelta_converter = str_to_timedelta  # for backward compatiblity
 
 
 #------------------------------------------------------------------------------
+def to_unicode(obj):
+    if not isinstance(obj, six.text_type):
+        try:
+            obj = six.text_type(obj, 'utf-8')
+        except TypeError:
+            pass
+    return obj
+
+#------------------------------------------------------------------------------
 def str_to_boolean(input_str):
     """ a conversion function for boolean
     """
-    if not isinstance(input_str, basestring):
+    if not isinstance(input_str, (six.binary_type, six.text_type)):
         raise ValueError(input_str)
     input_str = str_quote_stripper(input_str)
-    return input_str.lower() in ("true", "t", "1", "y", "yes")
+    return to_unicode(input_str.lower()) in (
+        to_unicode("true"), to_unicode("t"), to_unicode("1"),
+        to_unicode("y"), to_unicode("yes")
+    )
 
 boolean_converter = str_to_boolean  # for backward compatiblity
 
@@ -126,7 +143,7 @@ def str_to_python_object(input_str):
     """
     if not input_str:
         return None
-    if not isinstance(input_str, basestring):
+    if not isinstance(input_str, (six.binary_type, six.text_type)):
         # gosh, we didn't get a string, we can't convert anything but strings
         # we're going to assume that what we got is actually what was wanted
         # as the output
@@ -226,12 +243,15 @@ def str_to_classes_in_namespaces(
         one for each class in the list.  It does this by creating a proxy
         class stuffed with its own 'required_config' that's dynamically
         generated."""
-        if isinstance(class_list_str, basestring):
+        if isinstance(class_list_str, (six.binary_type, six.text_type)):
             class_list = [x.strip() for x in class_list_str.split(',')]
             if class_list == ['']:
                 class_list = []
         else:
-            raise TypeError('must be derivative of a basestring')
+            raise TypeError(
+                'must be derivative of %s or %s' %
+                (six.binary_type, six.text_type)
+            )
 
         #======================================================================
         class InnerClassList(RequiredConfig):
@@ -305,7 +325,7 @@ def str_to_list(
 ):
     """ a conversion function for list
     """
-    if not isinstance(input_str, basestring):
+    if not isinstance(input_str, (six.binary_type, six.text_type)):
         raise ValueError(input_str)
     input_str = str_quote_stripper(input_str)
     result = [
@@ -330,7 +350,7 @@ str_to_instance_of_type_converters = {
     int: int,
     float: float,
     str: str,
-    unicode: unicode,
+    unicode: six.text_type,
     bool: boolean_converter,
     dict: json.loads,
     list: list_converter,
@@ -355,7 +375,7 @@ def arbitrary_object_to_string(a_thing):
     if a_thing is None:
         return ''
     # is it already a string?
-    if isinstance(a_thing, basestring):
+    if isinstance(a_thing, (six.binary_type, six.text_type)):
         return a_thing
     # does it have a to_str function?
     try:
@@ -423,7 +443,7 @@ to_string_converters = {
     int: str,
     float: str,
     str: str,
-    unicode: unicode,
+    unicode: six.text_type,
     list: list_to_str,
     tuple: list_to_str,
     bool: lambda x: 'True' if x else 'False',
