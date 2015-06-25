@@ -1,13 +1,15 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
+from __future__ import absolute_import, division, print_function, \
+    unicode_literals
 
 import unittest
 import os
 import json
 import tempfile
 import contextlib
-from cStringIO import StringIO
+from six.moves import cStringIO as StringIO
 
 from configman.namespace import Namespace
 from configman.config_manager import ConfigurationManager
