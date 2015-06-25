@@ -176,15 +176,15 @@ class TestCase(unittest.TestCase):
     def test_setting_known_from_string_converter_onOption(self):
         opt = Option('name', default=u'Peter')
         self.assertEqual(opt.default, u'Peter')
-        self.assertEqual(opt.from_string_converter, unicode)
+        self.assertEqual(opt.from_string_converter, six.text_type)
 
         opt = Option('name', default=100)
         self.assertEqual(opt.default, 100)
         self.assertEqual(opt.from_string_converter, int)
 
         if six.PY2:
-            opt = Option('name', default=100L)
-            self.assertEqual(opt.default, 100L)
+            opt = Option('name', default=long(100))
+            self.assertEqual(opt.default, long(100))
             self.assertEqual(opt.from_string_converter, long)
 
         opt = Option('name', default=100.0)
@@ -282,7 +282,7 @@ class TestCase(unittest.TestCase):
         opt.set_value(timedelta_as_string)
         self.assertEqual(opt.value, two_days)
 
-        opt.set_value(unicode(timedelta_as_string))
+        opt.set_value(six.text_type(timedelta_as_string))
         self.assertEqual(opt.value, two_days)
 
         opt.set_value(two_days)
