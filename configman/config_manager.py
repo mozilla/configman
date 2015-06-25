@@ -1,7 +1,10 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
+from __future__ import absolute_import, division, print_function, \
+    unicode_literals
 
+import six
 import sys
 import os
 import collections
@@ -133,7 +136,7 @@ class ConfigurationManager(object):
             definition_source_list = []
         elif (
             isinstance(definition_source, collections.Sequence) and
-            not isinstance(definition_source, basestring)
+            not isinstance(definition_source, six.text_type)
         ):
             definition_source_list = list(definition_source)
         else:
@@ -339,20 +342,22 @@ class ConfigurationManager(object):
 
         parameters:
             output_stream - an open file-like object suitable for use as the
-                            target of a print statement
+                            target of a print function
         """
         if self.app_name or self.app_description:
-            print >> output_stream, 'Application:',
+            print('Application: ', end='', file=output_stream)
         if self.app_name:
-            print >> output_stream, self.app_name, self.app_version
+            print(self.app_name, self.app_version, file=output_stream)
         if self.app_description:
-            print >> output_stream, self.app_description
+            print(self.app_description, file=output_stream)
         if self.app_name or self.app_description:
-            print >> output_stream, ''
+            print('', file=output_stream)
 
         names_list = self.get_option_names()
-        print >> output_stream, \
+        print(
             "usage:\n%s [OPTIONS]... " % self.app_invocation_name,
+            end='', file=output_stream
+        )
         bracket_count = 0
         # this section prints the non-switch command line arguments
         for key in names_list:
@@ -360,7 +365,7 @@ class ConfigurationManager(object):
             if an_option.is_argument:
                 if an_option.default is None:
                     # there's no option, assume the user must set this
-                    print >> output_stream, an_option.name,
+                    print(an_option.name, end='', file=output_stream)
                 elif (
                     inspect.isclass(an_option.value)
                     or inspect.ismodule(an_option.value)
@@ -370,17 +375,17 @@ class ConfigurationManager(object):
                     # loaded and we're looking to show the help for it.
                     # display show it as a constant already provided rather
                     # than as an option the user must provide
-                    print >> output_stream, an_option.default,
+                    print(an_option.default, end='', file=output_stream)
                 else:
                     # this is an argument that the user may alternatively
                     # provide
-                    print >> output_stream, "[ %s" % an_option.name,
+                    print("[ %s" % an_option.name, end='', file=output_stream)
                     bracket_count += 1
-        print >> output_stream, ']' * bracket_count, '\n'
+        print(']' * bracket_count, '\n', file=output_stream)
 
         names_list.sort()
         if names_list:
-            print >> output_stream, 'OPTIONS:'
+            print('OPTIONS:', file=output_stream)
 
         pad = ' ' * 4
 
@@ -415,7 +420,7 @@ class ConfigurationManager(object):
                     # don't bother with certain dead obvious ones
                     line += '%s(default: %s)\n' % (pad, default)
 
-            print >> output_stream, line
+            print(line, file=output_stream)
 
     #--------------------------------------------------------------------------
     def print_conf(self):
@@ -831,7 +836,7 @@ class ConfigurationManager(object):
             # remove keys of the form 'y.z' if they match a known key of the
             # form 'x.y.z'
             for key in unmatched_keys.copy():
-                key_is_okay = reduce(
+                key_is_okay = six.moves.reduce(
                     lambda x, y: x or y,
                     (known_key.endswith(key) for known_key in known_keys)
                 )
