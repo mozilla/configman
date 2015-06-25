@@ -711,7 +711,7 @@ class ConfigurationManager(object):
                             finished_keys -= set(
                                 all_reference_values[key]
                             )
-                    except KeyError, x:
+                    except KeyError as x:
                         pass  # okay, that source doesn't have this value
 
             # expansion process:
@@ -789,7 +789,7 @@ class ConfigurationManager(object):
                     for new_key in new_namespace.keys_breadth_first():
                         if new_key not in current_namespace:
                             current_namespace[new_key] = new_namespace[new_key]
-                except AttributeError, x:
+                except AttributeError as x:
                     # there are apparently no new Options to bring in from
                     # this option's value
                     pass

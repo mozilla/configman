@@ -98,9 +98,9 @@ def str_quote_stripper(input_str):
 
 #------------------------------------------------------------------------------
 # a bunch of known mappings of builtin items to strings
-import __builtin__
+import six.moves.builtins as builtins
 known_mapping_str_to_type = dict(
-    (key, val) for key, val in sorted(__builtin__.__dict__.items())
+    (key, val) for key, val in sorted(builtins.__dict__.items())
     if val not in (True, False)
 )
 
@@ -166,9 +166,9 @@ def str_to_python_object(input_str):
         for name in parts[1:]:
             obj = getattr(obj, name)
         return obj
-    except AttributeError, x:
+    except AttributeError as x:
         raise CannotConvertError("%s cannot be found" % input_str)
-    except ImportError, x:
+    except ImportError as x:
         raise CannotConvertError(str(x))
 
 class_converter = str_to_python_object  # for backward compatibility
@@ -350,7 +350,7 @@ str_to_instance_of_type_converters = {
     int: int,
     float: float,
     str: str,
-    unicode: six.text_type,
+    six.text_type: six.text_type,
     bool: boolean_converter,
     dict: json.loads,
     list: list_converter,
@@ -401,7 +401,7 @@ def arbitrary_object_to_string(a_thing):
         pass
     # is it something from a loaded module?
     try:
-        if a_thing.__module__ not in ('__builtin__', 'exceptions'):
+        if a_thing.__module__ not in ('__builtin__', 'exceptions', 'builtins'):
             if a_thing.__module__ == "__main__":
                 module_name = (
                     sys.modules['__main__']
@@ -433,17 +433,25 @@ def list_to_str(a_list, delimiter=', '):
     return delimiter.join(to_str(x) for x in a_list)
 
 #------------------------------------------------------------------------------
-known_mapping_type_to_str = dict(
-    (val, key) for key, val in sorted(__builtin__.__dict__.items())
-    if val not in (True, False, list, dict)
-)
+#known_mapping_type_to_str = dict(
+#    (val, key) for key, val in sorted(builtins.__dict__.items())
+#    if val not in (True, False, list, dict) and
+#    type(val) not in (ModuleSpec,)
+#)
+known_mapping_type_to_str = {}
+for key, val in sorted(builtins.__dict__.items()):
+    if val not in (True, False, list, dict):
+        try:
+            known_mapping_type_to_str[val] = key
+        except TypeError:
+            pass
 
 #------------------------------------------------------------------------------
 to_string_converters = {
     int: str,
     float: str,
     str: str,
-    unicode: six.text_type,
+    six.text_type: six.text_type,
     list: list_to_str,
     tuple: list_to_str,
     bool: lambda x: 'True' if x else 'False',
