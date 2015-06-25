@@ -1,6 +1,8 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
+from __future__ import absolute_import, division, print_function, \
+    unicode_literals
 
 import types
 import sys
@@ -8,9 +10,9 @@ import datetime
 import json
 import keyword
 import re
+import six
 
 from inspect import isclass, ismodule, isfunction
-from types import NoneType
 from collections import defaultdict
 
 from configman.namespace import Namespace
@@ -29,7 +31,8 @@ file_name_extension = 'py'
 
 can_handle = (
     types.ModuleType,
-    basestring
+    six.binary_type,
+    six.text_type,
 )
 
 #------------------------------------------------------------------------------
@@ -156,15 +159,15 @@ def get_import_for_type(t):
 
 #------------------------------------------------------------------------------
 local_to_string_converters = {
-    str: string_to_string,
-    unicode: unicode_to_unicode,
+    six.binary_type: string_to_string,
+    six.text_type: unicode_to_unicode,
     list: sequence_to_string,
     tuple: sequence_to_string,
     dict: dict_to_string,
     datetime.datetime: datetime_to_string,
     datetime.date: date_to_string,
     datetime.timedelta: timedelta_to_string,
-    NoneType: lambda x: "None",
+    type(None): lambda x: "None",
     compiled_regexp_type: lambda x: string_to_string(x.pattern)
 }
 
@@ -192,7 +195,7 @@ def local_to_str(a_thing):
 class ValueSource(object):
     #--------------------------------------------------------------------------
     def __init__(self, source, the_config_manager=None):
-        if isinstance(source, basestring):
+        if isinstance(source, (six.binary_type, six.text_type)):
             source = class_converter(source)
         module_as_dotdict = DotDict()
         try:
@@ -229,9 +232,9 @@ class ValueSource(object):
             class_str = local_to_str(value)
         if is_identifier(class_str):
             parts = [x.strip() for x in class_str.split('.') if x.strip()]
-            print >>output_stream, '%s = %s' % (key, parts[-1])
+            print('%s = %s' % (key, parts[-1]), file=output_stream)
         else:
-            print >>output_stream, '%s = "%s"' % (key, class_str)
+            print('%s = "%s"' % (key, class_str), file=output_stream)
 
     #--------------------------------------------------------------------------
     @staticmethod
@@ -245,14 +248,14 @@ class ValueSource(object):
             value = repr(value)
         if '\n' in value:
             value = "'''%s'''" % str_quote_stripper(value)
-        print >>output_stream, '%s = %s' % (key, value)
+        print('%s = %s' % (key, value), file=output_stream)
 
     #--------------------------------------------------------------------------
     @staticmethod
     def write_option(key, an_option, alias_by_class, output_stream):
-        print >>output_stream, '\n',
+        print('\n', end='', file=output_stream)
         if an_option.doc:
-            print >>output_stream, '# %s' % an_option.doc
+            print('# %s' % an_option.doc, file=output_stream)
         if (
             isclass(an_option.value)
             or ismodule(an_option.value)
@@ -267,15 +270,15 @@ class ValueSource(object):
             return
         else:
             value = local_to_str(an_option.value)
-            print >>output_stream, '%s = %s' % (key, value)
+            print('%s = %s' % (key, value), file=output_stream)
 
     #--------------------------------------------------------------------------
     @staticmethod
     def write_namespace(key, a_namespace, output_stream):
-        print >>output_stream, '\n# Namespace:', key
+        print('\n# Namespace:', key, file=output_stream)
         if hasattr(a_namespace, 'doc'):
-            print >>output_stream, '#', a_namespace.doc
-        print >>output_stream, '%s = DotDict()' % key
+            print('#', a_namespace.doc, file=output_stream)
+        print('%s = DotDict()' % key, file=output_stream)
 
     #--------------------------------------------------------------------------
     @staticmethod
@@ -372,7 +375,7 @@ class ValueSource(object):
                 )
 
         # start writing the output module
-        print >>output_stream, "# generated Python configman file\n"
+        print("# generated Python configman file\n", file=output_stream)
 
         # the first section that we're going to write is imports of the form:
         #     from X import Y
@@ -410,7 +413,7 @@ class ValueSource(object):
                         symbols_to_ignore.add(a_class_name)
 
                 output_line = output_line + ')'
-                print >>output_stream, output_line.strip()
+                print(output_line.strip(), file=output_stream)
             else:
                 a_class, a_class_name = list_of_class_names[0]
                 output_line = "from %s import %s" % (
@@ -425,8 +428,8 @@ class ValueSource(object):
                     symbols_to_ignore.add(alias_by_class[a_class])
                 else:
                     symbols_to_ignore.add(a_class_name)
-                print >>output_stream, output_line.strip()
-        print >>output_stream, ''
+                print(output_line.strip(), file=output_stream)
+        print('', file=output_stream)
 
         # The next section to write will be the imports of the form:
         #     import X
@@ -438,19 +441,22 @@ class ValueSource(object):
                 continue
             import_str = ("import %s" % a_class_name).strip()
             symbols_to_ignore.add(a_class_name)
-            print >>output_stream, import_str
+            print(import_str, file=output_stream)
 
         # See the explanation of 'symbols_to_ignore' above
         if symbols_to_ignore:
-            print >>output_stream, "\n" \
+            print(
+                "\n" \
                 "# the following symbols will be ignored by configman when\n" \
                 "# this module is used as a value source.  This will\n" \
                 "# suppress the mismatch warning since these symbols are\n" \
-                "# values for options, not option names themselves."
-            print >>output_stream, "ignore_symbol_list = ["
+                "# values for options, not option names themselves.",
+                file=output_stream
+            )
+            print("ignore_symbol_list = [", file=output_stream)
             for a_symbol in sorted(symbols_to_ignore):
-                print >>output_stream, '    "%s",' % a_symbol
-            print >>output_stream, ']\n'
+                print('    "%s",' % a_symbol, file=output_stream)
+            print(']\n', file=output_stream)
 
         # finally, as the last step, we need to write out the keys and values
         # will be used by a future configman as Options and values.
