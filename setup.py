@@ -18,6 +18,10 @@ if sys.version_info[:3] <= (2, 6, 4):
     print("Please upgrade to a python >= 2.6.5!", file=sys.stderr)
     sys.exit(1)
 
+if sys.version_info[0] == 3 and sys.version_info[1] < 3:
+    print("Please upgrade to a python >= 3.3!", file=sys.stderr)
+    sys.exit(1)
+
 
 def read(fname):
     fpath = os.path.join(os.path.dirname(__file__), fname)
