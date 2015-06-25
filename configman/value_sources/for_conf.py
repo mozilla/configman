@@ -107,7 +107,7 @@ class ValueSource(object):
             for value in source_dict.values()
             if isinstance(value, Option)
         ]
-        options.sort(cmp=lambda x, y: cmp(x.name, y.name))
+        options.sort(key=lambda x: x.name)
         namespaces = [
             (key, value)
             for key, value in source_dict.items()

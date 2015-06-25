@@ -6,6 +6,7 @@ from __future__ import absolute_import, division, print_function, \
 import collections
 import os
 import sys
+import six
 
 from configman.value_sources.source_exceptions import CantHandleTypeException
 from configman.option import Option
@@ -62,7 +63,7 @@ class ValueSource(object):
             for value in source_dict.values()
             if isinstance(value, Option)
         ]
-        options.sort(cmp=lambda x, y: cmp(x.name, y.name))
+        options.sort(key=lambda x: x.name)
         namespaces = [
             (key, value)
             for key, value in source_dict.items()
@@ -88,7 +89,7 @@ class ValueSource(object):
             else:
                 option_name = an_option.name
             option_value = str(an_option)
-            if isinstance(option_value, unicode):
+            if isinstance(option_value, six.text_type):
                 option_value = option_value.encode('utf8')
 
             comment_line = '%s (default: %r)' % (

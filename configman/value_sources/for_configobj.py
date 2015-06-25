@@ -203,13 +203,13 @@ class ValueSource(object):
             for value in source_dict.values()
             if isinstance(value, Option)
         ]
-        options.sort(cmp=lambda x, y: cmp(x.name, y.name))
+        options.sort(key=lambda x: x.name)
         indent_spacer = " " * (level * indent_size)
         for an_option in options:
             print("%s# %s" % (indent_spacer, an_option.doc),
                   file=output_stream)
             option_value = str(an_option)
-            if isinstance(option_value, unicode):
+            if isinstance(option_value, six.text_type):
                 option_value = option_value.encode('utf8')
 
             if an_option.reference_value_from:
