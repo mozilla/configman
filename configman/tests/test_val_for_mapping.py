@@ -5,6 +5,7 @@ from __future__ import absolute_import, division, print_function
 
 import unittest
 import os
+import six
 
 from six.moves import cStringIO as StringIO
 import contextlib
@@ -26,6 +27,7 @@ def stringIO_context_wrapper(a_stringIO_instance):
 
 #==============================================================================
 class TestCase(unittest.TestCase):
+    maxDiff = None
 
     #--------------------------------------------------------------------------
     def _some_namespaces(self):
@@ -155,6 +157,8 @@ x__password='secret'
 # how big in tons (default: 100)
 x__size='100'
         """.strip()
+        if six.PY3:
+            expected = expected.replace("='", "=b'")
         self.assertEqual(received.strip(), expected)
 
     #--------------------------------------------------------------------------
@@ -182,4 +186,6 @@ x__size='100'
 # write it on multiple lines. (default: 'Default Value Goes In Here')
 aaa='Default Value Goes In Here'
         """.strip()
+        if six.PY3:
+            expected = expected.replace("='", "=b'")
         self.assertEqual(received.strip(), expected)
