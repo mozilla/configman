@@ -863,7 +863,7 @@ class ConfigurationManager(object):
     #--------------------------------------------------------------------------
     @staticmethod
     def _walk_and_close(a_dict):
-        for val in a_dict.itervalues():
+        for val in six.itervalues(a_dict):
             if isinstance(val, collections.Mapping):
                 ConfigurationManager._walk_and_close(val)
             if hasattr(val, 'close') and not inspect.isclass(val):

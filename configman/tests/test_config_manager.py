@@ -8,7 +8,7 @@ import os.path
 import unittest
 from contextlib import contextmanager
 import io
-from cStringIO import StringIO
+from six.moves import cStringIO as StringIO
 import getopt
 import six
 
@@ -2044,7 +2044,7 @@ c.string =   from ini
                 argv_source=['--admin.conf=x.ini']
             )
             assert False, "where's the missing exception?"
-        except AllHandlersFailedException, x:
+        except AllHandlersFailedException as x:
             self.assertTrue('ConfigObj cannot load' in str(x))
         finally:
             os.remove('x.ini')
