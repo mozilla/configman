@@ -12,6 +12,7 @@ from six.moves import cStringIO as StringIO
 import getopt
 import six
 
+import nose
 import mock
 
 import configman.config_manager as config_manager
@@ -2108,9 +2109,14 @@ c.string =   from ini
                 (n,),
                 argv_source=['--admin.conf=x.ini']
             )
-            mocked_warnings.warn.assert_called_once_with(
-                six.text_type('Invalid options: bar, baz')
-            )
+            try:
+                mocked_warnings.warn.assert_called_once_with(
+                    six.text_type('Invalid options: bar, baz')
+                )
+            except nose.proxy.AssertionError:
+                mocked_warnings.warn.assert_called_once_with(
+                    six.text_type('Invalid options: baz, bar')
+                )
         finally:
             os.remove('x.ini')
 

@@ -347,7 +347,11 @@ class DotDictWithAcquisition(DotDict):
         if key == '_parent':
             raise AttributeError('_parent')
         try:
-            return getattr(self._parent, key)
+            if six.PY2:
+                _parent = self._parent
+            else:
+                _parent = object.__getattribute(self, '_parent')
+            return getattr(_parent, key)
         except AttributeError:  # no parent attribute
             # the copy.deepcopy function will try to probe this class for an
             # instance of __deepcopy__.  If an AttributeError is raised, then
