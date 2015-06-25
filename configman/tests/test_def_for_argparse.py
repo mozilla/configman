@@ -8,7 +8,7 @@ from unittest import TestCase
 from mock import patch
 
 
-from StringIO import StringIO
+from six import StringIO
 
 try:
     import argparse
