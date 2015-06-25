@@ -9,8 +9,11 @@ like files or database results.  If supplied with a simple string rather than
 a ContextManager, the value source will assume it is a file pathname and try
 to open it.
 """
+from __future__ import absolute_import, division, print_function, \
+    unicode_literals
 
 import functools
+import six
 import sys
 
 from configman import namespace
@@ -30,7 +33,8 @@ function_type = type(lambda x: x)  # TODO: just how do you express the Fuction
 
 # the list of types that the contstuctor can handle.
 can_handle = (
-    basestring,
+    six.binary_type,
+    six.text_type,
     function_type  # this is to say that this ValueSource is willing
                    # to try a function that will return a
                    # context manager
@@ -50,7 +54,7 @@ class ValueSource(object):
     #--------------------------------------------------------------------------
     def __init__(self, candidate, the_config_manager=None):
         if (
-            isinstance(candidate, basestring) and
+            isinstance(candidate, (six.binary_type, six.text_type)) and
             candidate.endswith(file_name_extension)
         ):
             # we're trusting the string represents a filename
@@ -80,7 +84,7 @@ class ValueSource(object):
                         previous_key = key
                     except ValueError:
                         self.values[line] = ''
-        except Exception, x:
+        except Exception as x:
             raise NotAConfigFileError(
                 "Conf couldn't interpret %s as a config file: %s"
                 % (candidate, str(x))
@@ -114,30 +118,26 @@ class ValueSource(object):
                 option_name = "%s.%s" % (namespace_name, an_option.name)
             else:
                 option_name = an_option.name
-            print >>output_stream, "# name: %s" % option_name
-            print >>output_stream, "# doc: %s" % an_option.doc
-            option_value = str(an_option)
-            if isinstance(option_value, unicode):
+            print("# name: %s" % option_name, file=output_stream)
+            print("# doc: %s" % an_option.doc, file=output_stream)
+            option_value = six.text_type(an_option)
+            if isinstance(option_value, six.text_type):
                 option_value = option_value.encode('utf8')
 
             if an_option.likely_to_be_changed:
                 option_format = '%s=%r\n'
             else:
                 option_format = '# %s=%r\n'
-            print >>output_stream, option_format % (
-                option_name,
-                option_value
-            )
+            print(option_format % (option_name, option_value),
+                  file=output_stream)
         for key, a_namespace in namespaces:
             if namespace_name:
                 namespace_label = ''.join((namespace_name, '.', key))
             else:
                 namespace_label = key
-            print >> output_stream, '#%s' % ('-' * 79)
-            print >> output_stream, '# %s - %s\n' % (
-                namespace_label,
-                a_namespace._doc
-            )
+            print('#%s' % ('-' * 79), file=output_stream)
+            print('# %s - %s\n' % (namespace_label, a_namespace._doc),
+                  file=output_stream)
             ValueSource.write(
                 a_namespace,
                 namespace_name=namespace_label,

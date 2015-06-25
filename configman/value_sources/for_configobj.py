@@ -1,8 +1,11 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
+from __future__ import absolute_import, division, print_function, \
+    unicode_literals
 
 import sys
+import six
 import re
 import os.path
 
@@ -24,7 +27,8 @@ file_name_extension = 'ini'
 can_handle = (
     configobj,
     configobj.ConfigObj,
-    basestring,
+    six.binary_type,
+    six.text_type,
 )
 
 
@@ -147,7 +151,7 @@ class ValueSource(object):
         ):
             try:
                 self.config_obj = ConfigObjWithIncludes(source)
-            except Exception, x:
+            except Exception as x:
                 raise LoadingIniFileFailsException(
                     "ConfigObj cannot load ini: %s" % str(x)
                 )
@@ -202,18 +206,20 @@ class ValueSource(object):
         options.sort(cmp=lambda x, y: cmp(x.name, y.name))
         indent_spacer = " " * (level * indent_size)
         for an_option in options:
-            print >>output_stream, "%s# %s" % (indent_spacer, an_option.doc)
+            print("%s# %s" % (indent_spacer, an_option.doc),
+                  file=output_stream)
             option_value = str(an_option)
             if isinstance(option_value, unicode):
                 option_value = option_value.encode('utf8')
 
             if an_option.reference_value_from:
-                print >>output_stream, (
+                print(
                     '%s# see "%s.%s" for the default or override it here' % (
                         indent_spacer,
                         an_option.reference_value_from,
                         an_option.name
-                    )
+                    ),
+                    file=output_stream
                 )
 
             if an_option.likely_to_be_changed or an_option.has_changed:
@@ -226,11 +232,9 @@ class ValueSource(object):
                 if option_value[0] not in '\'"':
                     option_value = '"%s"' % option_value
 
-            print >>output_stream, option_format % (
-                indent_spacer,
-                an_option.name,
-                option_value
-            )
+            print(option_format % (indent_spacer, an_option.name,
+                                   option_value),
+                  file=output_stream)
         next_level = level + 1
         namespaces = [
             (key, value)
@@ -240,21 +244,15 @@ class ValueSource(object):
         namespaces.sort(key=ValueSource._namespace_reference_value_from_sort)
         for key, namespace in namespaces:
             next_level_spacer = " " * next_level * indent_size
-            print >>output_stream, "%s%s%s%s\n" % (
-                indent_spacer,
-                "[" * next_level,
-                key,
-                "]" * next_level
-            )
+            print("%s%s%s%s\n" % (indent_spacer, "[" * next_level, key,
+                                  "]" * next_level),
+                  file=output_stream)
             if namespace._doc:
-                print >>output_stream, (
-                    "%s%s" % (next_level_spacer, namespace._doc)
-                )
+                print("%s%s" % (next_level_spacer, namespace._doc),
+                      file=output_stream)
             if namespace._reference_value_from:
-                print >>output_stream, (
-                    "%s#+include ./common_%s.ini\n"
-                    % (next_level_spacer, key)
-                )
+                print("%s#+include ./common_%s.ini\n"
+                      % (next_level_spacer, key), file=output_stream)
 
             if namespace_name:
                 ValueSource._write_ini(
