@@ -192,6 +192,36 @@ def local_to_str(a_thing):
 
 
 #==============================================================================
+class OrderableObj(object):
+    """Python3 can't sort non-string types implicitly.
+    """
+    def __init__(self, value):
+        if not isinstance(value, six.text_type):
+            value_str = six.text_type(value)
+        else:
+            value_str = value
+        self.value_str = value_str
+        self.value = value
+    def __lt__(self, other):
+        return (self.value_str < other.value_str)
+    def __repr__(self):
+        return self.value
+
+
+#==============================================================================
+class OrderableTuple(object):
+    """Python3 can't sort non-string types implicitly.
+    """
+    def __init__(self, value, index=1):
+        self.value = value
+        self.index = index
+    def __lt__(self, other):
+        return (self.value[self.index] < other.value[self.index])
+    def __repr__(self):
+        return self.value
+
+
+#==============================================================================
 class ValueSource(object):
     #--------------------------------------------------------------------------
     def __init__(self, source, the_config_manager=None):
@@ -384,7 +414,10 @@ class ValueSource(object):
         #         A,
         #         B,
         #     )
-        for a_module_path in sorted(class_name_by_module_path_list.keys()):
+        sorted_list = [x.value for x in sorted([OrderableObj(x) for x in
+                       class_name_by_module_path_list.keys()])]
+        for a_module_path in sorted_list:
+            print(a_module_path)
             # if there is no module path, then it is something that we don't
             # need to import.  If the module path begins with underscore then
             # it is private and we ought not step into that mire.  If that
@@ -397,7 +430,12 @@ class ValueSource(object):
                 class_name_by_module_path_list[a_module_path]
             if len(list_of_class_names) > 1:
                 output_line = "from %s import (\n" % a_module_path
-                for a_class, a_class_name in sorted(list_of_class_names):
+                if six.PY2:
+                    sorted_list = sorted(list_of_class_names)
+                else:
+                    sorted_list = [x.value for x in sorted([OrderableTuple(x)
+                                   for x in list_of_class_names])]
+                for a_class, a_class_name in sorted_list:
                     if a_class in alias_by_class:
                         output_line = "%s\n    %s as %s," % (
                             output_line,
@@ -433,7 +471,9 @@ class ValueSource(object):
 
         # The next section to write will be the imports of the form:
         #     import X
-        for a_module_path in sorted(class_name_by_module_path_list.keys()):
+        sorted_list = [x.value for x in sorted([OrderableObj(x) for x in
+                       class_name_by_module_path_list.keys()])]
+        for a_module_path in sorted_list:
             list_of_class_names = \
                 class_name_by_module_path_list[a_module_path]
             a_class, a_class_name = list_of_class_names[0]
