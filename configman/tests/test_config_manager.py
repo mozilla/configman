@@ -10,6 +10,7 @@ from contextlib import contextmanager
 import io
 from cStringIO import StringIO
 import getopt
+import six
 
 import mock
 
@@ -2108,7 +2109,7 @@ c.string =   from ini
                 argv_source=['--admin.conf=x.ini']
             )
             mocked_warnings.warn.assert_called_once_with(
-                'Invalid options: bar, baz'
+                six.text_type('Invalid options: bar, baz')
             )
         finally:
             os.remove('x.ini')
