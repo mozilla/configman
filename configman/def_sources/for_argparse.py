@@ -576,7 +576,7 @@ class ArgumentParser(argparse.ArgumentParser):
             values_source_list=self.value_source_list,
             argv_source=args,
             app_name=self.prog,
-            app_version=self.version,
+#            app_version=self.version,
             app_description=self.description,
             use_auto_help=False,
         )
@@ -627,7 +627,7 @@ class ArgumentParser(argparse.ArgumentParser):
             values_source_list=self.value_source_list,
             argv_source=args,
             app_name=self.prog,
-            app_version=self.version,
+#            app_version=self.version,
             app_description=self.description,
             use_auto_help=False,
         )
