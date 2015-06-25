@@ -33,7 +33,6 @@ from configman.config_exceptions import CannotConvertError
 
 #------------------------------------------------------------------------------
 def str_dict_keys(a_dict):
-    # Stop supporting python <= 2.6.4
     """return a modified dict where all the keys that are anything but str get
     converted to str.
     E.g.
@@ -69,8 +68,8 @@ def str_dict_keys(a_dict):
     return a_dict
 #    new_dict = {}
 #    for key in a_dict:
-#        if isinstance(key, unicode):
-#            new_dict[str(key)] = a_dict[key]
+#        if isinstance(key, six.text_type):
+#            new_dict[six.binary_type(key)] = a_dict[key]
 #        else:
 #            new_dict[key] = a_dict[key]
 #    return new_dict

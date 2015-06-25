@@ -29,7 +29,8 @@ Each is used in a different context during the overlay expansion process.
 While several of them are functionally equivalent, we keep them as separate
 classes so that we can use class identity as a differention mechanism.
 """
-
+from __future__ import absolute_import, division, print_function, \
+    unicode_literals
 import argparse
 import copy
 

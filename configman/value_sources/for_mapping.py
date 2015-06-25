@@ -1,7 +1,8 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
-
+from __future__ import absolute_import, division, print_function, \
+    unicode_literals
 import collections
 import os
 import sys
@@ -95,19 +96,18 @@ class ValueSource(object):
                 an_option.default
             )
             comment_lines = split_long_line(comment_line, '\n# ').lstrip()
-            print >>output_stream, comment_lines
+            print(comment_lines, file=output_stream)
 
             option_format = '%s=%r'
-            print >>output_stream, option_format % (
-                option_name.replace('.', '__'),
-                option_value
-            )
+            print(option_format % (option_name.replace('.', '__'),
+                                   option_value),
+                  file=output_stream)
         for key, a_namespace in namespaces:
             if namespace_name:
                 namespace_label = ''.join((namespace_name, '.', key))
             else:
                 namespace_label = key
-            print >> output_stream, ''
+            print('', file=output_stream)
             ValueSource.write(
                 a_namespace,
                 namespace_name=namespace_label,

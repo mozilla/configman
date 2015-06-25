@@ -422,5 +422,7 @@ def create_key_translating_dot_dict(
                 self._translate_key(key)
             )
 
+    if six.PY2:
+        new_class_name = six.binary_type(new_class_name)
     DotDictWithKeyTranslations.__name__ = new_class_name
     return DotDictWithKeyTranslations
