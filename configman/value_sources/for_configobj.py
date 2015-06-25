@@ -102,7 +102,7 @@ class ConfigObjWithIncludes(configobj.ConfigObj):
         completed, this method submits the list of lines to the super class'
         function of the same name.  ConfigObj proceeds, completely unaware
         that it's input file has been preprocessed."""
-        if isinstance(infile, basestring):
+        if isinstance(infile, (six.binary_type, six.text_type)):
             original_path = os.path.dirname(infile)
             expanded_file_contents = self._expand_files(infile, original_path)
             super(ConfigObjWithIncludes, self)._load(
@@ -146,7 +146,7 @@ class ValueSource(object):
             if not os.path.exists(source) and config_manager.config_optional:
                 return
         if (
-            isinstance(source, basestring) and
+            isinstance(source, (six.binary_type, six.text_type)) and
             source.endswith(file_name_extension)
         ):
             try:
@@ -227,7 +227,8 @@ class ValueSource(object):
             else:
                 option_format = '%s#%s=%s\n'
 
-            if isinstance(option_value, basestring) and ',' in option_value:
+            if isinstance(option_value, (six.binary_type, six.text_type)) and \
+                    ',' in option_value:
                 # quote lists unless they're already quoted
                 if option_value[0] not in '\'"':
                     option_value = '"%s"' % option_value

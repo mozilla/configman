@@ -33,6 +33,7 @@ from __future__ import absolute_import, division, print_function, \
     unicode_literals
 import argparse
 import copy
+import six
 
 import collections
 
@@ -373,7 +374,7 @@ class ParserContainer(object):
 
         if (
             isinstance(option.default, collections.Sequence)
-            and not isinstance(option.default, basestring)
+            and not isinstance(option.default, (six.binary_type, six.text_type))
         ):
             if option.is_argument:
                 kwargs.nargs = len(option.default)
@@ -432,7 +433,7 @@ class ValueSource(object):
                     None
                 )
             else:
-                if isinstance(an_option.value, basestring):
+                if isinstance(an_option.value, (six.binary_type, six.text_type)):
                     return an_option.value
                 if an_option.to_string_converter:
                     return an_option.to_string_converter(an_option.value)
@@ -441,7 +442,7 @@ class ValueSource(object):
                 nargs is not None
                 and isinstance(an_option.value, collections.Sequence)
             ):
-                if isinstance(an_option.value, basestring):
+                if isinstance(an_option.value, (six.binary_type, six.text_type)):
                     return an_option.value
                 return [to_str(x) for x in an_option.value]
             if an_option.value is None:

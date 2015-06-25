@@ -2355,7 +2355,7 @@ c.string =   from ini
 
         class UpperCaseValueDotDict(DotDict):
             def __setattr__(self, key, value):
-                if isinstance(value, basestring):
+                if isinstance(value, (six.binary_type, six.text_type)):
                     super(UpperCaseValueDotDict, self).__setattr__(
                         key,
                         value.upper()

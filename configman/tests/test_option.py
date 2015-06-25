@@ -8,6 +8,7 @@ from decimal import Decimal
 import datetime
 import unittest
 import re
+import six
 
 from configman.converters import (
     boolean_converter,
@@ -276,7 +277,7 @@ class TestCase(unittest.TestCase):
 
         two_days = datetime.timedelta(days=2)
         timedelta_as_string = timedelta_to_str(two_days)
-        assert isinstance(timedelta_as_string, basestring)
+        assert isinstance(timedelta_as_string, (six.binary_type, six.text_type))
         opt.set_value(timedelta_as_string)
         self.assertEqual(opt.value, two_days)
 

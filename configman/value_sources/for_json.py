@@ -53,7 +53,7 @@ class ValueSource(object):
                     "Can't setup an json file without knowing the file name"
                 )
         if (
-            isinstance(source, basestring)
+            isinstance(source, (six.binary_type, six.text_type))
             and source.endswith(file_name_extension)
         ):
             try:
