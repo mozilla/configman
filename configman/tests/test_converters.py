@@ -362,7 +362,7 @@ class TestCase(unittest.TestCase):
         )
         self.assertEqual(
             to_str(datetime.timedelta(days=1, seconds=1)),
-            "1 00:00:01"
+            converters.to_unicode("1 00:00:01")
         )
         self.assertEqual(to_str(unittest), 'unittest')
 

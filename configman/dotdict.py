@@ -1,11 +1,12 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
-
+from __future__ import absolute_import, division, print_function, \
+    unicode_literals
 
 import collections
 import weakref
-import StringIO
+from six import StringIO
 
 from configman.orderedset import OrderedSet
 from configman.memoize import memoize
@@ -88,9 +89,9 @@ class DotDict(collections.MutableMapping):
         try:
             d.a
         except KeyError:
-            print 'yep, we got a KeyError'
+            print('yep, we got a KeyError')
         except AttributeError:
-            print 'nope, this will never happen'
+            print('nope, this will never happen')
     """
 
     #--------------------------------------------------------------------------
@@ -246,13 +247,13 @@ class DotDict(collections.MutableMapping):
             return self[parent_key]
 
     def __str__(self):
-        out = StringIO.StringIO()
+        out = StringIO()
         for key in self.keys_breadth_first(False):
             value = self[key]
             indent = '\t' * key.count('.')
             if isinstance(value, collections.Mapping):
                 value = str(value)  # recurse!
-            print >>out, '{0}{1}: {2}'.format(indent, key, repr(value))
+            print('{0}{1}: {2}'.format(indent, key, repr(value)), file=out)
         return out.getvalue().strip()
 
 
@@ -277,7 +278,7 @@ class DotDictWithAcquisition(DotDict):
         try:
             d.dd.x
         except KeyError:
-            print "'x' was not found in d.dd or in d"
+            print("'x' was not found in d.dd or in d")
 
     When used with keys of the form 'x.y.z', acquisition can allow it to return
     acquired values even if the intermediate keys don't exist:
@@ -292,8 +293,8 @@ class DotDictWithAcquisition(DotDict):
         d = DotDictWithAcquisition()
         d.a = 39
         try:
-            print d.x.y.z.a
-        except KeyError, e:
+            print(d.x.y.z.a)
+        except KeyError as e:
             assert str(e) == 'x'
 
     This behavior seems inconsistent, but really works so by design.  The form
