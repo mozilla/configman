@@ -6,7 +6,7 @@ from __future__ import absolute_import, division, print_function
 import unittest
 import os
 
-from cStringIO import StringIO
+from six.moves import cStringIO as StringIO
 import contextlib
 from configman import Namespace, ConfigurationManager
 from configman.datetime_util import datetime_from_ISO_string

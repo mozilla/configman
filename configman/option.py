@@ -5,6 +5,7 @@ from __future__ import absolute_import, division, print_function, \
     unicode_literals
 
 import collections
+import six
 
 from configman.converters import (
     str_to_python_object,
@@ -42,14 +43,14 @@ class Option(object):
         self.name = name
         self.short_form = short_form
         self.default = default
-        if isinstance(doc, basestring):
+        if isinstance(doc, (six.binary_type, six.text_type)):
             doc = doc.strip()
         self.doc = doc
         if from_string_converter is None:
             if default is not None:
                 # take a qualified guess from the default value
                 from_string_converter = self._deduce_converter(default)
-        if isinstance(from_string_converter, basestring):
+        if isinstance(from_string_converter, (six.binary_type, six.text_type)):
             from_string_converter = str_to_python_object(from_string_converter)
         self.from_string_converter = from_string_converter
         # if this is not set, the type is used in converters.py to attempt
@@ -118,7 +119,7 @@ class Option(object):
     def set_value(self, val=None):
         if val is None:
             val = self.default
-        if isinstance(val, basestring):
+        if isinstance(val, (six.binary_type, six.text_type)):
             try:
                 new_value = self.from_string_converter(val)
                 self.has_changed = new_value != self.value
@@ -212,7 +213,7 @@ class Aggregation(object):
         secret=False,
     ):
         self.name = name
-        if isinstance(function, basestring):
+        if isinstance(function, (six.binary_type, six.text_type)):
             self.function = str_to_python_object(function)
         else:
             self.function = function
