@@ -905,7 +905,7 @@ class ConfigurationManager(object):
             name='print_conf',
             default=None,
             doc='write current config to stdout (%s)'
-                % ', '.join(file_extension_dispatch.keys())
+                % ', '.join(sorted(file_extension_dispatch.keys()))
         )
         admin.add_option(
             name='dump_conf',
