@@ -408,6 +408,11 @@ class TestCaseForDefSourceArgparse(TestCase):
         return parser
 
     #--------------------------------------------------------------------------
+    @staticmethod
+    def _split_sort(a_string):
+        return sorted(a_string.split('\n'))
+
+    #--------------------------------------------------------------------------
     @patch('sys.stdout', new_callable=StringIO)
     def impl_for_subparser_stdout_with_exit(self, args, expected, mock_stdout):
         parser = self.setup_subparser()
@@ -417,7 +422,11 @@ class TestCaseForDefSourceArgparse(TestCase):
             args
         )
         x = mock_stdout.getvalue()
-        self.assertEqual(expected, x, '%s failed' % args)
+        self.assertEqual(
+            self._split_sort(expected),
+            self._split_sort(x),
+            '%s failed' % args
+        )
 
     #--------------------------------------------------------------------------
     @patch('sys.stdout', new_callable=StringIO)
@@ -425,7 +434,11 @@ class TestCaseForDefSourceArgparse(TestCase):
         parser = self.setup_subparser()
         parser.parse_args(args=args)
         x = mock_stdout.getvalue()
-        self.assertEqual(expected, x, '%s failed' % args)
+        self.assertEqual(
+            self._split_sort(expected),
+            self._split_sort(x),
+            '%s failed' % args
+        )
 
     #--------------------------------------------------------------------------
     @patch('sys.stderr', new_callable=StringIO)
@@ -437,7 +450,11 @@ class TestCaseForDefSourceArgparse(TestCase):
             args
         )
         x = mock_stderr.getvalue()
-        self.assertEqual(expected, x, '%s failed' % args)
+        self.assertEqual(
+            self._split_sort(expected),
+            self._split_sort(x),
+            '%s failed' % args
+        )
 
     #--------------------------------------------------------------------------
     @patch('sys.stderr', new_callable=StringIO)
@@ -445,7 +462,11 @@ class TestCaseForDefSourceArgparse(TestCase):
         parser = self.setup_subparser()
         parser.parse_args(args=args)
         x = mock_stderr.getvalue()
-        self.assertEqual(expected, x, '%s failed' % args)
+        self.assertEqual(
+            self._split_sort(expected),
+            self._split_sort(x),
+            '%s failed' % args
+        )
 
     #--------------------------------------------------------------------------
     def test_expansion_subparsers_stdout_with_exit(self):
