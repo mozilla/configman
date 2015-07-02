@@ -425,7 +425,7 @@ class TestCaseForDefSourceArgparse(TestCase):
         self.assertEqual(
             self._split_sort(expected),
             self._split_sort(x),
-            '%s failed' % args
+##            '%s failed' % args
         )
 
     #--------------------------------------------------------------------------
@@ -437,7 +437,7 @@ class TestCaseForDefSourceArgparse(TestCase):
         self.assertEqual(
             self._split_sort(expected),
             self._split_sort(x),
-            '%s failed' % args
+##            '%s failed' % args
         )
 
     #--------------------------------------------------------------------------
@@ -453,7 +453,7 @@ class TestCaseForDefSourceArgparse(TestCase):
         self.assertEqual(
             self._split_sort(expected),
             self._split_sort(x),
-            '%s failed' % args
+##            '%s failed' % args
         )
 
     #--------------------------------------------------------------------------
@@ -465,7 +465,7 @@ class TestCaseForDefSourceArgparse(TestCase):
         self.assertEqual(
             self._split_sort(expected),
             self._split_sort(x),
-            '%s failed' % args
+##            '%s failed' % args
         )
 
     #--------------------------------------------------------------------------
