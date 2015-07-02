@@ -417,7 +417,11 @@ class TestCaseForDefSourceArgparse(TestCase):
             args
         )
         x = mock_stdout.getvalue()
-        self.assertEqual(expected, x, '%s failed' % args)
+        self.assertEqual(
+            sorted(expected),
+            sorted(x),
+            'case: %s failed - %s != %s' % (args,  expected,  x)
+        )
 
     #--------------------------------------------------------------------------
     @patch('sys.stdout', new_callable=StringIO)
@@ -425,7 +429,11 @@ class TestCaseForDefSourceArgparse(TestCase):
         parser = self.setup_subparser()
         parser.parse_args(args=args)
         x = mock_stdout.getvalue()
-        self.assertEqual(expected, x, '%s failed' % args)
+        self.assertEqual(
+            sorted(expected),
+            sorted(x),
+            'case: %s failed - %s != %s' % (args,  expected,  x)
+        )
 
     #--------------------------------------------------------------------------
     @patch('sys.stderr', new_callable=StringIO)
@@ -437,7 +445,11 @@ class TestCaseForDefSourceArgparse(TestCase):
             args
         )
         x = mock_stderr.getvalue()
-        self.assertEqual(expected, x, '%s failed' % args)
+        self.assertEqual(
+            sorted(expected),
+            sorted(x),
+            'case: %s failed - %s != %s' % (args,  expected,  x)
+        )
 
     #--------------------------------------------------------------------------
     @patch('sys.stderr', new_callable=StringIO)
@@ -445,7 +457,11 @@ class TestCaseForDefSourceArgparse(TestCase):
         parser = self.setup_subparser()
         parser.parse_args(args=args)
         x = mock_stderr.getvalue()
-        self.assertEqual(expected, x, '%s failed' % args)
+        self.assertEqual(
+            sorted(expected),
+            sorted(x),
+            'case: %s failed - %s != %s' % (args,  expected,  x)
+        )
 
     #--------------------------------------------------------------------------
     def test_expansion_subparsers_stdout_with_exit(self):
