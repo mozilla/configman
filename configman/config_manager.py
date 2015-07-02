@@ -33,7 +33,6 @@ from configman.def_sources import (
 from configman.dotdict import (
     DotDict,
     DotDictWithAcquisition,
-    iteritems_breadth_first
 )
 from configman.environment import (
     environment
@@ -612,7 +611,7 @@ class ConfigurationManager(object):
         own configuration options, bring those into the current namespace and
         then proceed to overlay/expand those.
         """
-        new_keys_have_been_discovered = True  # loop control, False breaks the loop
+        new_keys_have_been_discovered = True  # loop control, False breaks loop
         finished_keys = set()
         all_reference_values = {}
 

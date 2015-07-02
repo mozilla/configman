@@ -28,7 +28,7 @@ def setup_definitions(source, destination):
             if 'name' in val and 'default' in val:
                 # this is an Option in the form of a dict, not a Namespace
                 if key == 'not_for_definition' and val is True:
-                    continue # ignore this element
+                    continue  # ignore this element
                 params = str_dict_keys(val)
                 destination[key] = Option(**params)
             elif 'function' in val:  # this is an Aggregation

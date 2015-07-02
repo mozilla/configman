@@ -74,4 +74,3 @@ class TestCase(unittest.TestCase):
             cm.option_definitions.cls.from_string_converter is class_converter
         )
         self.assertTrue(c.cls is MooseBase)
-

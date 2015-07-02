@@ -14,7 +14,6 @@ import getopt
 import mock
 
 import configman.config_manager as config_manager
-from configman.commandline import command_line
 from configman.option import Option
 from configman.dotdict import (
     DotDict,
@@ -29,7 +28,6 @@ from configman.config_exceptions import NotAnOptionError
 from configman.value_sources.source_exceptions import (
     AllHandlersFailedException,
     UnknownFileExtensionException,
-    NoHandlerForType
 )
 
 
@@ -52,6 +50,7 @@ class T3(RequiredConfig):
     required_config.namespace('ccc')
     required_config.ccc.add_option('x', default=99)
 
+
 #==============================================================================
 class AClass(RequiredConfig):
     required_config = Namespace()
@@ -68,6 +67,8 @@ class AClass(RequiredConfig):
         default='configman.tests.test_config_manager.BClass',
         from_string_converter=class_converter
     )
+
+
 #==============================================================================
 class BClass(RequiredConfig):
     required_config = Namespace()
@@ -78,7 +79,6 @@ class BClass(RequiredConfig):
         default=9988,
         reference_value_from='xxx.yyy'
     )
-
 
 
 #==============================================================================
@@ -600,8 +600,6 @@ c.string =   from ini
         self.assertEqual(c.option_definitions.c.zzz.fff.ooo.a.default, 2)
         self.assertEqual(c.option_definitions.c.zzz.fff.ooo.a.value, 2)
 
-
-
     #--------------------------------------------------------------------------
     def test_mapping_types_1(self):
         n = config_manager.Namespace()
@@ -851,55 +849,6 @@ c.string =   from ini
         self.assertTrue('application' in r)  # it ought to be there
         self.assertTrue('[ application' in r)  # listed as optional
         self.assertFalse('[ somevalue' in r)  # by name not by value
-
-
-    #--------------------------------------------------------------------------
-    def test_output_summary(self):
-        """test_output_summary: the output from help"""
-        n = config_manager.Namespace()
-        n.add_option('aaa', False, 'the a', short_form='a')
-        n.add_option('bee', True)
-        n.b = 17
-        n.c = config_manager.Namespace()
-        n.c.add_option('fred', doc='husband from Flintstones')
-        n.d = config_manager.Namespace()
-        n.d.add_option('fred', doc='male neighbor from I Love Lucy')
-        n.d.x = config_manager.Namespace()
-        n.d.x.add_option('size', 100, 'how big in tons', short_form='s')
-        n.d.x.add_option('password', 'secrets', 'the password')
-        c = config_manager.ConfigurationManager(
-            [n],
-            use_admin_controls=True,
-            use_auto_help=False,
-            argv_source=[],
-        )
-        s = StringIO()
-        c.output_summary(output_stream=s)
-        r = s.getvalue()
-        self.assertTrue('OPTIONS:\n' in r)
-
-        options = r.split('OPTIONS:\n')[1]
-        s.close()
-
-        padding = '\n' + ' ' * 4
-        expect = [
-            ('-a, --aaa', 'the a%s(default: False)' % padding),
-            ('--b', '(default: 17)'),
-            ('--bee', '(default: True)'),
-            ('--c.fred', 'husband from Flintstones'),
-            ('--d.fred', 'male neighbor from I Love Lucy'),
-            ('--d.x.password', 'the password%s(default: *********)' % padding),
-            ('-s, --d.x.size', 'how big in tons%s(default: 100)' % padding),
-        ]
-        point = -1  # used to assert the sort order
-        for i, (start, end) in enumerate(expect):
-            self.assertTrue(
-                point < options.find(start) < options.find(end),
-                expect[i]
-            )
-            point = options.find(end)
-
-
 
     #--------------------------------------------------------------------------
     def test_output_summary_with_secret(self):
@@ -1568,7 +1517,7 @@ c.string =   from ini
         temp_output = StringIO()
         sys.stdout = temp_output
         try:
-            c = config_manager.ConfigurationManager(
+            config_manager.ConfigurationManager(
                 n,
                 [getopt],
                 use_admin_controls=True,
@@ -1735,17 +1684,21 @@ c.string =   from ini
 
         with c.context() as config:
             statement = config.sub1.statement
-            self.assertEqual(statement.value,
-                             'wilma married fred using password @$*$&26Ht '
-                             'but divorced because of arg2.')
+            self.assertEqual(
+                statement.value,
+                'wilma married fred using password @$*$&26Ht '
+                'but divorced because of arg2.'
+            )
         self.assertTrue(statement.value is None)
 
         with c.context(mapping_class=dict) as config:
             self.assertTrue(isinstance(config, dict))
             statement = config['sub1']['statement']
-            self.assertEqual(statement.value,
-                 'wilma married fred using password @$*$&26Ht '
-                 'but divorced because of arg2.')
+            self.assertEqual(
+                statement.value,
+                'wilma married fred using password @$*$&26Ht '
+                'but divorced because of arg2.'
+            )
         self.assertTrue(statement.value is None)
 
     #--------------------------------------------------------------------------
@@ -2489,9 +2442,11 @@ c.string =   from ini
 
         self.assertTrue(isinstance(config, DotDictWithAcquisition))
         statement = config['sub1']['statement']
-        self.assertEqual(statement.value,
-             'wilma married fred using password @$*$&26Ht '
-             'but divorced because of arg2.')
+        self.assertEqual(
+            statement.value,
+            'wilma married fred using password @$*$&26Ht '
+            'but divorced because of arg2.'
+        )
 
         config = configuration(
             n,
@@ -2508,9 +2463,11 @@ c.string =   from ini
 
         self.assertTrue(isinstance(config, dict))
         statement = config['sub1']['statement']
-        self.assertEqual(statement.value,
-             'wilma married fred using password @$*$&26Ht '
-             'but divorced because of arg2.')
+        self.assertEqual(
+            statement.value,
+            'wilma married fred using password @$*$&26Ht '
+            'but divorced because of arg2.'
+        )
 
     #--------------------------------------------------------------------------
     def test_configmanger_set_has_changed_successfully(self):
@@ -2556,5 +2513,3 @@ c.string =   from ini
         self.assertFalse(config.option_definitions.wilma.has_changed)
         self.assertFalse(config.option_definitions.sarita.has_changed)
         self.assertTrue(config.option_definitions.robert.has_changed)
-
-

@@ -4,6 +4,7 @@
 
 from functools import wraps
 
+
 #------------------------------------------------------------------------------
 def memoize(max_cache_size=1000):
     """Python 2.4 compatible memoize decorator.
@@ -31,11 +32,9 @@ def memoize(max_cache_size=1000):
                 fn.cache[key] = result
                 fn.count += 1
                 return result
-            except TypeError, x:
+            except TypeError:
                 return f(*args, **kwargs)
         fn.cache = {}
         fn.count = 0
         return fn
     return wrapper
-
-

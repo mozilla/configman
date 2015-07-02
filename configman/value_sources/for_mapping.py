@@ -45,11 +45,6 @@ class ValueSource(object):
 
     #--------------------------------------------------------------------------
     @staticmethod
-    def write(source_mapping, output_stream=sys.stdout):
-        ValueSource._write_ini(source_mapping, output_stream=output_stream)
-
-    #--------------------------------------------------------------------------
-    @staticmethod
     def _namespace_reference_value_from_sort(key_value_tuple):
         key, value = key_value_tuple
         if value._reference_value_from:
@@ -104,8 +99,8 @@ class ValueSource(object):
 
             option_format = '%s=%r'
             print >>output_stream, option_format % (
-              option_name.replace('.', '__'),
-              option_value
+                option_name.replace('.', '__'),
+                option_value
             )
         for key, a_namespace in namespaces:
             if namespace_name:
@@ -114,7 +109,7 @@ class ValueSource(object):
                 namespace_label = key
             print >> output_stream, ''
             ValueSource.write(
-              a_namespace,
-              namespace_name=namespace_label,
-              output_stream=output_stream
+                a_namespace,
+                namespace_name=namespace_label,
+                output_stream=output_stream
             )

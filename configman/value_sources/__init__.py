@@ -3,7 +3,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import collections
-import inspect
 import os
 
 from configman.value_sources.source_exceptions import (
@@ -20,7 +19,7 @@ from configman.config_file_future_proxy import ConfigFileFutureProxy
 from configman.config_exceptions import CannotConvertError
 
 # replace with dynamic discovery and loading
-#from configman.value_sources import for_argparse
+from configman.value_sources import for_argparse
 #from configman.value_sources import or_xml
 from configman.value_sources import for_getopt
 from configman.value_sources import for_json
@@ -31,6 +30,7 @@ from configman.value_sources import for_modules
 
 # please replace with dynamic discovery
 for_handlers = [
+    for_argparse,
     for_mapping,
     for_getopt,
     for_json,
@@ -119,9 +119,9 @@ def wrap_with_value_source_api(value_source_list, a_config_manager):
                         continue  # no file, it's optional, ignore it
                     raise IOError(a_source)  # no file, it's required, raise
                 if a_source == a_config_manager.config_pathname:
-                    # the config file has not been set to anything other than the
-                    # the default value.  Force this into be the degenerate case
-                    # and skip the wrapping process.  We'll read the file later.
+                    # the config file has not been set to anything other than
+                    # the default value. Force this into be the degenerate case
+                    # and skip the wrapping process. We'll read the file later.
                     continue
 
         if a_source is None:
@@ -158,10 +158,11 @@ def has_registration_for(config_file_type):
 
 
 #------------------------------------------------------------------------------
-def dispatch_request_to_write(config_file_type,
-          options_mapping,
-          opener):
-
+def dispatch_request_to_write(
+    config_file_type,
+    options_mapping,
+    opener
+):
     if isinstance(config_file_type, basestring):
         try:
             writer_fn = file_extension_dispatch[config_file_type]
@@ -206,4 +207,3 @@ def config_filename_from_commandline(config_manager):
             # ok give up, it's not a file nor a module path
             raise IOError(config_file_name)
     return config_file_name
-

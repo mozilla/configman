@@ -45,4 +45,3 @@ def configuration(*args, **kwargs):
         config_kwargs = {}
     cm = ConfigurationManager(*args, **kwargs)
     return cm.get_config(**config_kwargs)
-

@@ -8,3 +8,11 @@
 # at which point we want to make argparse the default, we will eliminate
 # this line
 import getopt as command_line
+
+try:
+    # keep this commented out until we want argparse as the default
+    # import argparse as command_line
+    from configman.def_sources.for_argparse import ArgumentParser
+except ImportError:
+    # argparse is not available, we can silently ignore this problem
+    pass
