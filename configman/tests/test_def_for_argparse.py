@@ -408,11 +408,6 @@ class TestCaseForDefSourceArgparse(TestCase):
         return parser
 
     #--------------------------------------------------------------------------
-    @staticmethod
-    def _split_sort(a_string):
-        return sorted(a_string.split('\n'))
-
-    #--------------------------------------------------------------------------
     @patch('sys.stdout', new_callable=StringIO)
     def impl_for_subparser_stdout_with_exit(self, args, expected, mock_stdout):
         parser = self.setup_subparser()
@@ -423,9 +418,9 @@ class TestCaseForDefSourceArgparse(TestCase):
         )
         x = mock_stdout.getvalue()
         self.assertEqual(
-            self._split_sort(expected),
-            self._split_sort(x),
-##            '%s failed' % args
+            sorted(expected),
+            sorted(x),
+            'case: %s failed - %s != %s' % (args,  expected,  x)
         )
 
     #--------------------------------------------------------------------------
@@ -435,9 +430,9 @@ class TestCaseForDefSourceArgparse(TestCase):
         parser.parse_args(args=args)
         x = mock_stdout.getvalue()
         self.assertEqual(
-            self._split_sort(expected),
-            self._split_sort(x),
-##            '%s failed' % args
+            sorted(expected),
+            sorted(x),
+            'case: %s failed - %s != %s' % (args,  expected,  x)
         )
 
     #--------------------------------------------------------------------------
@@ -451,9 +446,9 @@ class TestCaseForDefSourceArgparse(TestCase):
         )
         x = mock_stderr.getvalue()
         self.assertEqual(
-            self._split_sort(expected),
-            self._split_sort(x),
-##            '%s failed' % args
+            sorted(expected),
+            sorted(x),
+            'case: %s failed - %s != %s' % (args,  expected,  x)
         )
 
     #--------------------------------------------------------------------------
@@ -463,9 +458,9 @@ class TestCaseForDefSourceArgparse(TestCase):
         parser.parse_args(args=args)
         x = mock_stderr.getvalue()
         self.assertEqual(
-            self._split_sort(expected),
-            self._split_sort(x),
-##            '%s failed' % args
+            sorted(expected),
+            sorted(x),
+            'case: %s failed - %s != %s' % (args,  expected,  x)
         )
 
     #--------------------------------------------------------------------------
