@@ -28,8 +28,8 @@ env:
 install:
     # Before installation, we'll run ``pip wheel``, this will build wheels for
     # anything that doesn't already have one on PyPI.
-    - travis_retry pip wheel tox
-    # Actually install our dependencies now, this will pull from the directory
+    - travis_retry pip wheel -r test-requirements.txt
+    # Actually install tox now, this will pull from the directory
     # that the first command placed the Wheels into.
     - travis_retry pip install tox
 
