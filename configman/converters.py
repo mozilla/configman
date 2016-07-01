@@ -141,6 +141,8 @@ def str_to_python_object(input_str):
     """
     if not input_str:
         return None
+    if six.PY3 and isinstance(input_str, six.binary_type):
+        input_str = to_str(input_str)
     if not isinstance(input_str, six.string_types):
         # gosh, we didn't get a string, we can't convert anything but strings
         # we're going to assume that what we got is actually what was wanted

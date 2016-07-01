@@ -1,8 +1,7 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
-from __future__ import absolute_import, division, print_function, \
-    unicode_literals
+from __future__ import absolute_import, division, print_function
 
 import collections
 import six
@@ -44,7 +43,7 @@ class Option(object):
         self.short_form = short_form
         self.default = default
         if isinstance(doc, (six.binary_type, six.text_type)):
-            doc = doc.strip()
+            doc = to_str(doc).strip()
         self.doc = doc
         if from_string_converter is None:
             if default is not None:
@@ -120,6 +119,7 @@ class Option(object):
         if val is None:
             val = self.default
         if isinstance(val, (six.binary_type, six.text_type)):
+            val = to_str(val)
             try:
                 new_value = self.from_string_converter(val)
                 self.has_changed = new_value != self.value

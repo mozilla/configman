@@ -29,8 +29,7 @@ Each is used in a different context during the overlay expansion process.
 While several of them are functionally equivalent, we keep them as separate
 classes so that we can use class identity as a differention mechanism.
 """
-from __future__ import absolute_import, division, print_function, \
-    unicode_literals
+from __future__ import absolute_import, division, print_function
 import argparse
 import copy
 import six
@@ -434,6 +433,7 @@ class ValueSource(object):
                 )
             else:
                 if isinstance(an_option.value, (six.binary_type, six.text_type)):
+                    an_option.value = to_str(an_option.value)
                     return an_option.value
                 if an_option.to_string_converter:
                     return an_option.to_string_converter(an_option.value)
@@ -443,6 +443,7 @@ class ValueSource(object):
                 and isinstance(an_option.value, collections.Sequence)
             ):
                 if isinstance(an_option.value, (six.binary_type, six.text_type)):
+                    an_option.value = to_str(an_option.value)
                     return an_option.value
                 return [to_str(x) for x in an_option.value]
             if an_option.value is None:

@@ -9,14 +9,16 @@ like files or database results.  If supplied with a simple string rather than
 a ContextManager, the value source will assume it is a file pathname and try
 to open it.
 """
-from __future__ import absolute_import, division, print_function, \
-    unicode_literals
+from __future__ import absolute_import, division, print_function
 
 import functools
 import six
 import sys
 
 from configman import namespace
+from configman.converters import (
+    to_str,
+)
 from configman.option import (
     Option,
 )

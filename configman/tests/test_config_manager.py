@@ -23,7 +23,7 @@ from configman.dotdict import (
 )
 from configman import Namespace, RequiredConfig
 from configman.config_file_future_proxy import ConfigFileFutureProxy
-from configman.converters import class_converter
+from configman.converters import class_converter, to_str
 from configman.datetime_util import datetime_from_ISO_string
 from configman.config_exceptions import NotAnOptionError
 from configman.value_sources.source_exceptions import (
@@ -2363,6 +2363,7 @@ c.string =   from ini
         class UpperCaseValueDotDict(DotDict):
             def __setattr__(self, key, value):
                 if isinstance(value, (six.binary_type, six.text_type)):
+                    value = to_str(value)
                     super(UpperCaseValueDotDict, self).__setattr__(
                         key,
                         value.upper()

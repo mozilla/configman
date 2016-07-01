@@ -7,8 +7,7 @@
 
 # at which point we want to make argparse the default, we will eliminate
 # this line
-from __future__ import absolute_import, division, print_function, \
-    unicode_literals
+from __future__ import absolute_import, division, print_function
 import getopt as command_line
 
 try:

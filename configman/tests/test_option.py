@@ -1,8 +1,7 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
-from __future__ import absolute_import, division, print_function, \
-    unicode_literals
+from __future__ import absolute_import, division, print_function
 
 from decimal import Decimal
 import datetime
@@ -279,11 +278,11 @@ class TestCase(unittest.TestCase):
 
         two_days = datetime.timedelta(days=2)
         timedelta_as_string = timedelta_to_str(two_days)
-        assert isinstance(timedelta_as_string, (six.binary_type, six.text_type))
+        assert isinstance(timedelta_as_string, six.string_types)
         opt.set_value(timedelta_as_string)
         self.assertEqual(opt.value, two_days)
 
-        opt.set_value(six.text_type(timedelta_as_string))
+        opt.set_value(timedelta_as_string)
         self.assertEqual(opt.value, two_days)
 
         opt.set_value(two_days)

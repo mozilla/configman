@@ -12,8 +12,7 @@ handle the getopt module or a list.  If specified as the getopt module, the
 constructor will fetch the source of argv from the configmanager that was
 passed in.  If specified as a list, the constructor will assume the list
 represents the argv source."""
-from __future__ import absolute_import, division, print_function, \
-    unicode_literals
+from __future__ import absolute_import, division, print_function
 
 import getopt
 import collections

@@ -1,8 +1,7 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
-from __future__ import absolute_import, division, print_function, \
-    unicode_literals
+from __future__ import absolute_import, division, print_function
 
 import six
 import sys
@@ -23,6 +22,7 @@ from configman.commandline import (
 )
 from configman.converters import (
     to_string_converters,
+    to_str
 )
 from configman.config_exceptions import (
     NotAnOptionError,
@@ -140,6 +140,8 @@ class ConfigurationManager(object):
         ):
             definition_source_list = list(definition_source)
         else:
+            if isinstance(definition_source, (six.binary_type, six.text_type)):
+                definition_source = to_str(definition_source)
             definition_source_list = [definition_source]
 
         if argv_source is None:
