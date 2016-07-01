@@ -306,7 +306,8 @@ class ValueSource(object):
     @staticmethod
     def write_namespace(key, a_namespace, output_stream):
         print('\n# Namespace:', key, file=output_stream)
-        if hasattr(a_namespace, 'doc'):
+        print(dir(a_namespace))
+        if 'doc' in dir(a_namespace):
             print('#', a_namespace.doc, file=output_stream)
         print('%s = DotDict()' % key, file=output_stream)
 
@@ -430,11 +431,8 @@ class ValueSource(object):
                 class_name_by_module_path_list[a_module_path]
             if len(list_of_class_names) > 1:
                 output_line = "from %s import (\n" % a_module_path
-                if six.PY2:
-                    sorted_list = sorted(list_of_class_names)
-                else:
-                    sorted_list = [x.value for x in sorted([OrderableTuple(x)
-                                   for x in list_of_class_names])]
+                sorted_list = [x.value for x in sorted([OrderableTuple(x)
+                               for x in list_of_class_names])]
                 for a_class, a_class_name in sorted_list:
                     if a_class in alias_by_class:
                         output_line = "%s\n    %s as %s," % (

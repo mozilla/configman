@@ -70,6 +70,7 @@ class Delta(RequiredConfig):
 
 #==========================================================================
 class TestCase(unittest.TestCase):
+    maxDiff = None
 
     #--------------------------------------------------------------------------
     def test_basic_import(self):
@@ -288,8 +289,8 @@ class TestCase(unittest.TestCase):
 
 from configman.dotdict import DotDict
 from configman.tests.values_for_module_tests_1 import (
-    foo,
     Alpha,
+    foo,
 )
 
 import os
@@ -380,8 +381,8 @@ xxx.yyy = 18
 
 from configman.dotdict import DotDict
 from configman.tests.values_for_module_tests_1 import (
-    foo,
     Alpha,
+    foo,
 )
 
 import os
