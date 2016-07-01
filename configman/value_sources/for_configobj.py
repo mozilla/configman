@@ -10,6 +10,9 @@ import os.path
 
 import configobj
 
+from configman.converters import (
+    to_str,
+)
 from configman.value_sources.source_exceptions import (
     CantHandleTypeException,
     ValueException,
@@ -102,6 +105,7 @@ class ConfigObjWithIncludes(configobj.ConfigObj):
         function of the same name.  ConfigObj proceeds, completely unaware
         that it's input file has been preprocessed."""
         if isinstance(infile, (six.binary_type, six.text_type)):
+            infile = to_str(infile)
             original_path = os.path.dirname(infile)
             expanded_file_contents = self._expand_files(infile, original_path)
             super(ConfigObjWithIncludes, self)._load(
@@ -144,8 +148,10 @@ class ValueSource(object):
                 return
             if not os.path.exists(source) and config_manager.config_optional:
                 return
+        if isinstance(source, (six.binary_type, six.text_type)):
+            source = to_str(source)
         if (
-            isinstance(source, (six.binary_type, six.text_type)) and
+            isinstance(source, six.string_types) and
             source.endswith(file_name_extension)
         ):
             try:
@@ -207,9 +213,7 @@ class ValueSource(object):
         for an_option in options:
             print("%s# %s" % (indent_spacer, an_option.doc),
                   file=output_stream)
-            option_value = str(an_option)
-            if six.PY2 and isinstance(option_value, six.text_type):
-                option_value = option_value.encode('utf8')
+            option_value = to_str(an_option)
 
             if an_option.reference_value_from:
                 print(
@@ -226,7 +230,7 @@ class ValueSource(object):
             else:
                 option_format = '%s#%s=%s\n'
 
-            if isinstance(option_value, (six.text_type, six.binary_type)) and \
+            if isinstance(option_value, six.string_types) and \
                     ',' in option_value:
                 # quote lists unless they're already quoted
                 if option_value[0] not in '\'"':

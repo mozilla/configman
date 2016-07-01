@@ -84,6 +84,7 @@ def dict_to_string(d):
 
 #------------------------------------------------------------------------------
 def string_to_string(a_string):
+    a_string = to_str(a_string)
     quote = '"'
     if '"' in a_string:
         quote = "'"
@@ -158,8 +159,6 @@ def get_import_for_type(t):
 
 #------------------------------------------------------------------------------
 local_to_string_converters = {
-    six.binary_type: string_to_string,
-    six.text_type: unicode_to_unicode,
     list: sequence_to_string,
     tuple: sequence_to_string,
     dict: dict_to_string,
@@ -169,6 +168,12 @@ local_to_string_converters = {
     type(None): lambda x: "None",
     compiled_regexp_type: lambda x: string_to_string(x.pattern)
 }
+if six.PY2:
+    local_to_string_converters[six.text_type] = unicode_to_unicode
+    local_to_string_converters[six.binary_type] = string_to_string
+elif six.PY3:
+    local_to_string_converters[six.text_type] = string_to_string
+    local_to_string_converters[six.binary_type] = string_to_string
 
 
 #------------------------------------------------------------------------------
@@ -195,8 +200,8 @@ class OrderableObj(object):
     """Python3 can't sort non-string types implicitly.
     """
     def __init__(self, value):
-        if not isinstance(value, six.text_type):
-            value_str = six.text_type(value)
+        if not isinstance(value, six.string_types):
+            value_str = to_str(value)
         else:
             value_str = value
         self.value_str = value_str

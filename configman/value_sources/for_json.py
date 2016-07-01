@@ -10,6 +10,7 @@ import sys
 
 from configman.converters import (
     to_string_converters,
+    to_str
 )
 from configman.namespace import Namespace
 from configman.option import Option, Aggregation
@@ -51,8 +52,10 @@ class ValueSource(object):
                 raise NotEnoughInformationException(
                     "Can't setup an json file without knowing the file name"
                 )
+        if isinstance(source, (six.binary_type, six.text_type)):
+            source = to_str(source)
         if (
-            isinstance(source, (six.binary_type, six.text_type))
+            isinstance(source, six.string_types)
             and source.endswith(file_name_extension)
         ):
             try:

@@ -55,8 +55,10 @@ class ValueSource(object):
 
     #--------------------------------------------------------------------------
     def __init__(self, candidate, the_config_manager=None):
+        if isinstance(candidate, (six.binary_type, six.text_type)):
+            candidate = to_str(candidate)
         if (
-            isinstance(candidate, (six.binary_type, six.text_type)) and
+            isinstance(candidate, six.string_types) and
             candidate.endswith(file_name_extension)
         ):
             # we're trusting the string represents a filename
