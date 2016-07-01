@@ -94,6 +94,7 @@ value. To do this you'll need to use one of the pre-defined ``configman``
 converters as the ``from_string_converter`` value. To our example
 above we're going to add a configurable class::
 
+ from __future__ import absolute_import, division, print_function
  from configman.converters import class_converter
  namespace.add_option(
    'dialect',
@@ -120,7 +121,7 @@ program. For example, in this trivial example we can use it like this::
  if __name__ == '__main__':
      config = create_config()
      dialect = config.dialect(config.morsecode)
-     print dialect.render()
+     print(dialect.render())
 
 If you run this like this::
 
@@ -169,6 +170,7 @@ Suppose none of the built-ins in ``configman`` is what you want. There's
 nothing stopping you from just writing down your own. Consider this
 tip calculator for example::
 
+ from __future__ import absolute_import, division, print_function
  import getopt
  from configman import Namespace, ConfigurationManager
 
@@ -192,8 +194,8 @@ tip calculator for example::
  if __name__ == '__main__':
      config = create_config()
      tip_amount = config.amount * config.tip / 100
-     print "(exact amount: %r)" % tip_amount
-     print '$%.2f' % tip_amount
+     print("(exact amount: %r)" % tip_amount)
+     print('$%.2f' % tip_amount)
 
 When run it will automatically convert whatever number you give it to
 a python ``Decimal`` type. Note how in the example it prints the

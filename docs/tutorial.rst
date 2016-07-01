@@ -16,13 +16,15 @@ Basics
 Suppose we write an app similar to the ``echo`` command line program in Unix
 and Linux.  Our app, though reverses the lettering of each word::
 
+
+ from __future__ import absolute_import, division, print_function
  def backwards(x):
      return x[::-1]
 
  if __name__ == '__main__':
      import sys
      output_string = ' '.join(sys.argv[1:])
-     print backwards(output_string)
+     print(backwards(output_string))
 
 .. sidebar:: running examples
 
@@ -86,6 +88,7 @@ wired with its ``__getitem__`` method.  This means that we can access the
 values in the dict as if they were attributes.  Watch how we access the value
 of ``devowel`` in the full example below::
 
+ from __future__ import absolute_import, division, print_function
  from configman import Namespace, ConfigurationManager
 
  def backwards(x, capitalize=False):
@@ -112,7 +115,7 @@ of ``devowel`` in the full example below::
      output_string = ' '.join(config_manager.args)
      if config.devowel:
          output_string = devowel(output_string)
-     print backwards(output_string)
+     print(backwards(output_string))
 
 When run, you get what you expect::
 
@@ -172,6 +175,7 @@ user doesn't use the switch, the value for this will be the empty string::
 
 Excellent! The whole thing together looks like this now::
 
+ from __future__ import absolute_import, division, print_function
  from configman import Namespace, ConfigurationManager
 
  def backwards(x, capitalize=False):
@@ -210,7 +214,7 @@ Excellent! The whole thing together looks like this now::
          output_string = ' '.join(config_manager.args)
      if config.devowel:
          output_string = devowel(output_string)
-     print backwards(output_string)
+     print(backwards(output_string))
 
 And it's executed like this::
 
