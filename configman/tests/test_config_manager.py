@@ -2110,15 +2110,9 @@ c.string =   from ini
                 (n,),
                 argv_source=['--admin.conf=x.ini']
             )
-            try:
-                mocked_warnings.warn.assert_called_once_with(
-                    six.text_type('Invalid options: bar, baz')
-                )
-            # allow for ordering swapping
-            except AssertionError:
-                mocked_warnings.warn.assert_called_once_with(
-                    six.text_type('Invalid options: baz, bar')
-                )
+            mocked_warnings.warn.assert_called_once_with(
+                six.text_type('Invalid options: bar, baz')
+            )
         finally:
             os.remove('x.ini')
 

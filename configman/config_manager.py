@@ -859,7 +859,7 @@ class ConfigurationManager(object):
                         )
                 else:
                     warnings.warn(
-                        'Invalid options: %s' % ', '.join(unmatched_keys)
+                        'Invalid options: %s' % ', '.join(sorted(unmatched_keys))
                     )
 
     #--------------------------------------------------------------------------
