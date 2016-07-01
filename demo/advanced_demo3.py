@@ -47,7 +47,6 @@ import threading
 import random
 import time
 import socket
-from six.moves import range as xrange
 
 from configman import RequiredConfig, ConfigurationManager, Namespace
 
@@ -355,7 +354,7 @@ class TransactionExecutorWithBackoff(TransactionExecutor):
     def responsive_sleep(self, seconds, wait_reason=''):
         """Sleep for the specified number of seconds, logging every
         'wait_log_interval' seconds with progress info."""
-        for x in xrange(int(seconds)):
+        for x in range(int(seconds)):
             if (self.config.wait_log_interval and
                 not x % self.config.wait_log_interval):
                 print('%s: %dsec of %dsec' % (wait_reason,
