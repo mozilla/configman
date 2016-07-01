@@ -89,19 +89,19 @@ class Beta(RequiredConfig):
 #==============================================================================
 class TestCase(unittest.TestCase):
 
-# Hopefully we don't need this if we drop <=2.6.4 support
-#    #--------------------------------------------------------------------------
-#    def test_str_dict_keys(self):
-#        function = converters.str_dict_keys
-#        result = function({u'name': u'Peter', 'age': 99, 10: 11})
-#        self.assertEqual(result, {'name': u'Peter', 'age': 99, 10: 11})
-#
-#        for key in result.keys():
-#            if key in ('name', 'age'):
-#                self.assertTrue(not isinstance(key, unicode))
-#                self.assertTrue(isinstance(key, str))
-#            else:
-#                self.assertTrue(isinstance(key, int))
+    #--------------------------------------------------------------------------
+    def test_str_dict_keys(self):
+        function = converters.str_dict_keys
+        result = function({u'name': u'Peter', 'age': 99, 10: 11})
+        self.assertEqual(result, {'name': u'Peter', 'age': 99, 10: 11})
+
+        for key in result.keys():
+            if key in ('name', 'age'):
+                if six.PY2:
+                    self.assertTrue(not isinstance(key, six.text_type))
+                self.assertTrue(isinstance(key, str))
+            else:
+                self.assertTrue(isinstance(key, int))
 
     #--------------------------------------------------------------------------
     def test_str_quote_stripper(self):

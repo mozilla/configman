@@ -2114,6 +2114,7 @@ c.string =   from ini
                 mocked_warnings.warn.assert_called_once_with(
                     six.text_type('Invalid options: bar, baz')
                 )
+            # allow for ordering swapping
             except AssertionError:
                 mocked_warnings.warn.assert_called_once_with(
                     six.text_type('Invalid options: baz, bar')
