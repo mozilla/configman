@@ -387,7 +387,7 @@ c.string = wilma
         n.c = config_manager.Namespace()
         n.c.add_option('extra', 3.14159, 'the x')
         n.c.add_option('string', 'fred', 'str')
-        ini_data = """
+        ini_data = b"""
 other.t=tea
 # blank line to be ignored
 d.a=22

@@ -1,8 +1,7 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
-from __future__ import absolute_import, division, print_function, \
-    unicode_literals
+from __future__ import absolute_import, division, print_function
 
 import sys
 import re
@@ -65,19 +64,18 @@ def str_dict_keys(a_dict):
     Using integers as parameter keys is a silly example but the point is that
     due to the python 2.6.4 bug only unicode keys are converted to str.
     """
-    return a_dict
-#    new_dict = {}
-#    for key in a_dict:
-#        if isinstance(key, six.text_type):
-#            new_dict[six.binary_type(key)] = a_dict[key]
-#        else:
-#            new_dict[key] = a_dict[key]
-#    return new_dict
+    new_dict = {}
+    for key in a_dict:
+        if six.PY2 and isinstance(key, six.text_type):
+            new_dict[str(key)] = a_dict[key]
+        else:
+            new_dict[key] = a_dict[key]
+    return new_dict
 
 
 #------------------------------------------------------------------------------
 def str_quote_stripper(input_str):
-    if not isinstance(input_str, (six.binary_type, six.text_type)):
+    if not isinstance(input_str, six.string_types):
         raise ValueError(input_str)
     while (
         input_str
@@ -113,25 +111,26 @@ timedelta_converter = str_to_timedelta  # for backward compatiblity
 
 
 #------------------------------------------------------------------------------
-def to_unicode(obj):
-    if not isinstance(obj, six.text_type):
-        try:
-            obj = six.text_type(obj, 'utf-8')
-        except TypeError:
-            pass
-    return obj
+def py2_to_unicode(input_str):
+    if six.PY2:
+        input_str = six.text_type(input_str, 'utf-8')
+    return input_str
+
+
+def py3_to_bytes(input_str):
+    if six.py3:
+        input_str = input_str.encode('utf-8')
+    return input_str
+
 
 #------------------------------------------------------------------------------
 def str_to_boolean(input_str):
     """ a conversion function for boolean
     """
-    if not isinstance(input_str, (six.binary_type, six.text_type)):
+    if not isinstance(input_str, six.string_types):
         raise ValueError(input_str)
     input_str = str_quote_stripper(input_str)
-    return to_unicode(input_str.lower()) in (
-        to_unicode("true"), to_unicode("t"), to_unicode("1"),
-        to_unicode("y"), to_unicode("yes")
-    )
+    return input_str.lower() in ("true", "t", "1", "y", "yes")
 
 boolean_converter = str_to_boolean  # for backward compatiblity
 
@@ -142,7 +141,7 @@ def str_to_python_object(input_str):
     """
     if not input_str:
         return None
-    if not isinstance(input_str, (six.binary_type, six.text_type)):
+    if not isinstance(input_str, six.string_types):
         # gosh, we didn't get a string, we can't convert anything but strings
         # we're going to assume that what we got is actually what was wanted
         # as the output
@@ -242,15 +241,12 @@ def str_to_classes_in_namespaces(
         one for each class in the list.  It does this by creating a proxy
         class stuffed with its own 'required_config' that's dynamically
         generated."""
-        if isinstance(class_list_str, (six.binary_type, six.text_type)):
+        if isinstance(class_list_str, six.string_types):
             class_list = [x.strip() for x in class_list_str.split(',')]
             if class_list == ['']:
                 class_list = []
         else:
-            raise TypeError(
-                'must be derivative of %s or %s' %
-                (six.binary_type, six.text_type)
-            )
+            raise TypeError('must be derivative of %s' % six.string_types)
 
         #======================================================================
         class InnerClassList(RequiredConfig):
@@ -324,7 +320,7 @@ def str_to_list(
 ):
     """ a conversion function for list
     """
-    if not isinstance(input_str, (six.binary_type, six.text_type)):
+    if not isinstance(input_str, six.string_types):
         raise ValueError(input_str)
     input_str = str_quote_stripper(input_str)
     result = [
@@ -348,8 +344,7 @@ list_converter = str_to_list  # for backward compatibility
 str_to_instance_of_type_converters = {
     int: int,
     float: float,
-    str: six.binary_type,
-    six.text_type: six.text_type,
+    str: str,
     bool: boolean_converter,
     dict: json.loads,
     list: list_converter,
@@ -360,6 +355,10 @@ str_to_instance_of_type_converters = {
     types.FunctionType: class_converter,
     compiled_regexp_type: regex_converter,
 }
+if six.PY2:
+    str_to_instance_of_type_converters[six.text_type] = py2_to_unicode
+if six.PY3:
+    str_to_instance_of_type_converters[six.binary_type] = py3_to_bytes
 
  # backward compatibility
 from_string_converters = str_to_instance_of_type_converters
@@ -374,8 +373,13 @@ def arbitrary_object_to_string(a_thing):
     if a_thing is None:
         return ''
     # is it already a string?
-    if isinstance(a_thing, (six.binary_type, six.text_type)):
+    if isinstance(a_thing, six.string_types):
         return a_thing
+    if six.PY3 and isinstance(a_thing, six.binary_type):
+        try:
+            return a_thing.decode('utf-8')
+        except UnicodeDecodeError:
+            pass
     # does it have a to_str function?
     try:
         return a_thing.to_str()
@@ -400,7 +404,7 @@ def arbitrary_object_to_string(a_thing):
         pass
     # is it something from a loaded module?
     try:
-        if a_thing.__module__ not in ('__builtin__', 'exceptions', 'builtins'):
+        if a_thing.__module__ not in ('__builtin__', 'builtins', 'exceptions'):
             if a_thing.__module__ == "__main__":
                 module_name = (
                     sys.modules['__main__']
@@ -431,12 +435,15 @@ py_obj_to_str = arbitrary_object_to_string  # for backwards compatibility
 def list_to_str(a_list, delimiter=', '):
     return delimiter.join(to_str(x) for x in a_list)
 
+
 #------------------------------------------------------------------------------
-#known_mapping_type_to_str = dict(
-#    (val, key) for key, val in sorted(builtins.__dict__.items())
-#    if val not in (True, False, list, dict) and
-#    type(val) not in (ModuleSpec,)
-#)
+def py2_to_str(a_unicode):
+    return six.text_type(a_unicode)
+
+def py3_to_str(a_bytes):
+    return a_bytes.encode('utf-8')
+
+#------------------------------------------------------------------------------
 known_mapping_type_to_str = {}
 for key, val in sorted(builtins.__dict__.items()):
     if val not in (True, False, list, dict):
@@ -445,12 +452,12 @@ for key, val in sorted(builtins.__dict__.items()):
         except TypeError:
             pass
 
+
 #------------------------------------------------------------------------------
 to_string_converters = {
     int: str,
     float: str,
     str: str,
-    six.text_type: six.text_type,
     list: list_to_str,
     tuple: list_to_str,
     bool: lambda x: 'True' if x else 'False',
@@ -463,6 +470,10 @@ to_string_converters = {
     types.FunctionType: arbitrary_object_to_string,
     compiled_regexp_type: lambda x: x.pattern,
 }
+if six.PY2:
+    to_string_converters[six.text_type] = py2_to_str
+if six.PY3:
+    to_string_converters[six.binary_type] = py3_to_str
 
 
 #------------------------------------------------------------------------------
