@@ -868,8 +868,12 @@ class ConfigurationManager(object):
         for val in six.itervalues(a_dict):
             if isinstance(val, collections.Mapping):
                 ConfigurationManager._walk_and_close(val)
-            if hasattr(val, 'close') and not inspect.isclass(val):
-                val.close()
+            try:
+                if hasattr(val, 'close') and not inspect.isclass(val):
+                    val.close()
+            except KeyError:
+                # py3 will sometimes hit KeyError from the hasattr()
+                pass
 
     #--------------------------------------------------------------------------
     def _generate_config(self, mapping_class):
