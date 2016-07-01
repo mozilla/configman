@@ -209,7 +209,7 @@ class ValueSource(object):
             print("%s# %s" % (indent_spacer, an_option.doc),
                   file=output_stream)
             option_value = str(an_option)
-            if isinstance(option_value, six.text_type):
+            if six.PY2 and isinstance(option_value, six.text_type):
                 option_value = option_value.encode('utf8')
 
             if an_option.reference_value_from:
@@ -227,7 +227,7 @@ class ValueSource(object):
             else:
                 option_format = '%s#%s=%s\n'
 
-            if isinstance(option_value, (six.binary_type, six.text_type)) and \
+            if isinstance(option_value, (six.text_type, six.binary_type)) and \
                     ',' in option_value:
                 # quote lists unless they're already quoted
                 if option_value[0] not in '\'"':
