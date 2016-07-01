@@ -74,6 +74,7 @@ class ValueSource(object):
             with opener() as f:
                 previous_key = None
                 for line in f:
+                    line = to_str(line)
                     if line.strip().startswith('#') or not line.strip():
                         continue
                     if line[0] in ' \t' and previous_key:

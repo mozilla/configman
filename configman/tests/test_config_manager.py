@@ -343,7 +343,7 @@ class TestCase(unittest.TestCase):
         n.c = config_manager.Namespace()
         n.c.add_option('extra', 3.14159, 'the x')
         n.c.add_option('string', 'fred', doc='str')
-        ini_data = """
+        ini_data = b"""
 other.t=tea
 # blank line to be ignored
 d.a=22
@@ -452,7 +452,7 @@ c.string =   from ini
         n.c = config_manager.Namespace()
         n.c.add_option('extra', 3.14159, 'the x')
         n.c.add_option('string', 'fred', doc='str')
-        ini_data = """
+        ini_data = b"""
 other.t=tea
 # blank line to be ignored
 d.a=22

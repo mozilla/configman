@@ -443,7 +443,7 @@ def py2_to_str(a_unicode):
     return six.text_type(a_unicode)
 
 def py3_to_str(a_bytes):
-    return a_bytes.encode('utf-8')
+    return a_bytes.decode('utf-8')
 
 #------------------------------------------------------------------------------
 known_mapping_type_to_str = {}
