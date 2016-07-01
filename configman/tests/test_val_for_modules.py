@@ -95,9 +95,9 @@ class TestCase(unittest.TestCase):
         self.assertFalse('os' in v)
         self.assertTrue('collections' in v)
 
-        self.assertTrue('__package__' not in v.keys())
-        self.assertTrue('__builtins__' not in v.keys())
-        self.assertTrue('__doc__' in v.keys())
+        self.assertTrue('__package__' not in list(v.keys()))
+        self.assertTrue('__builtins__' not in list(v.keys()))
+        self.assertTrue('__doc__' in list(v.keys()))
         self.assertTrue(v.__doc__.startswith('This is a test'))
 
         from collections import Mapping
