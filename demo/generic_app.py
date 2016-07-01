@@ -2,10 +2,11 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
-
+from __future__ import absolute_import, division, print_function
 import getopt
 import os.path
 import inspect
+import six
 
 import configman as cm
 from configman import ConfigurationManager, Namespace
@@ -16,7 +17,7 @@ from configman.converters import class_converter
 # This main function will load an application object, initialize it and then
 # call its 'main' function
 def main(app_object=None):
-    if isinstance(app_object, basestring):
+    if isinstance(app_object, six.string_types):
         app_object = class_converter(app_object)
 
     # the only config parameter is a special one that refers to a class or

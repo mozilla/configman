@@ -4,7 +4,7 @@
 
 """This file is the source of the simulated database classes used in the
 dyn_app example."""
-
+from __future__ import absolute_import, division, print_function
 import sys
 import datetime as dt
 
@@ -13,7 +13,7 @@ import configman.namespace as ns
 import configman.converters as conv
 
 def log(message):
-    print >>sys.stderr, dt.datetime.now(), message
+    print(dt.datetime.now(), message, file=sys.stderr)
 
 
 class Database(cm.RequiredConfig):
@@ -100,7 +100,7 @@ class CannedDataSource(cm.RequiredConfig):
                                from_string_converter=conv.class_converter)
 
     def __init__(self, config):
-        print self.__class__
+        print(self.__class__)
         self.class_as_string = conv.py_obj_to_str(self.__class__)
         log('starting %s' % self.class_as_string)
         self.config = config

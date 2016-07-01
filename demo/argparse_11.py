@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+from __future__ import absolute_import, division, print_function
 import configman
 parser = configman.ArgumentParser()
 parser.add_argument("square", type=int,
@@ -9,9 +10,9 @@ args = parser.parse_args()
 answer = args.square**2
 
 # bugfix: replace == with >=
-if args.verbosity >= 2:
-    print "the square of {} equals {}".format(args.square, answer)
-elif args.verbosity >= 1:
-    print "{}^2 == {}".format(args.square, answer)
+if args.verbosity and args.verbosity >= 2:
+    print("the square of {} equals {}".format(args.square, answer))
+elif args.verbosity and args.verbosity >= 1:
+    print("{}^2 == {}".format(args.square, answer))
 else:
-    print answer
+    print(answer)

@@ -7,7 +7,7 @@
 This sample app uses .ini files with `+include` directives
 to prove that it's possible to use relative paths.
 """
-
+from __future__ import absolute_import, division, print_function
 from configman import RequiredConfig, Namespace
 
 
@@ -35,12 +35,12 @@ class RelativeIncludesApp(RequiredConfig):
         self.config = config
 
     def main(self):
-        print "Option 1:",
-        print self.config.option1
-        print "Option 2:",
-        print self.config.option2
-        print "Option 3:",
-        print self.config.option3
+        print("Option 1:",)
+        print(self.config.option1)
+        print("Option 2:",)
+        print(self.config.option2)
+        print("Option 3:",)
+        print(self.config.option3)
 
 
 def create_environment():
@@ -83,7 +83,7 @@ def create_environment():
 if __name__ == "__main__":
     f = create_environment()
     if f:
-        print "Now run:\n\tpython %s --admin.conf=%s\n" % (__file__, f)
+        print("Now run:\n\tpython %s --admin.conf=%s\n" % (__file__, f))
     else:
         import generic_app
         generic_app.main(RelativeIncludesApp)

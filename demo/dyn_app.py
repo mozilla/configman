@@ -11,7 +11,7 @@
 # this app simulates passing a group of records from one datasource to
 # another.  It offers fake versions of Postgres, MySQL and HBase as the
 # data sources and sinks.
-
+from __future__ import absolute_import, division, print_function
 from configman import RequiredConfig, Namespace
 from configman.converters import class_converter
 
@@ -50,7 +50,7 @@ class DynApp(RequiredConfig):
     def main(self):
         # the config object now has reference to a source and destination
         # classes. We need to instantiate the classes
-        print self.config.source.storage
+        print(self.config.source.storage)
         source = self.config.source.storage(self.config)
         destination = self.config.destination.storage(self.config)
         # this is the actual functional part of the script.  Read rows from

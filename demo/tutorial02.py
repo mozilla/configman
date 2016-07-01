@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-
+from __future__ import absolute_import, division, print_function
 from configman import Namespace, ConfigurationManager
 
 def backwards(x, capitalize=False):
@@ -26,4 +26,4 @@ if __name__ == '__main__':
     output_string = ' '.join(config_manager.args)
     if config.devowel:
         output_string = devowel(output_string)
-    print backwards(output_string)
+    print(backwards(output_string))

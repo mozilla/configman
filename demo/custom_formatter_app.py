@@ -2,7 +2,6 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
-
 """
 This sample app demonstrates how you can easily set custom to and from string
 converters on options.
@@ -27,7 +26,7 @@ Change one of the defaults for `option1` or `option2`. Then run::
 
 Expect the values to change.
 """
-
+from __future__ import absolute_import, division, print_function
 from configman import RequiredConfig, Namespace
 
 
@@ -67,8 +66,8 @@ class CustomFormatterApp(RequiredConfig):
         self.config = config
 
     def main(self):
-        print self.config.option1['foo']
-        print self.config.option2['baz']
+        print(self.config.option1['foo'])
+        print(self.config.option2['baz'])
 
 
 if __name__ == "__main__":

@@ -1,5 +1,6 @@
 # This is just a hack to simulate the minimal api of psycopg2 for the purposes
 # of a demo.  There is nothing of any real interest here, please move along.
+from __future__ import absolute_import, division, print_function
 
 
 class FakeDatabaseObjects(object):
@@ -10,32 +11,32 @@ class FakeDatabaseObjects(object):
 
     @staticmethod
     def connect(dsn):
-        print 'connnected to database with "%s"' % dsn
+        print('connnected to database with "%s"' % dsn)
         FakeDatabaseObjects.in_transaction = 1
         return FakeDatabaseObjects
 
     @staticmethod
     def cursor():
-        print 'new cursor created'
+        print('new cursor created')
         return FakeDatabaseObjects
 
     @staticmethod
     def execute(sql):
-        print 'executing: "%s"' % sql
+        print('executing: "%s"' % sql)
 
     @staticmethod
     def close():
-        print 'closing connection'
+        print('closing connection')
 
     @staticmethod
     def commit():
         FakeDatabaseObjects.in_transaction = 0
-        print 'commiting transaction'
+        print('commiting transaction')
 
     @staticmethod
     def rollback():
         FakeDatabaseObjects.in_transaction = 0
-        print 'rolling back transaction'
+        print('rolling back transaction')
 
     @staticmethod
     def get_transaction_status():
