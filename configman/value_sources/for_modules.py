@@ -310,7 +310,6 @@ class ValueSource(object):
     @staticmethod
     def write_namespace(key, a_namespace, output_stream):
         print('\n# Namespace:', key, file=output_stream)
-        print(dir(a_namespace))
         if 'doc' in dir(a_namespace):
             print('#', a_namespace.doc, file=output_stream)
         print('%s = DotDict()' % key, file=output_stream)
