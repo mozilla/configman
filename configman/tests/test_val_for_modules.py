@@ -21,7 +21,8 @@ from configman import (
 )
 from configman.option import Option
 from configman.config_exceptions import CannotConvertError, NotAnOptionError
-from configman.value_sources.for_modules import ValueSource
+from configman.value_sources.for_modules import OrderableObj, OrderableTuple, \
+    ValueSource
 from configman.converters import class_converter
 
 
@@ -508,3 +509,24 @@ minimal_version_for_understanding_refusal = {
 }
 """
         self.assertEqual(generated_python_module_text, expected)
+
+    #--------------------------------------------------------------------------
+    def test_orderable_obj(self):
+        d = {
+            "a": 1,
+            3: 4,
+            None: 3
+        }
+        sorted_list = [y.value for y in sorted([OrderableObj(x) for x in
+                       d.keys()])]
+        self.assertEqual(sorted_list, [None, 3, 'a'])
+
+    #--------------------------------------------------------------------------
+    def test_orderable_tuple(self):
+        a = [
+            (print, 'foo'),
+            [sorted, 'bar'],
+        ]
+
+        sorted_list = [y.value for y in sorted([OrderableTuple(x) for x in a])]
+        self.assertEqual(sorted_list, [[sorted, 'bar'], (print, 'foo')])

@@ -209,7 +209,7 @@ class OrderableObj(object):
     def __lt__(self, other):
         return (self.value_str < other.value_str)
     def __repr__(self):
-        return self.value
+        return self.value_str
 
 
 #==============================================================================
@@ -222,7 +222,7 @@ class OrderableTuple(object):
     def __lt__(self, other):
         return (self.value[self.index] < other.value[self.index])
     def __repr__(self):
-        return self.value
+        return self.value.__repr__()
 
 
 #==============================================================================
