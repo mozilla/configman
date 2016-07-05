@@ -211,6 +211,7 @@ class ArgumentParser(argparse.ArgumentParser):
     def __init__(self, *args, **kwargs):
         self.original_args = args
         self.original_kwargs = kwargs.copy()
+        self.version = kwargs.get("version")  # py3 argparse doesn't define
         kwargs['add_help'] = False  # stop help, reintroduce it later
         self.subparser_name = kwargs.pop('subparser_name', None)
         self.configman_subparsers_option = kwargs.pop(
@@ -575,7 +576,7 @@ class ArgumentParser(argparse.ArgumentParser):
             values_source_list=self.value_source_list,
             argv_source=args,
             app_name=self.prog,
-#            app_version=self.version,
+            app_version=self.version,
             app_description=self.description,
             use_auto_help=False,
         )
