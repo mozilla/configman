@@ -3,6 +3,10 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 from __future__ import absolute_import, division, print_function
 
+try:
+    from functools import total_ordering
+except ImportError:
+    from total_ordering import total_ordering
 import types
 import sys
 import datetime
@@ -196,6 +200,7 @@ def local_to_str(a_thing):
 
 
 #==============================================================================
+@total_ordering
 class OrderableObj(object):
     """Python3 can't sort non-string types implicitly.
     """
@@ -208,11 +213,14 @@ class OrderableObj(object):
         self.value = value
     def __lt__(self, other):
         return (self.value_str < other.value_str)
+    def __eq__(self, other):
+        return (self.value_str == other.value_str)
     def __repr__(self):
         return self.value_str
 
 
 #==============================================================================
+@total_ordering
 class OrderableTuple(object):
     """Python3 can't sort non-string types implicitly.
     """
@@ -221,6 +229,8 @@ class OrderableTuple(object):
         self.index = index
     def __lt__(self, other):
         return (self.value[self.index] < other.value[self.index])
+    def __eq__(self, other):
+        return (self.value[self.index] == other.value[self.index])
     def __repr__(self):
         return self.value.__repr__()
 

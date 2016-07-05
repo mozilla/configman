@@ -33,6 +33,11 @@ def find_install_requires():
     return [x.strip() for x in
             read('requirements.txt').splitlines()
             if x.strip() and not x.startswith('#')]
+    try:
+        from functools import total_ordering
+    except ImportError:
+        reqs.append('total-ordering==0.1')
+    return reqs
 
 
 def find_tests_require():
