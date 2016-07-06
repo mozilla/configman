@@ -30,7 +30,7 @@ def read(fname):
 
 
 def find_install_requires():
-    return [x.strip() for x in
+    reqs = [x.strip() for x in
             read('requirements.txt').splitlines()
             if x.strip() and not x.startswith('#')]
     try:
