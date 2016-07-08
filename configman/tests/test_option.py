@@ -1,11 +1,13 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
+from __future__ import absolute_import, division, print_function
 
 from decimal import Decimal
 import datetime
 import unittest
 import re
+import six
 
 from configman.converters import (
     boolean_converter,
@@ -173,15 +175,17 @@ class TestCase(unittest.TestCase):
     def test_setting_known_from_string_converter_onOption(self):
         opt = Option('name', default=u'Peter')
         self.assertEqual(opt.default, u'Peter')
-        self.assertEqual(opt.from_string_converter, unicode)
+        if six.PY3:
+            self.assertEqual(opt.from_string_converter, six.text_type)
 
         opt = Option('name', default=100)
         self.assertEqual(opt.default, 100)
         self.assertEqual(opt.from_string_converter, int)
 
-        opt = Option('name', default=100L)
-        self.assertEqual(opt.default, 100L)
-        self.assertEqual(opt.from_string_converter, long)
+        if six.PY2:
+            opt = Option('name', default=long(100))
+            self.assertEqual(opt.default, long(100))
+            self.assertEqual(opt.from_string_converter, long)
 
         opt = Option('name', default=100.0)
         self.assertEqual(opt.default, 100.0)
@@ -274,11 +278,11 @@ class TestCase(unittest.TestCase):
 
         two_days = datetime.timedelta(days=2)
         timedelta_as_string = timedelta_to_str(two_days)
-        assert isinstance(timedelta_as_string, basestring)
+        assert isinstance(timedelta_as_string, six.string_types)
         opt.set_value(timedelta_as_string)
         self.assertEqual(opt.value, two_days)
 
-        opt.set_value(unicode(timedelta_as_string))
+        opt.set_value(timedelta_as_string)
         self.assertEqual(opt.value, two_days)
 
         opt.set_value(two_days)

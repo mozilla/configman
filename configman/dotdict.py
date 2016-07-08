@@ -1,11 +1,11 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
-
+from __future__ import absolute_import, division, print_function
 
 import collections
 import weakref
-import StringIO
+import six
 
 from configman.orderedset import OrderedSet
 from configman.memoize import memoize
@@ -16,7 +16,7 @@ def iteritems_breadth_first(a_mapping, include_dicts=False):
     """a generator that returns all the keys in a set of nested
     Mapping instances.  The keys take the form X.Y.Z"""
     subordinate_mappings = []
-    for key, value in a_mapping.iteritems():
+    for key, value in six.iteritems(a_mapping):
         if isinstance(value, collections.Mapping):
             subordinate_mappings.append((key, value))
             if include_dicts:
@@ -88,9 +88,9 @@ class DotDict(collections.MutableMapping):
         try:
             d.a
         except KeyError:
-            print 'yep, we got a KeyError'
+            print('yep, we got a KeyError')
         except AttributeError:
-            print 'nope, this will never happen'
+            print('nope, this will never happen')
     """
 
     #--------------------------------------------------------------------------
@@ -246,13 +246,13 @@ class DotDict(collections.MutableMapping):
             return self[parent_key]
 
     def __str__(self):
-        out = StringIO.StringIO()
+        out = six.StringIO()
         for key in self.keys_breadth_first(False):
             value = self[key]
             indent = '\t' * key.count('.')
             if isinstance(value, collections.Mapping):
                 value = str(value)  # recurse!
-            print >>out, '{0}{1}: {2}'.format(indent, key, repr(value))
+            print('{0}{1}: {2}'.format(indent, key, repr(value)), file=out)
         return out.getvalue().strip()
 
 
@@ -277,7 +277,7 @@ class DotDictWithAcquisition(DotDict):
         try:
             d.dd.x
         except KeyError:
-            print "'x' was not found in d.dd or in d"
+            print("'x' was not found in d.dd or in d")
 
     When used with keys of the form 'x.y.z', acquisition can allow it to return
     acquired values even if the intermediate keys don't exist:
@@ -292,8 +292,8 @@ class DotDictWithAcquisition(DotDict):
         d = DotDictWithAcquisition()
         d.a = 39
         try:
-            print d.x.y.z.a
-        except KeyError, e:
+            print(d.x.y.z.a)
+        except KeyError as e:
             assert str(e) == 'x'
 
     This behavior seems inconsistent, but really works so by design.  The form
@@ -346,7 +346,11 @@ class DotDictWithAcquisition(DotDict):
         if key == '_parent':
             raise AttributeError('_parent')
         try:
-            return getattr(self._parent, key)
+            if six.PY2:
+                _parent = self._parent
+            else:
+                _parent = object.__getattribute__(self, '_parent')
+            return getattr(_parent, key)
         except AttributeError:  # no parent attribute
             # the copy.deepcopy function will try to probe this class for an
             # instance of __deepcopy__.  If an AttributeError is raised, then
@@ -421,5 +425,7 @@ def create_key_translating_dot_dict(
                 self._translate_key(key)
             )
 
+    if six.PY2:
+        new_class_name = six.binary_type(new_class_name)
     DotDictWithKeyTranslations.__name__ = new_class_name
     return DotDictWithKeyTranslations

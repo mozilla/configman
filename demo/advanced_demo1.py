@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+from __future__ import absolute_import, division, print_function
 import contextlib
 
 from configman import Namespace, ConfigurationManager
@@ -93,8 +94,8 @@ if __name__ == '__main__':
             cursor = transaction.cursor()
             cursor.execute('select * from pg_tables')
             transaction.commit()
-    except Exception, x:
-        print str(x)
+    except Exception as x:
+        print(str(x))
 
     # This second transaction fails with a (contrived) exception being raised.
     # Because no commit was called during the context of the 'with' statement,
@@ -105,5 +106,5 @@ if __name__ == '__main__':
             cursor = transaction.cursor()
             cursor.execute('select * from pg_tables')
             raise Exception("we failed for some reason")
-    except Exception, x:
-        print str(x)
+    except Exception as x:
+        print(str(x))

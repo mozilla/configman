@@ -1,11 +1,13 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
+from __future__ import absolute_import, division, print_function
 
 import unittest
 import os
+import six
 
-from cStringIO import StringIO
+from six.moves import cStringIO as StringIO
 import contextlib
 from configman import Namespace, ConfigurationManager
 from configman.datetime_util import datetime_from_ISO_string
@@ -25,6 +27,7 @@ def stringIO_context_wrapper(a_stringIO_instance):
 
 #==============================================================================
 class TestCase(unittest.TestCase):
+    maxDiff = None
 
     #--------------------------------------------------------------------------
     def _some_namespaces(self):
@@ -154,6 +157,8 @@ x__password='secret'
 # how big in tons (default: 100)
 x__size='100'
         """.strip()
+        if six.PY3:
+            expected = expected.replace("='", "=b'")
         self.assertEqual(received.strip(), expected)
 
     #--------------------------------------------------------------------------
@@ -181,4 +186,6 @@ x__size='100'
 # write it on multiple lines. (default: 'Default Value Goes In Here')
 aaa='Default Value Goes In Here'
         """.strip()
+        if six.PY3:
+            expected = expected.replace("='", "=b'")
         self.assertEqual(received.strip(), expected)

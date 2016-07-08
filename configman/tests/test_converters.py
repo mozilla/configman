@@ -5,6 +5,7 @@
 
 import unittest
 import datetime
+import six
 
 from configman import converters
 from configman import RequiredConfig, Namespace, ConfigurationManager
@@ -96,7 +97,8 @@ class TestCase(unittest.TestCase):
 
         for key in result.keys():
             if key in ('name', 'age'):
-                self.assertTrue(not isinstance(key, unicode))
+                if six.PY2:
+                    self.assertTrue(not isinstance(key, six.text_type))
                 self.assertTrue(isinstance(key, str))
             else:
                 self.assertTrue(isinstance(key, int))
@@ -313,8 +315,12 @@ class TestCase(unittest.TestCase):
         to_str = converters.to_str
         self.assertEqual(to_str(int), 'int')
         self.assertEqual(to_str(float), 'float')
-        self.assertEqual(to_str(str), 'str')
-        self.assertEqual(to_str(unicode), 'unicode')
+        if six.PY2:
+            self.assertEqual(to_str(six.binary_type), 'str')
+            self.assertEqual(to_str(six.text_type), 'unicode')
+        else:
+            self.assertEqual(to_str(six.binary_type), 'bytes')
+            self.assertEqual(to_str(six.text_type), 'str')
         self.assertEqual(to_str(bool), 'bool')
         self.assertEqual(to_str(dict), 'dict')
         self.assertEqual(to_str(list), 'list')

@@ -21,7 +21,7 @@
 #      of configuration values.
 #   5) the app class defines a parameterless 'main' function that executes the
 #      business logic of the application
-
+from __future__ import absolute_import, division, print_function
 from configman import RequiredConfig, Namespace
 
 
@@ -47,15 +47,15 @@ class Demo3App(RequiredConfig):
 
     @staticmethod
     def echo_action(x):
-        print x
+        print(x)
 
     @staticmethod
     def backwards_action(x):
-        print x[::-1]
+        print(x[::-1])
 
     @staticmethod
     def upper_action(x):
-        print x.upper()
+        print(x.upper())
 
     @staticmethod
     def action_converter(action):

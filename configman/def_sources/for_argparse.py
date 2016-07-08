@@ -5,11 +5,13 @@
 """this module introduces support for argparse as a data definition source
 for configman.  Rather than write using configman's data definition language,
 programs can instead use the familiar argparse method."""
+from __future__ import absolute_import, division, print_function
 
 import argparse
 import inspect
 from os import environ
 from functools import partial
+import six
 
 from configman.namespace import Namespace
 from configman.config_file_future_proxy import ConfigFileFutureProxy
@@ -42,7 +44,7 @@ def find_action_name_by_value(registry, target_action_instance):
     which it was registered.
     """
     target_type = type(target_action_instance)
-    for key, value in registry['action'].iteritems():
+    for key, value in six.iteritems(registry['action']):
         if value is target_type:
             if key is None:
                 return 'store'
@@ -209,6 +211,7 @@ class ArgumentParser(argparse.ArgumentParser):
     def __init__(self, *args, **kwargs):
         self.original_args = args
         self.original_kwargs = kwargs.copy()
+        self.version = kwargs.get("version")  # py3 argparse doesn't define
         kwargs['add_help'] = False  # stop help, reintroduce it later
         self.subparser_name = kwargs.pop('subparser_name', None)
         self.configman_subparsers_option = kwargs.pop(
@@ -243,7 +246,7 @@ class ArgumentParser(argparse.ArgumentParser):
             # in the subparser's configman option.  This routine copies
             # the required_config of each subparser into the
             # SubparserFromStringConverter defined above.
-            for subparser_name, subparser_data in subparsers.iteritems():
+            for subparser_name, subparser_data in six.iteritems(subparsers):
                 subparser_namespaces.add_namespace(
                     subparser_name,
                     subparser_data.subparser.get_required_config()

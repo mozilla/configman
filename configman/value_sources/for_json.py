@@ -1,13 +1,16 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
+from __future__ import absolute_import, division, print_function
 
 import json
 import collections
+import six
 import sys
 
 from configman.converters import (
     to_string_converters,
+    to_str
 )
 from configman.namespace import Namespace
 from configman.option import Option, Aggregation
@@ -22,7 +25,8 @@ from configman.dotdict import DotDict
 from configman.memoize import memoize
 
 can_handle = (
-    basestring,
+    six.binary_type,
+    six.text_type,
     json
 )
 
@@ -48,14 +52,16 @@ class ValueSource(object):
                 raise NotEnoughInformationException(
                     "Can't setup an json file without knowing the file name"
                 )
+        if isinstance(source, (six.binary_type, six.text_type)):
+            source = to_str(source)
         if (
-            isinstance(source, basestring)
+            isinstance(source, six.string_types)
             and source.endswith(file_name_extension)
         ):
             try:
                 with open(source) as fp:
                     self.values = json.load(fp)
-            except IOError, x:
+            except IOError as x:
                 # The file doesn't exist.  That's ok, we'll give warning
                 # but this isn't a fatal error
                 import warnings
@@ -92,7 +98,7 @@ class ValueSource(object):
             for x in qkey.split('.'):
                 d = d[x]
             if isinstance(val, Option):
-                for okey, oval in val.__dict__.iteritems():
+                for okey, oval in six.iteritems(val.__dict__):
                     try:
                         d[okey] = to_string_converters[type(oval)](oval)
                     except KeyError:

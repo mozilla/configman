@@ -2,6 +2,7 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
+from __future__ import absolute_import, division, print_function
 
 """This sample application demonstrates configuration as context."""
 # this is an advanced demo that demonstrates using contextmanager with the
@@ -20,30 +21,30 @@ from configman import RequiredConfig, ConfigurationManager, Namespace
 class FakeDatabaseConnection():
     """this class substitutes for a real database connection"""
     def __init__(self, dsn):
-        print "FakeDatabaseConnection - created"
+        print("FakeDatabaseConnection - created")
         self.connection_open = True
         self.in_transaction = False
 
     def close(self):
         if self.connection_open:
-            print "FakeDatabaseConnection - closed connection"
+            print("FakeDatabaseConnection - closed connection")
             self.connection_open = False
         else:
-            print "FakeDatabaseConnection - already closed"
+            print("FakeDatabaseConnection - already closed")
 
     def query(self, query):
         if self.connection_open:
-            print 'FakeDatabaseConnection - yep, we did your query <wink>'
+            print('FakeDatabaseConnection - yep, we did your query <wink>')
             self.in_transaction = True
         else:
-            print "FakeDatabaseConnection - you can't query a close connection"
+            print("FakeDatabaseConnection - you can't query a close connection")
 
     def commit(self):
-        print "FakeDatabaseConnection - commit"
+        print("FakeDatabaseConnection - commit")
         self.in_transaction = False
 
     def rollback(self):
-        print "FakeDatabaseConnection - rollback"
+        print("FakeDatabaseConnection - rollback")
         self.in_transaction = False
 
 
@@ -131,7 +132,7 @@ class PGTransaction(RequiredConfig):
         parameters:
             connection - the database connection object
         """
-        print "PGTransaction - requestng connection to close"
+        print("PGTransaction - requestng connection to close")
         connection.close()
 
     #--------------------------------------------------------------------------
@@ -148,7 +149,7 @@ class PGPooledTransaction(PGTransaction):
     #--------------------------------------------------------------------------
     def __init__(self, config, local_config):
         super(PGPooledTransaction, self).__init__(config, local_config)
-        print "PGPooledTransaction - setting up connection pool"
+        print("PGPooledTransaction - setting up connection pool")
         self.pool = {}
 
     #--------------------------------------------------------------------------
@@ -175,15 +176,15 @@ class PGPooledTransaction(PGTransaction):
         """overriding the baseclass function, this routine will decline to
         close a connection at the end of a transaction context.  This allows
         for reuse of connections."""
-        print 'PGPooledTransaction - refusing to close connection'
+        print('PGPooledTransaction - refusing to close connection')
 
     #--------------------------------------------------------------------------
     def close(self):
         """close all pooled connections"""
-        print "PGPooledTransaction - shutting down connection pool"
+        print("PGPooledTransaction - shutting down connection pool")
         for name, conn in self.pool.iteritems():
             conn.close()
-            print "PGPooledTransaction - connection %s closed" % name
+            print("PGPooledTransaction - connection %s closed" % name)
 
 
 #------------------------------------------------------------------------------
@@ -220,13 +221,13 @@ if __name__ == "__main__":
                              app_name='demo4',
                              app_description=__doc__)
     with c.context() as config:
-        print "\n**** First query will succeed"
+        print("\n**** First query will succeed")
         with config.db_transaction() as trans:
             trans.query('select * from life')
             trans.commit()
 
-        print "\n**** Second query will fail"
+        print("\n**** Second query will fail")
         with config.db_transaction() as trans:
             trans.query('select * from life')
 
-        print "\n**** about to leave the config context"
+        print("\n**** about to leave the config context")

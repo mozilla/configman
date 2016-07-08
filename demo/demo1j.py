@@ -10,22 +10,22 @@
 # embody the business logic of the application.  We setup configuration
 # parameters that will control the command line and config file forms.  Then
 # we run the application.
-
+from __future__ import absolute_import, division, print_function
 import sys
 from configman import ConfigurationManager
 
 
 # the following three functions are the business logic of the application.
 def echo(x):
-    print x
+    print(x)
 
 
 def backwards(x):
-    print x[::-1]
+    print(x[::-1])
 
 
 def upper(x):
-    print x.upper()
+    print(x.upper())
 
 # create an iterable collection of definition sources
 # internally, this list will be appended to, so a tuple won't do.
@@ -55,4 +55,4 @@ elif config.action == 'backwards':
 elif config.action == 'upper':
     upper(config.text)
 else:
-    print >>sys.stderr, config.action, "is not a valid action"
+    print(config.action, "is not a valid action", file=sys.stderr)

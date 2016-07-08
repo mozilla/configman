@@ -8,8 +8,9 @@ import os.path
 import unittest
 from contextlib import contextmanager
 import io
-from cStringIO import StringIO
+from six.moves import cStringIO as StringIO
 import getopt
+import six
 
 import mock
 
@@ -22,7 +23,7 @@ from configman.dotdict import (
 )
 from configman import Namespace, RequiredConfig
 from configman.config_file_future_proxy import ConfigFileFutureProxy
-from configman.converters import class_converter
+from configman.converters import class_converter, to_str
 from configman.datetime_util import datetime_from_ISO_string
 from configman.config_exceptions import NotAnOptionError
 from configman.value_sources.source_exceptions import (
@@ -342,7 +343,7 @@ class TestCase(unittest.TestCase):
         n.c = config_manager.Namespace()
         n.c.add_option('extra', 3.14159, 'the x')
         n.c.add_option('string', 'fred', doc='str')
-        ini_data = """
+        ini_data = b"""
 other.t=tea
 # blank line to be ignored
 d.a=22
@@ -386,7 +387,7 @@ c.string = wilma
         n.c = config_manager.Namespace()
         n.c.add_option('extra', 3.14159, 'the x')
         n.c.add_option('string', 'fred', 'str')
-        ini_data = """
+        ini_data = b"""
 other.t=tea
 # blank line to be ignored
 d.a=22
@@ -451,7 +452,7 @@ c.string =   from ini
         n.c = config_manager.Namespace()
         n.c.add_option('extra', 3.14159, 'the x')
         n.c.add_option('string', 'fred', doc='str')
-        ini_data = """
+        ini_data = b"""
 other.t=tea
 # blank line to be ignored
 d.a=22
@@ -1217,6 +1218,8 @@ c.string =   from ini
             "password: *********",
             "sub.name: wilma"
         ]
+        if six.PY3:
+            e[3] = "application: <class 'configman.tests.test_config_manager.TestCase.test_log_config.<locals>.MyApp'>"
         for expected, received in zip(e, fl.log):
             self.assertEqual(expected, received)
 
@@ -1339,7 +1342,7 @@ c.string =   from ini
             ]
         )
         conf = c.get_config()
-        self.assertEqual(conf.keys(), ['admin', 'application'])
+        self.assertEqual(list(conf.keys()), ['admin', 'application'])
 
     #--------------------------------------------------------------------------
     def test_print_conf(self):
@@ -1796,7 +1799,7 @@ c.string =   from ini
         )
         conf = c.get_config()
         self.assertEqual(len(conf), 3)
-        self.assertEqual(conf.keys(), ['source', 'destination', 'admin'])
+        self.assertEqual(list(conf.keys()), ['source', 'destination', 'admin'])
         self.assertEqual(len(conf.source), 3)
         self.assertEqual(conf.source.c, 33)
         self.assertEqual(conf.source.cls, T3)
@@ -2043,7 +2046,7 @@ c.string =   from ini
                 argv_source=['--admin.conf=x.ini']
             )
             assert False, "where's the missing exception?"
-        except AllHandlersFailedException, x:
+        except AllHandlersFailedException as x:
             self.assertTrue('ConfigObj cannot load' in str(x))
         finally:
             os.remove('x.ini')
@@ -2108,7 +2111,7 @@ c.string =   from ini
                 argv_source=['--admin.conf=x.ini']
             )
             mocked_warnings.warn.assert_called_once_with(
-                'Invalid options: bar, baz'
+                six.text_type('Invalid options: bar, baz')
             )
         finally:
             os.remove('x.ini')
@@ -2354,7 +2357,8 @@ c.string =   from ini
 
         class UpperCaseValueDotDict(DotDict):
             def __setattr__(self, key, value):
-                if isinstance(value, basestring):
+                if isinstance(value, (six.binary_type, six.text_type)):
+                    value = to_str(value)
                     super(UpperCaseValueDotDict, self).__setattr__(
                         key,
                         value.upper()

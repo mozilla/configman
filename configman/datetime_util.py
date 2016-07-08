@@ -1,6 +1,7 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
+from __future__ import absolute_import, division, print_function
 
 import datetime
 
@@ -76,7 +77,7 @@ def timedelta_to_str(aTimedelta):
     """
     days = aTimedelta.days
     temp_seconds = aTimedelta.seconds
-    hours = temp_seconds / 3600
-    minutes = (temp_seconds - hours * 3600) / 60
+    hours = int(temp_seconds / 3600)
+    minutes = int((temp_seconds - hours * 3600) / 60)
     seconds = temp_seconds - hours * 3600 - minutes * 60
     return '%d %02d:%02d:%02d' % (days, hours, minutes, seconds)

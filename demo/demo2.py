@@ -12,7 +12,7 @@
 # In this case, there is no need for a 'main' function.  The action done by the
 # application is specified in configuration.  The last line of the file invokes
 # the action.
-
+from __future__ import absolute_import, division, print_function
 from configman import ConfigurationManager, Namespace
 from configman import environment, command_line
 from configman.converters import class_converter
@@ -20,15 +20,15 @@ from configman.converters import class_converter
 
 # the following three functions are the business logic of the application.
 def echo(x):
-    print x
+    print(x)
 
 
 def backwards(x):
-    print x[::-1]
+    print(x[::-1])
 
 
 def upper(x):
-    print x.upper()
+    print(x.upper())
 
 action_dispatch = {'echo': echo,
                    'backwards': backwards,

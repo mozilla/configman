@@ -1,4 +1,6 @@
+from __future__ import absolute_import, division, print_function
 import collections
+import six
 
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -14,8 +16,8 @@ from configman.def_sources import for_json
 definition_dispatch = {
     collections.Mapping: for_mappings.setup_definitions,
     type(for_modules): for_modules.setup_definitions,
-    str: for_json.setup_definitions,
-    unicode: for_json.setup_definitions,
+    six.binary_type: for_json.setup_definitions,
+    six.text_type: for_json.setup_definitions,
 }
 
 

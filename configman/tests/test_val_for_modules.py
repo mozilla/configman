@@ -1,12 +1,14 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
+from __future__ import absolute_import, division, print_function
 
 import unittest
 import contextlib
 import re
+import six
 
-from cStringIO import StringIO
+from six.moves import cStringIO as StringIO
 from datetime import datetime, timedelta, date
 
 from mock import Mock
@@ -19,7 +21,8 @@ from configman import (
 )
 from configman.option import Option
 from configman.config_exceptions import CannotConvertError, NotAnOptionError
-from configman.value_sources.for_modules import ValueSource
+from configman.value_sources.for_modules import OrderableObj, OrderableTuple, \
+    ValueSource
 from configman.converters import class_converter
 
 
@@ -67,6 +70,7 @@ class Delta(RequiredConfig):
 
 #==========================================================================
 class TestCase(unittest.TestCase):
+    maxDiff = None
 
     #--------------------------------------------------------------------------
     def test_basic_import(self):
@@ -91,9 +95,9 @@ class TestCase(unittest.TestCase):
         self.assertFalse('os' in v)
         self.assertTrue('collections' in v)
 
-        self.assertTrue('__package__' not in v.keys())
-        self.assertTrue('__builtins__' not in v.keys())
-        self.assertTrue('__doc__' in v.keys())
+        self.assertTrue('__package__' not in list(v.keys()))
+        self.assertTrue('__builtins__' not in list(v.keys()))
+        self.assertTrue('__doc__' in list(v.keys()))
         self.assertTrue(v.__doc__.startswith('This is a test'))
 
         from collections import Mapping
@@ -248,7 +252,7 @@ class TestCase(unittest.TestCase):
         r = s.getvalue()
         g = {}
         l = {}
-        exec r in g, l
+        six.exec_(r, g, l)
         self.assertEqual(l['a'], 68)
         self.assertEqual(l['b'], 'this is b')
         self.assertEqual(l['n'].x, datetime(1960, 5, 4, 15, 10))
@@ -285,8 +289,8 @@ class TestCase(unittest.TestCase):
 
 from configman.dotdict import DotDict
 from configman.tests.values_for_module_tests_1 import (
-    foo,
     Alpha,
+    foo,
 )
 
 import os
@@ -321,6 +325,8 @@ xxx = DotDict()
 # yyy
 xxx.yyy = 18
 """
+        if six.PY2:
+            expected = six.binary_type(expected)
         self.assertEqual(generated_python_module_text, expected)
 
     #--------------------------------------------------------------------------
@@ -375,8 +381,8 @@ xxx.yyy = 18
 
 from configman.dotdict import DotDict
 from configman.tests.values_for_module_tests_1 import (
-    foo,
     Alpha,
+    foo,
 )
 
 import os
@@ -503,3 +509,24 @@ minimal_version_for_understanding_refusal = {
 }
 """
         self.assertEqual(generated_python_module_text, expected)
+
+    #--------------------------------------------------------------------------
+    def test_orderable_obj(self):
+        d = {
+            "a": 1,
+            3: 4,
+            None: 3
+        }
+        sorted_list = [y.value for y in sorted([OrderableObj(x) for x in
+                       d.keys()])]
+        self.assertEqual(sorted_list, [None, 3, 'a'])
+
+    #--------------------------------------------------------------------------
+    def test_orderable_tuple(self):
+        a = [
+            (print, 'foo'),
+            [sorted, 'bar'],
+        ]
+
+        sorted_list = [y.value for y in sorted([OrderableTuple(x) for x in a])]
+        self.assertEqual(sorted_list, [[sorted, 'bar'], (print, 'foo')])

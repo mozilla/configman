@@ -2,6 +2,7 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
+from __future__ import absolute_import, division, print_function
 
 """This sample app demos wrapping a pluggable database with configman."""
 # this is an advanced demo uses configman to allow an app to not only change
@@ -68,39 +69,39 @@ class FakeDatabaseConnection():
     # demo easier to run.
     #--------------------------------------------------------------------------
     def __init__(self, dsn):
-        print "FakeDatabaseConnection - created"
+        print("FakeDatabaseConnection - created")
         self.connection_open = True
         self.in_transaction = False
 
     #--------------------------------------------------------------------------
     def close(self):
         if self.connection_open:
-            print "FakeDatabaseConnection - closed connection"
+            print("FakeDatabaseConnection - closed connection")
             self.connection_open = False
         else:
-            print "FakeDatabaseConnection - already closed"
+            print("FakeDatabaseConnection - already closed")
 
     #--------------------------------------------------------------------------
     def query(self, query):
 
         if self.connection_open:
-            print "FakeDatabaseConnection - trying query..."
+            print("FakeDatabaseConnection - trying query...")
             if random.randint(1, 2) == 1:
                 raise FakeDBOperationalError("can't connect to database")
-            print 'FakeDatabaseConnection - yep, we did your query <wink>'
+            print('FakeDatabaseConnection - yep, we did your query <wink>')
             self.in_transaction = True
         else:
-            print "FakeDatabaseConnection - can't query a closed connection"
+            print("FakeDatabaseConnection - can't query a closed connection")
             raise FakeDBProgrammingError("can't query a closed connection")
 
     #--------------------------------------------------------------------------
     def commit(self):
-        print "FakeDatabaseConnection - commit"
+        print("FakeDatabaseConnection - commit")
         self.in_transaction = False
 
     #--------------------------------------------------------------------------
     def rollback(self):
-        print "FakeDatabaseConnection - rollback"
+        print("FakeDatabaseConnection - rollback")
         self.in_transaction = False
 
 
@@ -186,10 +187,10 @@ class Postgres(RequiredConfig):
             yield conn
         except self.operational_exceptions:
             # we need to close the connection
-            print "Postgres - operational exception caught"
+            print("Postgres - operational exception caught")
             exception_raised = True
         except Exception:
-            print "Postgres - non operational exception caught"
+            print("Postgres - non operational exception caught")
             exception_raised = True
         finally:
             if not exception_raised:
@@ -217,7 +218,7 @@ class Postgres(RequiredConfig):
             connection - the database connection object
             force - unused boolean to force closure; used in derived classes
         """
-        print "Postgres - requestng connection to close"
+        print("Postgres - requestng connection to close")
         connection.close()
 
     #--------------------------------------------------------------------------
@@ -234,7 +235,7 @@ class PostgresPooled(Postgres):
     #--------------------------------------------------------------------------
     def __init__(self, config, local_config):
         super(PostgresPooled, self).__init__(config, local_config)
-        print "PostgresPooled - setting up connection pool"
+        print("PostgresPooled - setting up connection pool")
         self.pool = {}
 
     #--------------------------------------------------------------------------
@@ -262,26 +263,26 @@ class PostgresPooled(Postgres):
         close a connection at the end of a transaction context.  This allows
         for reuse of connections."""
         if force:
-            print 'PostgresPooled - delegating connection closure'
+            print('PostgresPooled - delegating connection closure')
             try:
                 super(PostgresPooled, self).close_connection(connection,
                                                                   force)
             except self.operational_exceptions:
-                print 'PostgresPooled - failed closing'
+                print('PostgresPooled - failed closing')
             for name, conn in self.pool.iteritems():
                 if conn is connection:
                     break
             del self.pool[name]
         else:
-            print 'PostgresPooled - refusing to close connection'
+            print('PostgresPooled - refusing to close connection')
 
     #--------------------------------------------------------------------------
     def close(self):
         """close all pooled connections"""
-        print "PostgresPooled - shutting down connection pool"
+        print("PostgresPooled - shutting down connection pool")
         for name, conn in self.pool.iteritems():
             conn.close()
-            print "PostgresPooled - connection %s closed" % name
+            print("PostgresPooled - connection %s closed" % name)
 
 
 #------------------------------------------------------------------------------
@@ -353,12 +354,12 @@ class TransactionExecutorWithBackoff(TransactionExecutor):
     def responsive_sleep(self, seconds, wait_reason=''):
         """Sleep for the specified number of seconds, logging every
         'wait_log_interval' seconds with progress info."""
-        for x in xrange(int(seconds)):
+        for x in range(int(seconds)):
             if (self.config.wait_log_interval and
                 not x % self.config.wait_log_interval):
-                print '%s: %dsec of %dsec' % (wait_reason,
+                print('%s: %dsec of %dsec' % (wait_reason,
                                               x,
-                                              seconds)
+                                              seconds))
             time.sleep(1.0)
 
     #--------------------------------------------------------------------------
@@ -372,8 +373,8 @@ class TransactionExecutorWithBackoff(TransactionExecutor):
                     break
             except self.config.db_transaction.operational_exceptions:
                 pass
-            print ('failure in transaction - retry in %s seconds' %
-                   wait_in_seconds)
+            print(('failure in transaction - retry in %s seconds' %
+                   wait_in_seconds))
             self.responsive_sleep(wait_in_seconds,
                                   "waiting for retry after failure in "
                                   "transaction")
@@ -410,14 +411,14 @@ if __name__ == "__main__":
         # connectivity problem.  If the transaction_executor_class is a class
         # with backing off retry, you'll see the transaction tried over and
         # over until it succeeds.
-        print "\n**** First query"
+        print("\n**** First query")
         executor.do_transaction(query1)
 
         # this second query has a 50% probability of failing due to a non-
         # database problem.  Because the exception raised is not recoverable
         # by the database, it won't get retried even if the
         # transaction_executor_class has the capability
-        print "\n**** Second query"
+        print("\n**** Second query")
         executor.do_transaction(query2)
 
-        print "\n**** about to leave the config context"
+        print("\n**** about to leave the config context")

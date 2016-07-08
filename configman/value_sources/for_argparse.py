@@ -29,9 +29,10 @@ Each is used in a different context during the overlay expansion process.
 While several of them are functionally equivalent, we keep them as separate
 classes so that we can use class identity as a differention mechanism.
 """
-
+from __future__ import absolute_import, division, print_function
 import argparse
 import copy
+import six
 
 import collections
 
@@ -120,7 +121,7 @@ class IntermediateConfigmanParser(argparse.ArgumentParser):
         if object_hook is None:
             object_hook = DotDict
         config = object_hook()
-        for key, value in proposed_config.__dict__.iteritems():
+        for key, value in six.iteritems(proposed_config.__dict__):
             config[key] = value
         return config
 
@@ -372,7 +373,7 @@ class ParserContainer(object):
 
         if (
             isinstance(option.default, collections.Sequence)
-            and not isinstance(option.default, basestring)
+            and not isinstance(option.default, (six.binary_type, six.text_type))
         ):
             if option.is_argument:
                 kwargs.nargs = len(option.default)
@@ -431,7 +432,8 @@ class ValueSource(object):
                     None
                 )
             else:
-                if isinstance(an_option.value, basestring):
+                if isinstance(an_option.value, (six.binary_type, six.text_type)):
+                    an_option.value = to_str(an_option.value)
                     return an_option.value
                 if an_option.to_string_converter:
                     return an_option.to_string_converter(an_option.value)
@@ -440,7 +442,8 @@ class ValueSource(object):
                 nargs is not None
                 and isinstance(an_option.value, collections.Sequence)
             ):
-                if isinstance(an_option.value, basestring):
+                if isinstance(an_option.value, (six.binary_type, six.text_type)):
+                    an_option.value = to_str(an_option.value)
                     return an_option.value
                 return [to_str(x) for x in an_option.value]
             if an_option.value is None:

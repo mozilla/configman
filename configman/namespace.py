@@ -1,6 +1,9 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
+from __future__ import absolute_import, division, print_function
+
+import six
 
 from configman.dotdict import DotDict
 from configman.option import Option, Aggregation
@@ -83,7 +86,7 @@ class Namespace(DotDict):
         new_namespace = Namespace()
         if self._reference_value_from:
             new_namespace.ref_value_namespace()
-        for key, opt in self.iteritems():
+        for key, opt in six.iteritems(self):
             if isinstance(opt, Option):
                 new_namespace[key] = opt.copy()
                 # assign a new reference_value if one has not been defined

@@ -1,9 +1,11 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
+from __future__ import absolute_import, division, print_function
 
 import collections
 import os
+import six
 
 from configman.value_sources.source_exceptions import (
     NoHandlerForType,
@@ -13,7 +15,7 @@ from configman.value_sources.source_exceptions import (
     ValueException,
 )
 from configman.orderedset import OrderedSet
-from configman.converters import str_to_python_object
+from configman.converters import str_to_python_object, to_str
 
 from configman.config_file_future_proxy import ConfigFileFutureProxy
 from configman.config_exceptions import CannotConvertError
@@ -48,12 +50,12 @@ class DispatchByType(collections.defaultdict):
     def get_handlers(self, candidate):
         handlers_set = OrderedSet()
         # find exact candidate matches first
-        for key, handler_list in self.iteritems():
+        for key, handler_list in six.iteritems(self):
             if candidate is key:
                 for a_handler in handler_list:
                     handlers_set.add(a_handler)
         # then find the "instance of" candidate matches
-        for key, handler_list in self.iteritems():
+        for key, handler_list in six.iteritems(self):
             if self._is_instance_of(candidate, key):
                 for a_handler in handler_list:
                     handlers_set.add(a_handler)
@@ -112,7 +114,8 @@ def wrap_with_value_source_api(value_source_list, a_config_manager):
         if a_source is ConfigFileFutureProxy:
             a_source = a_config_manager._get_option('admin.conf').default
             # raise hell if the config file doesn't exist
-            if isinstance(a_source, basestring):
+            if isinstance(a_source, (six.binary_type, six.text_type)):
+                a_source = to_str(a_source)
                 config_file_doesnt_exist = not os.path.isfile(a_source)
                 if config_file_doesnt_exist:
                     if a_config_manager.config_optional:
@@ -136,7 +139,7 @@ def wrap_with_value_source_api(value_source_list, a_config_manager):
                 wrapped_source = a_handler.ValueSource(a_source,
                                                        a_config_manager)
                 break
-            except (ValueException, CannotConvertError), x:
+            except (ValueException, CannotConvertError) as x:
                 # a failure is not necessarily fatal, we need to try all of
                 # the handlers.  It's only fatal when they've all failed
                 exception_as_str = str(x)
@@ -163,7 +166,8 @@ def dispatch_request_to_write(
     options_mapping,
     opener
 ):
-    if isinstance(config_file_type, basestring):
+    if isinstance(config_file_type, (six.binary_type, six.text_type)):
+        config_file_type = to_str(config_file_type)
         try:
             writer_fn = file_extension_dispatch[config_file_type]
         except KeyError:
