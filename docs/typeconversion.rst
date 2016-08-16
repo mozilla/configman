@@ -48,7 +48,8 @@ basic python types. The complete list is this:
 * **float**
 * **str**
 * **unicode**
-* **bool**
+* **bool** (empty string is False, non-empty string is True--use
+  ``boolean_converter`` for better boolean conversion)
 * **datetime.datetime** (``%Y-%m-%dT%H:%M:%S`` or ``%Y-%m-%dT%H:%M:%S.%f``)
 * **datetime.date** (``%Y-%m-%d``)
 * **datetime.timedelta** (for example, ``1:2:0:3`` becomes ``days=1,
