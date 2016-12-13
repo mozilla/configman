@@ -260,6 +260,7 @@ class ValueSource(object):
             module_as_dotdict[key] = value
         self.module = source
         self.source = module_as_dotdict
+        self.identity = to_str(source)
 
     #--------------------------------------------------------------------------
     def get_values(self, config_manager, ignore_mismatches, obj_hook=DotDict):

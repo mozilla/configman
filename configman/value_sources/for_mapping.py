@@ -27,7 +27,12 @@ class ValueSource(object):
     def __init__(self, source, the_config_manager=None):
         if source is os.environ:
             self.always_ignore_mismatches = True
+            self.identity = 'os.environ'
         elif isinstance(source, collections.Mapping):
+            try:
+                self.identity = source['__identity']
+            except (KeyError, AttributeError): # cover simple mapping & DotDict
+                self.identity = 'a mapping'
             if "always_ignore_mismatches" in source:
                 self.always_ignore_mismatches = \
                     bool(source["always_ignore_mismatches"])

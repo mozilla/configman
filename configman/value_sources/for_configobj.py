@@ -162,6 +162,10 @@ class ValueSource(object):
                 )
         else:
             raise CantHandleTypeException()
+        
+        # save the identity of the value source so the "admin.why" can
+        # identify it.
+        self.identity = source
 
     #--------------------------------------------------------------------------
     @memoize()

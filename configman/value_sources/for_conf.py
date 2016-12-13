@@ -94,6 +94,8 @@ class ValueSource(object):
                 "Conf couldn't interpret %s as a config file: %s"
                 % (candidate, str(x))
             )
+        
+        self.identity = to_str(candidate)
 
     #--------------------------------------------------------------------------
     @memoize()

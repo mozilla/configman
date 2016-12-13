@@ -7,4 +7,5 @@ from os import environ
 from configman.dotdict import configman_keys
 
 environment = configman_keys(environ)
+environment["__identity"] = 'environment'
 environment.always_ignore_mismatches = True

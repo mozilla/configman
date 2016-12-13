@@ -73,6 +73,8 @@ class ValueSource(object):
                 )
         else:
             raise CantHandleTypeException()
+        
+        self.identity = source
 
     #--------------------------------------------------------------------------
     @memoize()

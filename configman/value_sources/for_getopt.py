@@ -51,6 +51,8 @@ class ValueSource(object):
             self.argv_source = source
         else:
             raise CantHandleTypeException()
+        
+        self.identity = 'getopt'
 
     # frequently, command line data sources must be treated differently.  For
     # example, even when the overall option for configman is to allow

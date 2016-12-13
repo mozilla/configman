@@ -38,6 +38,7 @@ class Option(object):
         secret=False,
         has_changed=False,
         foreign_data=None,
+        sourced_from='default value',
     ):
         self.name = name
         self.short_form = short_form
@@ -67,6 +68,7 @@ class Option(object):
         self.secret = secret
         self.has_changed = has_changed
         self.foreign_data = foreign_data
+        self.sourced_from = sourced_from
 
     #--------------------------------------------------------------------------
     def __str__(self):

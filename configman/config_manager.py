@@ -532,11 +532,11 @@ class ConfigurationManager(object):
         logger.info("app_name: %s", self.app_name)
         logger.info("app_version: %s", self.app_version)
         logger.info("current configuration:")
-        config = [(key, self.option_definitions[key].value)
+        config = [(key, self.option_definitions[key].value, self.option_definitions[key].sourced_from)
                   for key in self.option_definitions.keys_breadth_first()
                   if key not in self.keys_blocked_from_output]
         config.sort()
-        for key, val in config:
+        for key, val, source in config:
             if (
                 self.option_definitions[key].secret
                 or 'password' in key.lower()
@@ -548,6 +548,7 @@ class ConfigurationManager(object):
                                 to_string_converters[type(key)](val))
                 except KeyError:
                     logger.info('%s: %s', key, val)
+            logger.info('  source: %s', source)
 
     #--------------------------------------------------------------------------
     def get_option_names(self):
@@ -661,6 +662,10 @@ class ConfigurationManager(object):
                 )
                 for a_value_source in self.values_source_list
             ]
+            value_source_identities = [
+                a_value_source.identity
+                for a_value_source in self.values_source_list
+            ]
 
             # overlay process:
             # fetch all the default values from the value sources before
@@ -682,6 +687,8 @@ class ConfigurationManager(object):
                         self.option_definitions[reference_value_from]
                         [top_key].default
                     )
+                    self.option_definitions[key].sourced_from = "reference_value - '%s.%s'" % (reference_value_from, top_key)
+
                     all_reference_values[
                         '.'.join((reference_value_from, top_key))
                     ].append(
@@ -696,7 +703,7 @@ class ConfigurationManager(object):
                         all_reference_values[key]
                     )
 
-                for val_src_dict in values_from_all_sources:
+                for val_src_dict, val_src_identity in zip(values_from_all_sources, value_source_identities):
                     try:
 
                         # overlay the default with the new value from
@@ -707,6 +714,7 @@ class ConfigurationManager(object):
                             an_option.default != val_src_dict[key]
                         )
                         an_option.default = val_src_dict[key]
+                        an_option.sourced_from = val_src_identity
                         if key in all_reference_values:
                             # make sure that this value gets propagated to keys
                             # even if the keys have already been overlaid
@@ -844,6 +852,12 @@ class ConfigurationManager(object):
                 )
                 if key_is_okay:
                     unmatched_keys.remove(key)
+                if '__identity' in unmatched_keys:
+                    # we allow bare Mappings to use the key "__identity" to give
+                    # the Mapping a name.  The helps in identifying the source
+                    # of a value when echoing the log of the config.  We don't
+                    # want it to contribute to warnings
+                    unmatched_keys.remove('__identity')
             # anything left in the unmatched_key set is a badly formed key.
             # issue a warning
             if unmatched_keys:

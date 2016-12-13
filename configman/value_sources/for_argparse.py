@@ -406,6 +406,8 @@ class ValueSource(object):
         self.source = source
         self.parent_parsers = []
         self.argv_source = tuple(conf_manager.argv_source)
+        
+        self.identity = 'argparse'
 
     # frequently, command line data sources must be treated differently.  For
     # example, even when the overall option for configman is to allow

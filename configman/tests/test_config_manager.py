@@ -172,7 +172,7 @@ class TestCase(unittest.TestCase):
         n.b = 17
         n.c = config_manager.Namespace()
         n.c.add_option('extra', doc='the x', default=3.14159)
-        g = {'a': 2, 'c.extra': 2.89}
+        g = {'a': 2, 'c.extra': 2.89, '__identity': 'the_g_mapping'}
         c = config_manager.ConfigurationManager(
             [n],
             [g],
@@ -183,13 +183,18 @@ class TestCase(unittest.TestCase):
         self.assertTrue(isinstance(c.option_definitions.b,
                                    config_manager.Option))
         self.assertEqual(c.option_definitions.a.value, 2)
+        self.assertEqual(c.option_definitions.a.sourced_from, 'the_g_mapping')
+        
         self.assertEqual(c.option_definitions.b.value, 17)
+        self.assertEqual(c.option_definitions.b.sourced_from, 'default value')
         self.assertEqual(c.option_definitions.b.default, 17)
         self.assertEqual(c.option_definitions.b.name, 'b')
+        
         self.assertEqual(c.option_definitions.c.extra.name, 'extra')
         self.assertEqual(c.option_definitions.c.extra.doc, 'the x')
         self.assertEqual(c.option_definitions.c.extra.default, 2.89)
         self.assertEqual(c.option_definitions.c.extra.value, 2.89)
+        self.assertEqual(c.option_definitions.c.extra.sourced_from, 'the_g_mapping')
 
     #--------------------------------------------------------------------------
     def test_overlay_config_4a(self):
@@ -199,7 +204,7 @@ class TestCase(unittest.TestCase):
         n.b = 17
         n.c = config_manager.Namespace()
         n.c.add_option('extra', doc='the x', default=3.14159)
-        g = {'a': 2, 'c': {'extra': 2.89}}
+        g = {'a': 2, 'c': {'extra': 2.89}, '__identity': 'the_g_mapping'}
         c = config_manager.ConfigurationManager(
             [n],
             [g],
@@ -210,13 +215,18 @@ class TestCase(unittest.TestCase):
         self.assertTrue(isinstance(c.option_definitions.b,
                                    config_manager.Option))
         self.assertEqual(c.option_definitions.a.value, 2)
+        self.assertEqual(c.option_definitions.a.sourced_from, 'the_g_mapping')
+        
         self.assertEqual(c.option_definitions.b.value, 17)
+        self.assertEqual(c.option_definitions.b.sourced_from, 'default value')
         self.assertEqual(c.option_definitions.b.default, 17)
         self.assertEqual(c.option_definitions.b.name, 'b')
+        
         self.assertEqual(c.option_definitions.c.extra.name, 'extra')
         self.assertEqual(c.option_definitions.c.extra.doc, 'the x')
         self.assertEqual(c.option_definitions.c.extra.default, 2.89)
         self.assertEqual(c.option_definitions.c.extra.value, 2.89)
+        self.assertEqual(c.option_definitions.c.extra.sourced_from, 'the_g_mapping')
 
     #--------------------------------------------------------------------------
     def test_overlay_config_5(self):
@@ -235,11 +245,16 @@ class TestCase(unittest.TestCase):
         self.assertTrue(isinstance(c.option_definitions.b,
                                    config_manager.Option))
         self.assertEqual(c.option_definitions.a.value, 2)
+        self.assertEqual(c.option_definitions.a.sourced_from, 'getopt')
+        
         self.assertEqual(c.option_definitions.b.value, 17)
+        self.assertEqual(c.option_definitions.b.sourced_from, 'default value')
         self.assertEqual(c.option_definitions.b.default, 17)
         self.assertEqual(c.option_definitions.b.name, 'b')
+        
         self.assertEqual(c.option_definitions.c.name, 'c')
         self.assertEqual(c.option_definitions.c.value, True)
+        self.assertEqual(c.option_definitions.c.sourced_from, 'getopt')
 
     #--------------------------------------------------------------------------
     def test_overlay_config_6(self):
@@ -258,13 +273,18 @@ class TestCase(unittest.TestCase):
         )
         self.assertEqual(type(c.option_definitions.b), config_manager.Option)
         self.assertEqual(c.option_definitions.a.value, 2)
+        self.assertEqual(c.option_definitions.a.sourced_from, 'getopt')
+        
         self.assertEqual(c.option_definitions.b.value, 17)
+        self.assertEqual(c.option_definitions.b.sourced_from, 'default value')
         self.assertEqual(c.option_definitions.b.default, 17)
         self.assertEqual(c.option_definitions.b.name, 'b')
+        
         self.assertEqual(c.option_definitions.c.extra.name, 'extra')
         self.assertEqual(c.option_definitions.c.extra.doc, 'the x')
         self.assertEqual(c.option_definitions.c.extra.default, '11.0')
         self.assertEqual(c.option_definitions.c.extra.value, 11.0)
+        self.assertEqual(c.option_definitions.c.extra.sourced_from, 'getopt')
 
     #--------------------------------------------------------------------------
     def test_overlay_config_6a(self):
@@ -283,13 +303,18 @@ class TestCase(unittest.TestCase):
         )
         self.assertEqual(type(c.option_definitions.b), config_manager.Option)
         self.assertEqual(c.option_definitions.a.value, 2)
+        self.assertEqual(c.option_definitions.a.sourced_from, 'getopt')
+        
         self.assertEqual(c.option_definitions.b.value, 17)
+        self.assertEqual(c.option_definitions.b.sourced_from, 'default value')
         self.assertEqual(c.option_definitions.b.default, 17)
         self.assertEqual(c.option_definitions.b.name, 'b')
+        
         self.assertEqual(c.option_definitions.c.extra.name, 'extra')
         self.assertEqual(c.option_definitions.c.extra.doc, 'the x')
         self.assertEqual(c.option_definitions.c.extra.default, '11.0')
         self.assertEqual(c.option_definitions.c.extra.value, 11.0)
+        self.assertEqual(c.option_definitions.c.extra.sourced_from, 'getopt')
 
     #--------------------------------------------------------------------------
     def test_overlay_config_7(self):
@@ -319,17 +344,24 @@ class TestCase(unittest.TestCase):
         )
         self.assertEqual(type(c.option_definitions.b), config_manager.Option)
         self.assertEqual(c.option_definitions.a.value, 22)
+        self.assertEqual(c.option_definitions.a.sourced_from, 'configman.tests.test_config_manager.dummy_open')
+        
         self.assertEqual(c.option_definitions.b.value, 33)
         self.assertEqual(c.option_definitions.b.default, '33')
         self.assertEqual(c.option_definitions.b.name, 'b')
+        self.assertEqual(c.option_definitions.b.sourced_from, 'configman.tests.test_config_manager.dummy_open')
+        
         self.assertEqual(c.option_definitions.c.extra.name, 'extra')
         self.assertEqual(c.option_definitions.c.extra.doc, 'the x')
         self.assertEqual(c.option_definitions.c.extra.default, '2.0')
         self.assertEqual(c.option_definitions.c.extra.value, 2.0)
+        self.assertEqual(c.option_definitions.c.extra.sourced_from, 'configman.tests.test_config_manager.dummy_open')
+        
         self.assertEqual(c.option_definitions.c.string.name, 'string')
         self.assertEqual(c.option_definitions.c.string.doc, 'str')
         self.assertEqual(c.option_definitions.c.string.default, 'wilma')
         self.assertEqual(c.option_definitions.c.string.value, 'wilma')
+        self.assertEqual(c.option_definitions.c.string.sourced_from, 'configman.tests.test_config_manager.dummy_open')
 
     #--------------------------------------------------------------------------
     def test_overlay_config_8(self):
@@ -361,19 +393,28 @@ c.string = wilma
         )
         self.assertEqual(c.option_definitions.other.t.name, 't')
         self.assertEqual(c.option_definitions.other.t.value, 'tea')
+        self.assertEqual(c.option_definitions.other.t.sourced_from, 'configman.tests.test_config_manager.strio')
+        
         self.assertEqual(type(c.option_definitions.d.b), config_manager.Option)
         self.assertEqual(c.option_definitions.d.a.value, 22)
+        self.assertEqual(c.option_definitions.d.a.sourced_from, 'configman.tests.test_config_manager.strio')
+        
         self.assertEqual(c.option_definitions.d.b.value, 33)
         self.assertEqual(c.option_definitions.d.b.default, '33')
         self.assertEqual(c.option_definitions.d.b.name, 'b')
+        self.assertEqual(c.option_definitions.d.b.sourced_from, 'configman.tests.test_config_manager.strio')
+        
         self.assertEqual(c.option_definitions.c.extra.name, 'extra')
         self.assertEqual(c.option_definitions.c.extra.doc, 'the x')
         self.assertEqual(c.option_definitions.c.extra.default, '2.0')
         self.assertEqual(c.option_definitions.c.extra.value, 2.0)
+        self.assertEqual(c.option_definitions.c.extra.sourced_from, 'configman.tests.test_config_manager.strio')
+        
         self.assertEqual(c.option_definitions.c.string.name, 'string')
         self.assertEqual(c.option_definitions.c.string.doc, 'str')
         self.assertEqual(c.option_definitions.c.string.default, 'wilma')
         self.assertEqual(c.option_definitions.c.string.value, 'wilma')
+        self.assertEqual(c.option_definitions.c.string.sourced_from, 'configman.tests.test_config_manager.strio')
 
     #--------------------------------------------------------------------------
     def test_overlay_config_9(self):
@@ -426,19 +467,28 @@ c.string =   from ini
         #fm.os = saved_os
         self.assertEqual(c.option_definitions.other.t.name, 't')
         self.assertEqual(c.option_definitions.other.t.value, 'TTT')
+        self.assertEqual(c.option_definitions.other.t.sourced_from, 'getopt')
+        
         self.assertEqual(type(c.option_definitions.d.b), config_manager.Option)
         self.assertEqual(c.option_definitions.d.a.value, 22)
+        self.assertEqual(c.option_definitions.d.a.sourced_from, 'configman.tests.test_config_manager.strio')
+        
         self.assertEqual(c.option_definitions.d.b.value, 17)
         self.assertEqual(c.option_definitions.d.b.default, 17)
         self.assertEqual(c.option_definitions.d.b.name, 'b')
+        self.assertEqual(c.option_definitions.d.b.sourced_from, 'default value')
+        
         self.assertEqual(c.option_definitions.c.extra.name, 'extra')
         self.assertEqual(c.option_definitions.c.extra.doc, 'the x')
         self.assertEqual(c.option_definitions.c.extra.default, '11.0')
         self.assertEqual(c.option_definitions.c.extra.value, 11.0)
+        self.assertEqual(c.option_definitions.c.extra.sourced_from, 'getopt')
+
         self.assertEqual(c.option_definitions.c.string.name, 'string')
         self.assertEqual(c.option_definitions.c.string.doc, 'str')
         self.assertEqual(c.option_definitions.c.string.default, 'from ini')
         self.assertEqual(c.option_definitions.c.string.value, 'from ini')
+        self.assertEqual(c.option_definitions.c.string.sourced_from, 'configman.tests.test_config_manager.strio')
 
     #--------------------------------------------------------------------------
     def test_overlay_config_10(self):
@@ -480,19 +530,28 @@ c.string =   from ini
         )
         self.assertEqual(c.option_definitions.other.t.name, 't')
         self.assertEqual(c.option_definitions.other.t.value, 'tea')
+        self.assertEqual(c.option_definitions.other.t.sourced_from, 'configman.tests.test_config_manager.strio')
+
         self.assertEqual(type(c.option_definitions.d.b), config_manager.Option)
         self.assertEqual(c.option_definitions.d.a.value, 22)
+        self.assertEqual(c.option_definitions.d.a.sourced_from, 'configman.tests.test_config_manager.strio')
+        
         self.assertEqual(c.option_definitions.d.b.value, 17)
         self.assertEqual(c.option_definitions.d.b.default, 17)
         self.assertEqual(c.option_definitions.d.b.name, 'b')
+        self.assertEqual(c.option_definitions.d.b.sourced_from, 'default value')
+
         self.assertEqual(c.option_definitions.c.extra.name, 'extra')
         self.assertEqual(c.option_definitions.c.extra.doc, 'the x')
         self.assertEqual(c.option_definitions.c.extra.default, '11.0')
         self.assertEqual(c.option_definitions.c.extra.value, 11.0)
+        self.assertEqual(c.option_definitions.c.extra.sourced_from, 'getopt')
+        
         self.assertEqual(c.option_definitions.c.string.name, 'string')
         self.assertEqual(c.option_definitions.c.string.doc, 'str')
         self.assertEqual(c.option_definitions.c.string.default, 'from ini')
         self.assertEqual(c.option_definitions.c.string.value, 'from ini')
+        self.assertEqual(c.option_definitions.c.string.sourced_from, 'configman.tests.test_config_manager.strio')
 
     #--------------------------------------------------------------------------
     def test_overlay_config_11(self):
@@ -531,14 +590,21 @@ c.string =   from ini
             config_manager.Option
         ))
         self.assertEqual(c.option_definitions.a.value, 2)
+        self.assertEqual(c.option_definitions.a.sourced_from, "reference_value - 'xxx.yyy.a'")
+        
         self.assertEqual(c.option_definitions.b.value, 17)
         self.assertEqual(c.option_definitions.b.default, 17)
         self.assertEqual(c.option_definitions.b.name, 'b')
+        self.assertEqual(c.option_definitions.b.sourced_from, "default value")
+        
         self.assertEqual(c.option_definitions.c.extra.name, 'extra')
         self.assertEqual(c.option_definitions.c.extra.doc, 'the x')
         self.assertEqual(c.option_definitions.c.extra.default, 2.89)
         self.assertEqual(c.option_definitions.c.extra.value, 2.89)
+        self.assertEqual(c.option_definitions.c.extra.sourced_from, "reference_value - 'xxx.yyy.extra'")
+        
         self.assertEqual(c.option_definitions.c.a.value, 2)
+        self.assertEqual(c.option_definitions.c.a.sourced_from, "reference_value - 'xxx.yyy.a'")
 
     #--------------------------------------------------------------------------
     def test_overlay_config_12(self):
@@ -574,8 +640,8 @@ c.string =   from ini
         c = config_manager.ConfigurationManager(
             [n],
             [
-                {'b': 21},
-                {'c.a': 399},
+                {'b': 21, "__identity": 'first mapping'},
+                {'c.a': 399, "__identity": 'second mapping'},
                 value_source,
             ],
             use_admin_controls=True,
@@ -587,19 +653,30 @@ c.string =   from ini
             config_manager.Option
         ))
         self.assertEqual(c.option_definitions.a.value, 2)
+        self.assertEqual(c.option_definitions.a.sourced_from, "reference_value - 'xxx.yyy.a'")
+        
         self.assertEqual(c.option_definitions.b.value, 21)
         self.assertEqual(c.option_definitions.b.default, 21)
         self.assertEqual(c.option_definitions.b.name, 'b')
+        self.assertEqual(c.option_definitions.b.sourced_from, "first mapping")
+
         self.assertEqual(c.option_definitions.c.extra.name, 'extra')
         self.assertEqual(c.option_definitions.c.extra.doc, 'the x')
         self.assertEqual(c.option_definitions.c.extra.default, 2.89)
         self.assertEqual(c.option_definitions.c.extra.value, 2.89)
+        self.assertEqual(c.option_definitions.c.extra.sourced_from, "reference_value - 'xxx.yyy.extra'")
+        
         self.assertEqual(c.option_definitions.c.a.default, 399)
         self.assertEqual(c.option_definitions.c.a.value, 399)
+        self.assertEqual(c.option_definitions.c.a.sourced_from, "second mapping")
+
         self.assertEqual(c.option_definitions.c.zzz.fff.a.value, 2)
         self.assertEqual(c.option_definitions.c.zzz.fff.a.default, 2)
+        self.assertEqual(c.option_definitions.c.zzz.fff.a.sourced_from, "reference_value - 'xxx.yyy.a'")
+                
         self.assertEqual(c.option_definitions.c.zzz.fff.ooo.a.default, 2)
         self.assertEqual(c.option_definitions.c.zzz.fff.ooo.a.value, 2)
+        self.assertEqual(c.option_definitions.c.zzz.fff.ooo.a.sourced_from, "reference_value - 'xxx.yyy.a'")
 
     #--------------------------------------------------------------------------
     def test_mapping_types_1(self):
@@ -1215,8 +1292,11 @@ c.string =   from ini
             "app_version: 1.0",
             "current configuration:",
             "application: <class 'configman.tests.test_config_manager.MyApp'>",
+            "  source: default value",
             "password: *********",
-            "sub.name: wilma"
+            "  source: default value",
+            "sub.name: wilma",
+            "  source: getopt",
         ]
         if six.PY3:
             e[3] = "application: <class 'configman.tests.test_config_manager.TestCase.test_log_config.<locals>.MyApp'>"
