@@ -27,18 +27,18 @@ expected_value = {
                  [--admin.dump_conf ADMIN.DUMP_CONF] [--admin.strict]
                  [--admin.expose_secrets] [--admin.conf ADMIN.CONF] [--foo]
                  [--egg EGG]
-                 {a,b} ...
+                 {b,a} ...
 
 positional arguments:
-  {a,b}                 sub-command help
+  {b,a}                 sub-command help
     a                   a help
     b                   b help
 
 optional arguments:
   -h, --help            show this help message and exit
   --admin.print_conf ADMIN.PRINT_CONF
-                        write current config to stdout (json, py, conf, env,
-                        ini)
+                        write current config to stdout (conf, env, ini, json,
+                        py)
   --admin.dump_conf ADMIN.DUMP_CONF
                         a pathname to which to write the current config
   --admin.strict        mismatched options generate exceptions rather than
@@ -65,8 +65,8 @@ positional arguments:
 optional arguments:
   -h, --help            show this help message and exit
   --admin.print_conf ADMIN.PRINT_CONF
-                        write current config to stdout (json, py, conf, env,
-                        ini)
+                        write current config to stdout (conf, env, ini, json,
+                        py)
   --admin.dump_conf ADMIN.DUMP_CONF
                         a pathname to which to write the current config
   --admin.strict        mismatched options generate exceptions rather than
@@ -87,8 +87,8 @@ optional arguments:
 optional arguments:
   -h, --help            show this help message and exit
   --admin.print_conf ADMIN.PRINT_CONF
-                        write current config to stdout (json, py, conf, env,
-                        ini)
+                        write current config to stdout (conf, env, ini, json,
+                        py)
   --admin.dump_conf ADMIN.DUMP_CONF
                         a pathname to which to write the current config
   --admin.strict        mismatched options generate exceptions rather than
@@ -106,8 +106,8 @@ optional arguments:
                  [--admin.dump_conf ADMIN.DUMP_CONF] [--admin.strict]
                  [--admin.expose_secrets] [--admin.conf ADMIN.CONF] [--foo]
                  [--egg EGG]
-                 {a,b} ...
-highwater: error: argument sub_command: invalid choice: 'c' (choose from 'a', 'b')
+                 {b,a} ...
+highwater: error: argument sub_command: invalid choice: 'c' (choose from 'b', 'a')
 """,
     "test_expansion_subparsers_5":
 """usage: highwater a [-h] [--admin.print_conf ADMIN.PRINT_CONF]
@@ -122,7 +122,7 @@ highwater a: error: too few arguments
                  [--admin.dump_conf ADMIN.DUMP_CONF] [--admin.strict]
                  [--admin.expose_secrets] [--admin.conf ADMIN.CONF] [--foo]
                  [--egg EGG]
-                 {a,b} ...
+                 {b,a} ...
 highwater: error: unrecognized arguments: --baz Y
 """,
     "test_expansion_subparsers_7":
@@ -130,7 +130,7 @@ highwater: error: unrecognized arguments: --baz Y
                  [--admin.dump_conf ADMIN.DUMP_CONF] [--admin.strict]
                  [--admin.expose_secrets] [--admin.conf ADMIN.CONF] [--foo]
                  [--egg EGG]
-                 {a,b} ...
+                 {b,a} ...
 highwater: error: unrecognized arguments: 16
 """,
     "test_expansion_subparsers_defaults_values_1":
@@ -472,8 +472,9 @@ class TestCaseForDefSourceArgparse(TestCase):
     def test_expansion_subparsers_stdout_with_exit(self):
         tests = (
             (['--help'], expected_value['test_expansion_subparsers_1']),
-            (['a', '--help'], expected_value['test_expansion_subparsers_2']),
             (['b', '--help'], expected_value['test_expansion_subparsers_3']),
+            (['a', '--help'], expected_value['test_expansion_subparsers_2']),
+
         )
         for args, expected in tests:
             self.impl_for_subparser_stdout_with_exit(args, expected)
