@@ -1,3 +1,9 @@
+status
+======
+
+2024-03-29: configman is an unmaintained project.
+
+
 configman
 =========
 
